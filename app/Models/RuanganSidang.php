@@ -11,12 +11,12 @@ class RuanganSidang extends Model
 
     protected $table = 'ruangan_sidang';
     protected $fillable = [
-        'prodi_id',
+        'program_studi_id',
         'nama_ruangan',
     ];
 
     public function programStudi()
     {
-        return $this->belongsTo(ProgramStudi::class, 'prodi_id');
+        return $this->belongsTo(ProgramStudi::class, 'program_studi_id');
     }
 }
