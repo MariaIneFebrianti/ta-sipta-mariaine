@@ -180,7 +180,7 @@
                                     <div class="mt-4 flex justify-center gap-4">
                                         <button onclick="document.getElementById('popup').style.display='none'"
                                             class="px-4 py-2 bg-gray-400 text-white rounded-lg">Kembali</button>
-                                        <a href="{{ route('logbook_bimbingan.index') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                                        <a href="{{ route('logbook_bimbingan.index_mahasiswa') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg">
                                             Lihat Logbook Bimbingan
                                         </a>
                                     </div>

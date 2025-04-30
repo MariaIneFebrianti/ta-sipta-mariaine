@@ -38,4 +38,9 @@ class Mahasiswa extends Model
     {
         return $this->hasOne(PengajuanPembimbing::class, 'mahasiswa_id');
     }
+
+    public function logbooks()
+    {
+        return $this->hasMany(LogbookBimbingan::class, 'pendaftaran_bimbingan_id');
+    }
 }

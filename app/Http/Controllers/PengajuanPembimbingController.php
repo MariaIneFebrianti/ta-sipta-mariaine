@@ -20,6 +20,7 @@ class PengajuanPembimbingController extends Controller
                 ->paginate(5);
         } elseif ($userRole === 'Dosen') {
             // Ambil ID dosen dari user yang login
+            // $dosenId = Auth::user()->dosen->id;
             $dosenId = Auth::user()->dosen->id;
 
             // Query hanya menampilkan pengajuan di mana dosen login sebagai pembimbing utama atau pendamping

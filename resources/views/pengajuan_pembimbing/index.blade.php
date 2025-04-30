@@ -198,26 +198,26 @@
                     @endforeach
                 </tbody> --}}
                 @foreach($pengajuanPembimbing as $pembimbing)
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700">Tanggal Pengajuan</label>
-                        <input type="text" value="{{ $pembimbing->created_at->format('d-m-Y') }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-600 cursor-not-allowed" disabled>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Tanggal Pengajuan</label>
+                            <input type="text" value="{{ $pembimbing->created_at->format('d-m-Y') }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-600 cursor-not-allowed" disabled>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Nama Mahasiswa</label>
+                            <input type="text" value="{{ $pembimbing->mahasiswa->nama_mahasiswa }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-600 cursor-not-allowed" disabled>
+                        </div>
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700">Nama Mahasiswa</label>
-                        <input type="text" value="{{ $pembimbing->mahasiswa->nama_mahasiswa }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-600 cursor-not-allowed" disabled>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Dosen Pembimbing Utama</label>
+                            <input type="text" value="{{ $pembimbing->pembimbingUtama ? $pembimbing->pembimbingUtama->nama_dosen : 'Tidak ada' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-600 cursor-not-allowed" disabled>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Dosen Pembimbing Pendamping</label>
+                            <input type="text" value="{{ $pembimbing->pembimbingPendamping ? $pembimbing->pembimbingPendamping->nama_dosen : 'Tidak ada' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-600 cursor-not-allowed" disabled>
+                        </div>
                     </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700">Dosen Pembimbing Utama</label>
-                        <input type="text" value="{{ $pembimbing->pembimbingUtama ? $pembimbing->pembimbingUtama->nama_dosen : 'Tidak ada' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-600 cursor-not-allowed" disabled>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700">Dosen Pembimbing Pendamping</label>
-                        <input type="text" value="{{ $pembimbing->pembimbingPendamping ? $pembimbing->pembimbingPendamping->nama_dosen : 'Tidak ada' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-600 cursor-not-allowed" disabled>
-                    </div>
-                </div>
                 @endforeach
             </table>
 
@@ -245,13 +245,24 @@
                             <td class="border border-gray-300 px-4 py-2">{{ $pembimbing->mahasiswa->nama_mahasiswa }}</td>
                             <td class="border border-gray-300 px-4 py-2">{{ $pembimbing->pembimbingUtama ? $pembimbing->pembimbingUtama->nama_dosen : 'Tidak ada' }}</td>
                             <td class="border border-gray-300 px-4 py-2">{{ $pembimbing->pembimbingPendamping ? $pembimbing->pembimbingPendamping->nama_dosen : 'Tidak ada' }}</td>
-                            <td class="border border-gray-300 px-4 py-2 text-center">
-                                <a href="{{ route('logbook_bimbingan.show', ['dosenId' => Auth::user()->dosen->id, 'mahasiswaId' => $pembimbing->mahasiswa->id]) }}">
-                                    <button class="bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg px-4 py-2 transition duration-200">
-                                        Lihat Logbook
-                                    </button>
-                                </a>
-                            </td>
+                            @if($userRole === 'Dosen')
+                                <td class="border border-gray-300 px-4 py-2 text-center">
+                                    <a href="{{ route('logbook_bimbingan.show_mahasiswa', ['dosenId' => Auth::user()->dosen->id, 'mahasiswaId' => $pembimbing->mahasiswa->id]) }}">
+                                        <button class="bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg px-4 py-2 transition duration-200">
+                                            Lihat Logbook
+                                        </button>
+                                    </a>
+                                </td>
+                            @elseif($userRole === 'Koordinator Program Studi')
+                                <td class="border border-gray-300 px-4 py-2 text-center">
+                                    <a href="{{ route('logbook_bimbingan.show_kaprodi', ['mahasiswaId' => $pembimbing->mahasiswa->id]) }}">
+                                        <button class="bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg px-4 py-2 transition duration-200">
+                                            Lihat Logbook
+                                        </button>
+                                    </a>
+                                </td>
+                            @endif
+
                             @if($userRole === 'Koordinator Program Studi')
                                 <td class="border border-gray-300 px-4 py-2">
                                     <div class="flex justify-center space-x-2">

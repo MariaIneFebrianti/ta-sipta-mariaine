@@ -51,7 +51,7 @@
         </table>
 
         <div class="flex justify-between mt-4">
-            <a href="{{ route('logbook_bimbingan.index') }}" class="mr-2">
+            <a href="{{ route('logbook_bimbingan.index_mahasiswa') }}" class="mr-2">
                 <button class="text-white bg-gray-600 hover:bg-gray-800 font-medium rounded-lg text-sm px-5 py-2.5">
                     Kembali
                 </button>
@@ -129,6 +129,56 @@
                 </table>
             </div>
         @endif
+
+
+        @if($userRole === 'Koordinator Program Studi')
+                <!-- Tabel untuk menampilkan logbook -->
+                <div class="mt-6">
+                    <h2 class="text-lg font-semibold">Daftar Logbook</h2>
+                    <table class="min-w-full mt-2 border border-gray-300">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border px-4 py-2">Tanggal</th>
+                                <th class="border px-4 py-2">Permasalahan</th>
+                                <th class="border px-4 py-2">File</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($logbooks as $logbook)
+                                <tr>
+                                    <td class="border px-4 py-2">
+                                        {{ \Carbon\Carbon::parse($logbook->pendaftaranBimbingan->jadwalBimbingan->tanggal)->format('d F Y') }}
+                                    <td class="border px-4 py-2">{{ $logbook->permasalahan }}</td>
+                                    <td class="border px-4 py-2">
+                                        @if($logbook->file_bimbingan)
+                                        <a href="#"
+                                            onclick="openModal('{{ asset('storage/' . $logbook->file_bimbingan) }}', '{{ pathinfo($logbook->file_bimbingan, PATHINFO_EXTENSION) }}')"
+                                            class="text-blue-600 hover:underline">
+                                            Lihat File
+                                        </a>
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                        <!-- Modal -->
+                        <div id="fileModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 items-center justify-center">
+                            <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-3/4 lg:w-1/2 h-[90%] flex flex-col">
+                                <div class="flex justify-between items-center p-4 border-b">
+                                    <h3 class="text-lg font-semibold">Preview File</h3>
+                                    <button onclick="closeModal()" class="text-red-500 hover:text-red-700">&times;</button>
+                                </div>
+                                <div class="flex-grow overflow-hidden">
+                                    <iframe id="fileFrame" class="w-full h-full" frameborder="0"></iframe>
+                                </div>
+                            </div>
+                        </div>
+                    </table>
+                </div>
+        @endif
+
     </div>
 </div>
 

@@ -188,7 +188,7 @@
                                 <td class="border border-gray-300 px-4 py-2">{{ $dsn->tempat_lahir }}</td>
                                 <td class="border border-gray-300 px-4 py-2">{{ $dsn->tanggal_lahir }}</td>
                                 <td class="border border-gray-300 px-4 py-2">{{ $dsn->jenis_kelamin }}</td>
-                                <td class="border border-gray-300 px-4 py-2">{{ $dsn->programStudi->nama_prodi }}</td>
+                                {{-- <td class="border border-gray-300 px-4 py-2">{{ $dsn->programStudi->nama_prodi }}</td> --}}
                                 <td class="border border-gray-300 px-4 py-2">
                                     <div class="flex justify-center space-x-2">
                                         <button data-modal-target="editModal-{{ $dsn->id }}" data-modal-toggle="editModal-{{ $dsn->id }}" class="flex items-center justify-center w-full sm:w-20 md:w-20 px-3 py-1 bg-yellow-400 text-white rounded-lg hover:bg-yellow-600 transition duration-200 mb-2 sm:mb-0">Edit</button>

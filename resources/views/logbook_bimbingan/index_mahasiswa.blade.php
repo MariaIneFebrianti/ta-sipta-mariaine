@@ -35,33 +35,41 @@
     <div class="mt-3 p-5 rounded-md bg-gray-50 border border-gray-200">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4"> <!-- Responsive grid layout -->
 
-            <!-- Card untuk Pembimbing Utama -->
-            @if($pengajuan->pembimbingUtama)
-            <div class="bg-blue-500 text-white text-center p-4 rounded-lg shadow transition-transform transform hover:scale-105 cursor-pointer"
-                onclick="window.location='{{ route('logbook_bimbingan.show', [$pengajuan->pembimbingUtama->id, $pengajuan->mahasiswa_id]) }}'">
-                <h2 class="text-lg font-bold">Pembimbing Utama</h2>
-                <p>Nama Dosen: {{ $pengajuan->pembimbingUtama->nama_dosen }}</p>
-            </div>
-            @else
-            <div class="bg-gray-300 text-gray-500 text-center p-4 rounded-lg shadow">
-                <h2 class="text-lg font-bold">Pembimbing Utama</h2>
-                <p>Belum ada dosen</p>
-            </div>
+            @if($userRole === 'Mahasiswa')
+                <!-- Card untuk Pembimbing Utama -->
+                @if($pengajuan->pembimbingUtama)
+                <div class="bg-blue-500 text-white text-center p-4 rounded-lg shadow transition-transform transform hover:scale-105 cursor-pointer"
+                    onclick="window.location='{{ route('logbook_bimbingan.show_mahasiswa', [$pengajuan->pembimbingUtama->id, $pengajuan->mahasiswa_id]) }}'">
+                    <h2 class="text-lg font-bold">Pembimbing Utama</h2>
+                    <p>Nama Dosen: {{ $pengajuan->pembimbingUtama->nama_dosen }}</p>
+                </div>
+                @else
+                <div class="bg-gray-300 text-gray-500 text-center p-4 rounded-lg shadow">
+                    <h2 class="text-lg font-bold">Pembimbing Utama</h2>
+                    <p>Belum ada dosen</p>
+                </div>
+                @endif
+
+                <!-- Card untuk Pembimbing Pendamping -->
+                @if($pengajuan->pembimbingPendamping)
+                <div class="bg-gray-500 text-white text-center p-4 rounded-lg shadow transition-transform transform hover:scale-105 cursor-pointer"
+                    onclick="window.location='{{ route('logbook_bimbingan.show_mahasiswa', [$pengajuan->pembimbingPendamping->id, $pengajuan->mahasiswa_id]) }}'">
+                    <h2 class="text-lg font-bold">Pembimbing Pendamping</h2>
+                    <p>Nama Dosen: {{ $pengajuan->pembimbingPendamping->nama_dosen }}</p>
+                </div>
+                @else
+                <div class="bg-gray-300 text-gray-500 text-center p-4 rounded-lg shadow">
+                    <h2 class="text-lg font-bold">Pembimbing Pendamping</h2>
+                    <p>Belum ada dosen</p>
+                </div>
+                @endif
             @endif
 
-            <!-- Card untuk Pembimbing Pendamping -->
-            @if($pengajuan->pembimbingPendamping)
-            <div class="bg-gray-500 text-white text-center p-4 rounded-lg shadow transition-transform transform hover:scale-105 cursor-pointer"
-                onclick="window.location='{{ route('logbook_bimbingan.show', [$pengajuan->pembimbingPendamping->id, $pengajuan->mahasiswa_id]) }}'">
-                <h2 class="text-lg font-bold">Pembimbing Pendamping</h2>
-                <p>Nama Dosen: {{ $pengajuan->pembimbingPendamping->nama_dosen }}</p>
-            </div>
-            @else
-            <div class="bg-gray-300 text-gray-500 text-center p-4 rounded-lg shadow">
-                <h2 class="text-lg font-bold">Pembimbing Pendamping</h2>
-                <p>Belum ada dosen</p>
-            </div>
+            @if($userRole === 'Koordinator Program Studi')
+            <!-- Tabel untuk menampilkan logbook -->
+
             @endif
+
 
         </div>
     </div>

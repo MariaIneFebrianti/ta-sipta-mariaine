@@ -16,16 +16,25 @@ use Illuminate\Support\Facades\Auth;
 class LogbookBimbinganController extends Controller
 {
 
-    public function index()
+    public function indexMahasiswa()
     {
         $userRole = Auth::user()->role;
         $mahasiswa = Auth::user();
         $pengajuan = PengajuanPembimbing::where('mahasiswa_id', $mahasiswa->id)->first();
-
-        return view('logbook_bimbingan.index', compact('pengajuan', 'mahasiswa', 'userRole'));
+        $logbooks = LogbookBimbingan::all();
+        return view('logbook_bimbingan.index_mahasiswa', compact('pengajuan', 'mahasiswa', 'userRole', 'logbooks'));
     }
 
-    public function show($dosenId, $mahasiswaId)
+    public function indexKaprodi()
+    {
+        $userRole = Auth::user()->role;
+        $mahasiswa = Mahasiswa::all();
+        return view('logbook_bimbingan.index_kaprodi', compact('userRole', 'mahasiswa'));
+    }
+
+
+
+    public function showMahasiswa($dosenId, $mahasiswaId)
     {
         $userRole = Auth::user()->role;
 
@@ -63,10 +72,15 @@ class LogbookBimbinganController extends Controller
                 });
         })->get();
 
+        if ($userRole == 'Koordinator Program Studi') {
+            // Jika role adalah Koordinator Program Studi, ambil semua logbook
+            $logbooks = LogbookBimbingan::with('pendaftaranBimbingan.mahasiswa')->get();
+        }
+
         // Ambil data dosen berdasarkan dosenId
         $dosen = Dosen::find($dosenId);
 
-        return view('logbook_bimbingan.show', compact(
+        return view('logbook_bimbingan.show_mahasiswa', compact(
             'pengajuan',
             'mahasiswa',
             'availablePendaftaranBimbingan',
@@ -76,6 +90,22 @@ class LogbookBimbinganController extends Controller
         ));
     }
 
+    public function showKaprodi($mahasiswaId)
+    {
+        $userRole = Auth::user()->role;
+
+        // Ambil logbook untuk mahasiswa yang dipilih, termasuk relasi dosen
+        $logbooks = LogbookBimbingan::with(['pendaftaranBimbingan.jadwalBimbingan.dosen'])
+            ->whereHas('pendaftaranBimbingan', function ($query) use ($mahasiswaId) {
+                $query->where('mahasiswa_id', $mahasiswaId);
+            })
+            ->get();
+
+        // Ambil data mahasiswa untuk ditampilkan
+        $mahasiswa = Mahasiswa::find($mahasiswaId);
+
+        return view('logbook_bimbingan.show_kaprodi', compact('userRole', 'logbooks', 'mahasiswa'));
+    }
 
     public function store(Request $request)
     {
