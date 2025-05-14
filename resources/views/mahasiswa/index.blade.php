@@ -44,7 +44,7 @@
     </div>
     <div class="mt-3 p-5 rounded-md bg-gray-50 border border-gray-200">
         <!-- Modal toggle -->
-        <div class="flex justify-between mb-4 flex-wrap">
+        {{-- <div class="flex justify-between mb-4 flex-wrap">
             <button data-modal-target="crud-modal" data-modal-toggle="crud-modal" class="focus:outline-none text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-4">
                 <svg class="w-7 h-7 inline-block" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                     <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
@@ -52,23 +52,6 @@
                 Tambah Mahasiswa
             </button>
             <div class="flex justify-end mb-4 flex-grow ">
-                {{-- <form action="{{ route('mahasiswa.search') }}" method="GET" class="max-w-md  w-full" id="search-form">
-                    <label for="default-search" class="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">Search</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
-                            </svg>
-                        </div>
-                        <input type="search" id="search-input" name="search"
-                            class="block w-full p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="Cari data mahasiswa disini"
-                            required
-                            value="{{ request('search') }}" style="min-width: 400px;"
-                            oninput="document.querySelector('#search-form').submit();" />
-                        <button type="submit" class="text-white absolute end-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Search</button>
-                    </div>
-                </form> --}}
                 <form action="{{ route('mahasiswa.search') }}" method="GET" class="max-w-md  w-full" id="search-form">
                     <label for="default-search" class="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">Search</label>
                     <div class="relative">
@@ -86,8 +69,178 @@
                         <button type="submit" class="text-white absolute end-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Search</button>
                     </div>
                 </form>
+                <!-- Form Dropdown Search -->
+                <form action="{{ route('mahasiswa.dropdown-search') }}" method="GET" class="max-w-md w-full" id="searchForm">
+                    <div class="mb-4">
+                        <label for="program_studi" class="block text-sm font-medium text-gray-900 dark:text-white">Program Studi</label>
+                        <div class="relative">
+                            <select name="program_studi" id="program_studi"
+                                class="block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                onchange="document.getElementById('searchForm').submit();">
+                                <option value="">Semua Program Studi</option>
+                                @foreach($programStudi as $prodi)
+                                    <option value="{{ $prodi->id }}" {{ request()->get('program_studi') == $prodi->id ? 'selected' : '' }}>
+                                        {{ $prodi->nama_prodi }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="tahun_ajaran" class="block text-sm font-medium text-gray-900 dark:text-white">Tahun Ajaran</label>
+                        <div class="relative">
+                            <select name="tahun_ajaran" id="tahun_ajaran"
+                                class="block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                onchange="document.getElementById('searchForm').submit();">
+                                <option value="">Semua Tahun Ajaran</option>
+                                @foreach($tahunAjaran as $tahun)
+                                    <option value="{{ $tahun->id }}" {{ request()->get('tahun_ajaran') == $tahun->id ? 'selected' : '' }}>
+                                        {{ $tahun->tahun_ajaran }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="jenis_kelamin" class="block text-sm font-medium text-gray-900 dark:text-white">Jenis Kelamin</label>
+                        <div class="relative">
+                            <select name="jenis_kelamin" id="jenis_kelamin"
+                                class="block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                onchange="document.getElementById('searchForm').submit();">
+                                <option value="">Semua Jenis Kelamin</option>
+                                <option value="Laki-laki" {{ request()->get('jenis_kelamin') == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                                <option value="Perempuan" {{ request()->get('jenis_kelamin') == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-right">
+                        <button type="submit"
+                            class="inline-flex items-center justify-center px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-800">
+                            Cari
+                        </button>
+                    </div>
+                </form>
+
             </div>
+        </div> --}}
+
+
+        <div class="flex justify-between items-center mb-4 flex-wrap">
+            <!-- Tombol Tambah Mahasiswa -->
+            <button data-modal-target="crud-modal" data-modal-toggle="crud-modal"
+                class="focus:outline-none text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-4">
+                <svg class="w-7 h-7 inline-block" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
+                </svg>
+                Tambah Mahasiswa
+            </button>
+
+            {{-- <form action="{{ route('mahasiswa.import') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div>
+                    <label for="file">Pilih file Excel (CSV/XLSX)</label>
+                    <input type="file" name="file" required>
+                </div>
+                <button type="submit">Import</button>
+            </form> --}}
+            @if (session('success'))
+                <div class="bg-green-100 text-green-800 p-2 rounded mb-4">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="bg-red-100 text-red-800 p-2 rounded mb-4">
+                    {{ session('error') }}
+                </div>
+            @endif
+
+            <form action="{{ route('mahasiswa.import') }}" method="POST" enctype="multipart/form-data" id="importForm">
+                @csrf
+                <input type="file" name="file" id="fileInput" accept=".csv, .xlsx, .xls" style="display: none;" onchange="document.getElementById('importForm').submit();">
+                <button type="button" onclick="document.getElementById('fileInput').click();" class="flex items-center gap-2 focus:outline-none text-white bg-blue-500 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-6 py-3 me-2 mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="white" viewBox="0 0 48 48" id="import">
+                        <path d="m18 6-8 7.98h6V28h4V13.98h6L18 6zm14 28.02V20h-4v14.02h-6L30 42l8-7.98h-6z"></path>
+                        <path fill="none" d="M0 0h48v48H0z"></path>
+                    </svg>
+                    Import Mahasiswa
+                </button>
+            </form>
+
         </div>
+
+        <div class="flex justify-between items-center mb-4 flex-wrap">
+            <!-- Dropdown Search-->
+            <form action="{{ route('mahasiswa.dropdown-search') }}" method="GET" class="max-w-md w-full" id="searchForm">
+                <div class="flex flex-col md:flex-row gap-4 w-full mb-4">
+                    <div class="flex-1 min-w-[200px]">
+                        <label for="program_studi" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Program Studi</label>
+                        <select name="program_studi" id="program_studi"
+                            class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+                            onchange="document.getElementById('searchForm').submit();">
+                            <option value="">Semua Program Studi</option>
+                            @foreach($programStudi as $prodi)
+                                <option value="{{ $prodi->id }}" {{ request()->get('program_studi') == $prodi->id ? 'selected' : '' }}>
+                                    {{ $prodi->nama_prodi }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Tahun Ajaran -->
+                    <div class="flex-1 min-w-[200px]">
+                        <label for="tahun_ajaran" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Tahun Ajaran</label>
+                        <select name="tahun_ajaran" id="tahun_ajaran"
+                            class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+                            onchange="document.getElementById('searchForm').submit();">
+                            <option value="">Semua Tahun Ajaran</option>
+                            @foreach($tahunAjaran as $tahun)
+                                <option value="{{ $tahun->id }}" {{ request()->get('tahun_ajaran') == $tahun->id ? 'selected' : '' }}>
+                                    {{ $tahun->tahun_ajaran }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Jenis Kelamin -->
+                    <div class="flex-1 min-w-[200px]">
+                        <label for="jenis_kelamin" class="block text-sm font-medium text-gray-900 dark:text-white mb-2 mr-2">Jenis Kelamin</label>
+                        <select name="jenis_kelamin" id="jenis_kelamin"
+                            class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+                            onchange="document.getElementById('searchForm').submit();">
+                            <option value="">Semua Jenis Kelamin</option>
+                            <option value="Laki-laki" {{ request()->get('jenis_kelamin') == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                            <option value="Perempuan" {{ request()->get('jenis_kelamin') == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Search -->
+            <form action="{{ route('mahasiswa.search') }}" method="GET" class="w-full sm:max-w-xs mt-3" id="search-form">
+                {{-- <label for="default-search" class="mt-2 mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">Search</label> --}}
+                <div class="relative">
+                    <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                        <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                        </svg>
+                    </div>
+                    <input type="search" id="search-input" name="search"
+                        class="block w-full p-2.5 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Cari data mahasiswa disini"
+                        required value="{{ request('search') }}"
+                        oninput="document.querySelector('#search-form').submit();" />
+                    {{-- <button type="submit"
+                        class="text-white absolute end-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2">
+                        Search
+                    </button> --}}
+                </div>
+            </form>
+        </div>
+
 
         <!-- Main modal -->
         <div id="crud-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-full max-h-full bg-black bg-opacity-45">
@@ -147,8 +300,8 @@
                             </div>
 
                             <div class="grid-cols-2">
-                                <label for="prodi_id" class="block mb-2 text-sm font-medium text-gray-900">Pilih Program Studi</label>
-                                <select id="prodi_id" name="prodi_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                <label for="program_studi_id" class="block mb-2 text-sm font-medium text-gray-900">Pilih Program Studi</label>
+                                <select id="program_studi_id" name="program_studi_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                                     <option selected disabled>Pilih Program Studi</option>
                                     @foreach ($programStudi as $prodi)
                                         <option value="{{ $prodi->id }}">{{ $prodi->nama_prodi }}</option>
@@ -199,10 +352,11 @@
                                 <th class="w-7/12 border border-gray-300 px-4 py-2">NIM</th>
                                 <th class="w-1/12 border border-gray-300 px-4 py-2">Tempat Lahir</th>
                                 <th class="w-0.5/12 border border-gray-300 px-4 py-2">Tanggal Lahir</th>
-                                <th class="w-3/12 border border-gray-300 px-4 py-2">Jenis Kelamin</th>
+                                <th class="w-2/12 border border-gray-300 px-4 py-2">Jenis Kelamin</th>
                                 <th class="w-7/12 border border-gray-300 px-4 py-2">Program Studi</th>
                                 <th class="w-1/12 border border-gray-300 px-4 py-2">Tahun Ajaran</th>
                                 <th class="w-1/12 border border-gray-300 px-4 py-2">Aksi</th>
+                                <th class="w-1/12 border border-gray-300 px-4 py-2">Logbook Bimbingan</th>
                             </tr>
                     </thead>
                     <tbody>
@@ -274,10 +428,10 @@
 
                                                             <div class="grid-cols-2">
                                                                 <label for="program_studi" class="block mb-2 text-sm font-medium text-gray-900">Program Studi</label>
-                                                                <select id="program_studi" name="prodi_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                                                <select id="program_studi" name="program_studi_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                                                                     <option selected disabled>Pilih Program Studi</option>
                                                                     @foreach ($programStudi as $prodi)
-                                                                    <option value="{{ $prodi->id }}" {{ $prodi->id == $mhs->prodi_id ? 'selected' : '' }}>{{ $prodi->nama_prodi }}</option>
+                                                                    <option value="{{ $prodi->id }}" {{ $prodi->id == $mhs->program_studi_id ? 'selected' : '' }}>{{ $prodi->nama_prodi }}</option>
                                                                     @endforeach
                                                                 </select>
                                                             </div>
@@ -309,7 +463,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <form id="delete-form-{{ $mhs->id }}" action="{{ route('mahasiswa.destroy', $mhs->id) }}" method="POST" class="inline">
+                                        {{-- <form id="delete-form-{{ $mhs->id }}" action="{{ route('mahasiswa.destroy', $mhs->id) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
                                             <button data-modal-target="popup-modal" data-modal-toggle="popup-modal" class="flex w-full sm:w-20 md:w-20 px-3 py-1 text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center" type="button" onclick="openDeleteModal('{{ $mhs->id }}')">
@@ -337,8 +491,65 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                        </form> --}}
+                                        <form id="delete-form-{{ $mhs->id }}" action="{{ route('mahasiswa.destroy', $mhs->id) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button data-modal-target="popup-modal-{{ $mhs->id }}" data-modal-toggle="popup-modal-{{ $mhs->id }}"
+                                                class="flex w-full sm:w-20 md:w-20 px-3 py-1 text-white bg-red-600 hover:bg-red-800
+                                                focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm
+                                                px-5 py-2.5 text-center" type="button">
+                                                Hapus
+                                            </button>
+
+                                            <!-- Modal -->
+                                            <div id="popup-modal-{{ $mhs->id }}" tabindex="-1"
+                                                class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50
+                                                justify-center items-center w-full md:inset-0 h-full max-h-full bg-black bg-opacity-45">
+                                                <div class="relative p-4 w-full max-w-md max-h-full">
+                                                    <div class="relative bg-white rounded-lg shadow-sm">
+                                                        <button type="button" class="absolute top-3 end-2.5 text-gray-400 bg-transparent
+                                                            hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto
+                                                            inline-flex justify-center items-center" data-modal-hide="popup-modal-{{ $mhs->id }}">
+                                                            <svg class="w-3 h-3" aria-hidden="true" fill="none" viewBox="0 0 14 14">
+                                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                                            </svg>
+                                                            <span class="sr-only">Close modal</span>
+                                                        </button>
+                                                        <div class="p-4 md:p-5 text-center">
+                                                            <svg class="mx-auto mb-4 text-gray-400 w-12 h-12" aria-hidden="true"
+                                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                                            </svg>
+                                                            <h3 class="mb-5 text-lg font-normal text-gray-500">
+                                                                Apakah anda yakin ingin menghapus data mahasiswa ini?
+                                                            </h3>
+                                                            <button type="submit" class="w-full sm:w-20 md:w-20 text-white bg-red-600
+                                                                hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300
+                                                                font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 justify-center">
+                                                                Ya
+                                                            </button>
+                                                            <button data-modal-hide="popup-modal-{{ $mhs->id }}" type="button"
+                                                                class="w-full sm:w-20 md:w-20 py-2.5 px-5 ms-3 text-sm font-medium text-gray-900
+                                                                focus:outline-none bg-grey-200 rounded-lg border border-gray-200
+                                                                hover:bg-gray-500 hover:text-white focus:z-10 focus:ring-4 focus:ring-gray-100 justify-center">
+                                                                Tidak
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </form>
                                     </div>
+                                </td>
+                                <td class="border border-gray-300 px-4 py-2 text-center">
+                                    <a href="{{ route('logbook_bimbingan.show_kaprodi', $mhs->id) }}">
+                                        <button class="bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg px-4 py-2 transition duration-200">
+                                            Lihat Logbook
+                                        </button>
+                                    </a>
                                 </td>
                             </tr>
                         @endforeach

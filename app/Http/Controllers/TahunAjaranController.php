@@ -40,6 +40,7 @@ class TahunAjaranController extends Controller
 
     public function search(Request $request)
     {
+        $userRole = Auth::user()->role;
         $search = $request->input('search');
         $tahunAjaran = TahunAjaran::when($search, function ($query) use ($search) {
             return $query->where(function ($query) use ($search) {
@@ -47,7 +48,7 @@ class TahunAjaranController extends Controller
             });
         })->paginate(5);
 
-        return view('tahun_ajaran.index', compact('tahunAjaran'));
+        return view('tahun_ajaran.index', compact('tahunAjaran', 'userRole'));
     }
 
     public function destroy(string $id)

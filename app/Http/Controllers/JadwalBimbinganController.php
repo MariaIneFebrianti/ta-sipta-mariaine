@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
+use App\Models\Dosen;
 use Illuminate\Http\Request;
 use App\Models\JadwalBimbingan;
 use App\Models\LogbookBimbingan;
-use App\Models\PendaftaranBimbingan;
+use Symfony\Component\Clock\now;
 use App\Models\PengajuanPembimbing;
+use App\Http\Controllers\Controller;
+use App\Models\PendaftaranBimbingan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -17,6 +20,7 @@ class JadwalBimbinganController extends Controller
     {
         $userRole = Auth::user()->role;
         $today = Carbon::today();
+        $dosen = Dosen::all();
 
         // Update status berdasarkan tanggal
         JadwalBimbingan::where('tanggal', '<', $today)
@@ -65,10 +69,8 @@ class JadwalBimbinganController extends Controller
             $jadwalBimbingan = JadwalBimbingan::with('dosen')->paginate(10);
         }
 
-        return view('jadwal_bimbingan.index', compact('jadwalBimbingan', 'userRole'));
+        return view('jadwal_bimbingan.index', compact('jadwalBimbingan', 'userRole', 'dosen'));
     }
-
-
     public function store(Request $request)
     {
         // Validasi input
@@ -156,5 +158,40 @@ class JadwalBimbinganController extends Controller
             'tanggal' => $jadwalBimbingan->tanggal,
             'waktu' => $jadwalBimbingan->waktu
         ]);
+    }
+
+    public function dropdownSearch(Request $request)
+    {
+        $userRole = Auth::user()->role;
+
+        // Ambil semua data untuk dropdown
+        $dosen = Dosen::all();
+        $statusList = ['Selesai', 'Sedang Berlangsung', 'Terjadwal'];
+
+        // Ambil nilai dari dropdown
+        $namaDosen = $request->input('nama_dosen');
+        $tanggal = $request->input('tanggal');
+        $waktu = $request->input('waktu');
+        $status = $request->input('status');
+
+        // Query jadwal bimbingan dengan filter yang dipilih
+        $jadwalBimbingan = JadwalBimbingan::when($namaDosen, function ($query) use ($namaDosen) {
+            return $query->whereHas('dosen', function ($q) use ($namaDosen) {
+                $q->where('nama_dosen', 'LIKE', "%$namaDosen%");
+            });
+        })
+            ->when($tanggal, function ($query) use ($tanggal) {
+                return $query->whereDate('tanggal', $tanggal);
+            })
+            ->when($waktu, function ($query) use ($waktu) {
+                return $query->where('waktu', $waktu);
+            })
+            ->when($status, function ($query) use ($status) {
+                return $query->where('status', $status);
+            })
+            ->with('dosen')
+            ->paginate(10);
+
+        return view('jadwal_bimbingan.index', compact('jadwalBimbingan', 'dosen', 'statusList', 'userRole'));
     }
 }

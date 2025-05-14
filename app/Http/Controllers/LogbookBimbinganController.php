@@ -8,6 +8,8 @@ use App\Models\LogbookBimbingan;
 use App\Models\Mahasiswa;
 use App\Models\PendaftaranBimbingan;
 use App\Models\PengajuanPembimbing;
+use App\Models\ProgramStudi;
+use App\Models\TahunAjaran;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,7 +31,9 @@ class LogbookBimbinganController extends Controller
     {
         $userRole = Auth::user()->role;
         $mahasiswa = Mahasiswa::all();
-        return view('logbook_bimbingan.index_kaprodi', compact('userRole', 'mahasiswa'));
+        $programStudi = ProgramStudi::all();
+        $tahunAjaran = TahunAjaran::all();
+        return view('logbook_bimbingan.index_kaprodi', compact('userRole', 'mahasiswa', 'programStudi', 'tahunAjaran'));
     }
 
 

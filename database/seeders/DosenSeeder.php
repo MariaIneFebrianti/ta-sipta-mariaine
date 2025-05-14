@@ -85,6 +85,16 @@ class DosenSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+            [
+                'user_id' => 13,
+                'nama_dosen' => 'Fajar Mahardika',
+                'nip' => 1008,
+                'tempat_lahir' => 'Cilacap',
+                'tanggal_lahir' => '1989-07-07',
+                'jenis_kelamin' => 'Laki-laki',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ]);
     }
 }

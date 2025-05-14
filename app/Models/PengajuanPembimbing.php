@@ -14,6 +14,7 @@ class PengajuanPembimbing extends Model
         'mahasiswa_id',
         'pembimbing_utama_id',
         'pembimbing_pendamping_id',
+        'validasi',
     ];
 
     public function pembimbingUtama()

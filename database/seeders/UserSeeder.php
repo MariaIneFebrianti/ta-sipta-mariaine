@@ -123,6 +123,15 @@ class UserSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+            [
+                'name' => 'Fajar Mahardika',
+                'email' => 'fajar@gmail.com',
+                'email_verified_at' => now(),
+                'password' => Hash::make('11111111'),
+                'role' => 'Dosen',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ]);
     }
 }

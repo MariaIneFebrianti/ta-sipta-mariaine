@@ -2,28 +2,44 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Mahasiswa;
-use App\Models\ProgramStudi;
-use App\Models\RuanganSidang;
-use App\Models\TahunAjaran;
 use App\Models\User;
+use App\Models\Mahasiswa;
+use App\Models\TahunAjaran;
+use App\Models\ProgramStudi;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use App\Models\RuanganSidang;
+use App\Imports\MahasiswaImport;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Maatwebsite\Excel\Facades\Excel;
 
 
 class MahasiswaController extends Controller
 {
-    public function index()
+    // public function index()
+    // {
+    //     $userRole = Auth::user()->role;
+    //     // Mengambil semua data mahasiswa dengan relasi user
+    //     $mahasiswa = Mahasiswa::with('user')->paginate(5);
+    //     $programStudi = ProgramStudi::all();
+    //     $tahunAjaran = TahunAjaran::all();
+
+    //     return view('mahasiswa.index', compact('mahasiswa', 'programStudi', 'tahunAjaran', 'userRole'));
+    // }
+
+
+    public function index(Request $request)
     {
         $userRole = Auth::user()->role;
-        // Mengambil semua data mahasiswa dengan relasi user
-        $mahasiswa = Mahasiswa::with('user')->paginate(5);
+        // $mahasiswa = Mahasiswa::with('user')->paginate(5);
+        $mahasiswa = Mahasiswa::with('user')->orderBy('mahasiswa.nama_mahasiswa', 'asc')->paginate(5);
         $programStudi = ProgramStudi::all();
         $tahunAjaran = TahunAjaran::all();
 
-        return view('mahasiswa.index', compact('mahasiswa', 'programStudi', 'tahunAjaran', 'userRole'));
+        return view('mahasiswa.index', compact('programStudi', 'tahunAjaran', 'mahasiswa', 'userRole'));
     }
+
+
     public function store(Request $request)
     {
         // Validasi input
@@ -34,7 +50,7 @@ class MahasiswaController extends Controller
             'tempat_lahir' => 'required|string|max:255',
             'tanggal_lahir' => 'required|date',
             'jenis_kelamin' => 'required|string|max:10',
-            'prodi_id' => 'required|string|max:255',
+            'program_studi_id' => 'required|string|max:255',
             'tahun_ajaran_id' => 'required|string|max:255',
 
         ]);
@@ -63,7 +79,7 @@ class MahasiswaController extends Controller
             'tempat_lahir' => $request->tempat_lahir,
             'tanggal_lahir' => $request->tanggal_lahir,
             'jenis_kelamin' => $request->jenis_kelamin,
-            'prodi_id' => $request->prodi_id,
+            'program_studi_id' => $request->program_studi_id,
             'tahun_ajaran_id' => $request->tahun_ajaran_id,
         ]);
 
@@ -83,7 +99,7 @@ class MahasiswaController extends Controller
             'tempat_lahir' => 'required|string|max:255',
             'tanggal_lahir' => 'required|date',
             'jenis_kelamin' => 'required|string|max:10',
-            'prodi_id' => 'required|exists:program_studi,id',
+            'program_studi_id' => 'required|exists:program_studi,id',
             'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id',
         ]);
 
@@ -103,7 +119,7 @@ class MahasiswaController extends Controller
             'tempat_lahir' => $request->tempat_lahir,
             'tanggal_lahir' => $request->tanggal_lahir,
             'jenis_kelamin' => $request->jenis_kelamin,
-            'prodi_id' => $request->prodi_id,
+            'program_studi_id' => $request->program_studi_id,
             'tahun_ajaran_id' => $request->tahun_ajaran_id,
         ]);
 
@@ -112,6 +128,7 @@ class MahasiswaController extends Controller
 
     public function search(Request $request)
     {
+        $userRole = Auth::user()->role;
         $programStudi = ProgramStudi::all();
         $tahunAjaran = TahunAjaran::all();
         $search = $request->input('search'); // Ambil input pencarian
@@ -120,21 +137,41 @@ class MahasiswaController extends Controller
         $mahasiswa = Mahasiswa::when($search, function ($query) use ($search) {
             return $query->where(function ($query) use ($search) {
                 $query->where('nama_mahasiswa', 'like', "%$search%")
-                    ->orWhere('nim', 'like', "%$search%")
-                    ->orWhere('tempat_lahir', 'like', "%$search%")
-                    ->orWhere('jenis_kelamin', 'like', "%$search%")
-                    ->orWhereHas('programStudi', function ($query) use ($search) {
-                        $query->where('nama_prodi', 'like', "%$search%");
-                    })
-                    ->orWhereHas('tahunAjaran', function ($query) use ($search) {
-                        $query->where('tahun_ajaran', 'like', "%$search%");
-                    });
+                    ->orWhere('nim', 'like', "%$search%");
+                // ->orWhere('tempat_lahir', 'like', "%$search%");
             });
+        })->paginate(5);
+
+        return view('mahasiswa.index', compact('mahasiswa', 'programStudi', 'tahunAjaran', 'userRole'));
+    }
+
+    public function dropdownSearch(Request $request)
+    {
+        $userRole = Auth::user()->role;
+        $programStudi = ProgramStudi::all();
+        $tahunAjaran = TahunAjaran::all();
+
+        // Ambil nilai dari dropdown
+        $programStudiId = $request->input('program_studi');
+        $tahunAjaranId = $request->input('tahun_ajaran');
+        $jenisKelamin = $request->input('jenis_kelamin');
+
+        // Query untuk mencari mahasiswa dengan kondisi yang dipilih
+        $mahasiswa = Mahasiswa::when($programStudiId, function ($query) use ($programStudiId) {
+            return $query->where('program_studi_id', $programStudiId);
         })
+            ->when($tahunAjaranId, function ($query) use ($tahunAjaranId) {
+                return $query->where('tahun_ajaran_id', $tahunAjaranId);
+            })
+            ->when($jenisKelamin, function ($query) use ($jenisKelamin) {
+                return $query->where('jenis_kelamin', $jenisKelamin);
+            })
+            ->orderBy('nama_mahasiswa', 'asc')
             ->paginate(5);
 
-        return view('mahasiswa.index', compact('mahasiswa', 'programStudi', 'tahunAjaran'));
+        return view('mahasiswa.index', compact('mahasiswa', 'programStudi', 'tahunAjaran', 'userRole'));
     }
+
 
     public function destroy(string $id)
     {
@@ -145,5 +182,19 @@ class MahasiswaController extends Controller
         $user->delete();
 
         return redirect()->route('mahasiswa.index')->with('success', 'Data mahasiswa berhasil dihapus.');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:csv,xlsx,xls|max:2048',
+        ]);
+
+        try {
+            Excel::import(new MahasiswaImport, $request->file('file'));
+            return redirect()->route('mahasiswa.index')->with('success', 'Data mahasiswa berhasil diimpor.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal mengimpor data mahasiswa: ' . $e->getMessage());
+        }
     }
 }

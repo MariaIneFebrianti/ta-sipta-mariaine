@@ -11,12 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pengajuan_pembimbing', function (Blueprint $table) {
+        Schema::create('jadwal_sidang_tugas_akhir', function (Blueprint $table) {
             $table->id();
             $table->foreignId('mahasiswa_id')->constrained('mahasiswa')->onDelete('cascade');
             $table->foreignId('pembimbing_utama_id')->constrained('dosen')->onDelete('cascade');
             $table->foreignId('pembimbing_pendamping_id')->constrained('dosen')->onDelete('cascade');
-            $table->enum('validasi', ['Menunggu', 'Acc'])->default('Menunggu');
+            $table->foreignId('penguji_utama_id')->constrained('dosen')->onDelete('cascade');
+            $table->foreignId('penguji_pendamping_id')->constrained('dosen')->onDelete('cascade');
+            $table->date('tanggal');
+            $table->time('waktu_mulai');
+            $table->time('waktu_selesai');
+            $table->foreignId('ruangan_sidang_id')->constrained('ruangan_sidang')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -26,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pengajuan_pembimbing');
+        Schema::dropIfExists('jadwal_sidang_tugas_akhir');
     }
 };

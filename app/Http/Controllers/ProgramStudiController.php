@@ -42,6 +42,7 @@ class ProgramStudiController extends Controller
 
     public function search(Request $request)
     {
+        $userRole = Auth::user()->role;
         $search = $request->input('search');
 
         // Mengambil data pengguna berdasarkan pencarian kode prodi atau nama prodi
@@ -53,7 +54,7 @@ class ProgramStudiController extends Controller
         })
             ->paginate(5);
 
-        return view('program_studi.index', compact('programStudi'));
+        return view('program_studi.index', compact('programStudi', 'userRole'));
     }
 
     public function destroy(string $id)

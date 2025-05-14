@@ -44,6 +44,7 @@ class RuanganSidangController extends Controller
 
     public function search(Request $request)
     {
+        $userRole = Auth::user()->role;
         $programStudi = ProgramStudi::all();
         $search = $request->input('search');
 
@@ -57,7 +58,7 @@ class RuanganSidangController extends Controller
             });
         })->paginate(5);
 
-        return view('ruangan_sidang.index', compact('ruanganSidang', 'programStudi'));
+        return view('ruangan_sidang.index', compact('ruanganSidang', 'programStudi', 'userRole'));
     }
 
     public function destroy(string $id)

@@ -44,32 +44,45 @@
     </div>
     <div class="mt-3 p-5 rounded-md bg-gray-50 border border-gray-200">
         <!-- Modal toggle -->
-        <div class="flex justify-between mb-4 flex-wrap">
+        <div class="flex justify-between items-center mb-0 flex-wrap">
             <button data-modal-target="crud-modal" data-modal-toggle="crud-modal" class="focus:outline-none text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-4">
                 <svg class="w-7 h-7 inline-block" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                     <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
                 </svg>
                 Tambah Dosen
             </button>
-            <div class="flex justify-end mb-4 flex-grow">
-                <form action="{{ route('dosen.search') }}" method="GET" class="max-w-md  w-full" id="search-form">
-                    <label for="default-search" class="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">Search</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
-                            </svg>
-                        </div>
-                        <input type="search" id="search-input" name="search"
-                            class="block w-full p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="Cari data dosen disini"
-                            required
-                            value="{{ request('search') }}" style="min-width: 300px"
-                            oninput="document.querySelector('#search-form').submit();" />
-                        <button type="submit" class="text-white absolute end-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Search</button>
+
+            <form action="{{ route('mahasiswa.import') }}" method="POST" enctype="multipart/form-data" id="importForm">
+                @csrf
+                <input type="file" name="file" id="fileInput" accept=".csv, .xlsx, .xls" style="display: none;" onchange="document.getElementById('importForm').submit();">
+                <button type="button" onclick="document.getElementById('fileInput').click();" class="flex items-center gap-2 focus:outline-none text-white bg-blue-500 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-6 py-3 me-2 mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="white" viewBox="0 0 48 48" id="import">
+                        <path d="m18 6-8 7.98h6V28h4V13.98h6L18 6zm14 28.02V20h-4v14.02h-6L30 42l8-7.98h-6z"></path>
+                        <path fill="none" d="M0 0h48v48H0z"></path>
+                    </svg>
+                    Import Dosen
+                </button>
+            </form>
+        </div>
+
+        <div class="flex justify-between items-center mb-4 flex-wrap">
+            <form action="{{ route('dosen.search') }}" method="GET" class="w-full sm:max-w-xs mt-3" id="search-form">
+                <label for="default-search" class="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">Search</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                        <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                        </svg>
                     </div>
-                </form>
-            </div>
+                    <input type="search" id="search-input" name="search"
+                        class="block w-full p-2.5 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Cari data dosen disini"
+                        required
+                        value="{{ request('search') }}" style="min-width: 300px"
+                        oninput="document.querySelector('#search-form').submit();" />
+                    {{-- <button type="submit" class="text-white absolute end-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Search</button> --}}
+                </div>
+            </form>
         </div>
 
         <!-- Main modal -->
@@ -175,7 +188,6 @@
                                 <th class="w-1/12 border border-gray-300 px-4 py-2">Tempat Lahir</th>
                                 <th class="w-0.5/12 border border-gray-300 px-4 py-2">Tanggal Lahir</th>
                                 <th class="w-3/12 border border-gray-300 px-4 py-2">Jenis Kelamin</th>
-                                <th class="w-7/12 border border-gray-300 px-4 py-2">Program Studi</th>
                                 <th class="w-1/12 border border-gray-300 px-4 py-2">Aksi</th>
                             </tr>
                     </thead>
@@ -188,7 +200,6 @@
                                 <td class="border border-gray-300 px-4 py-2">{{ $dsn->tempat_lahir }}</td>
                                 <td class="border border-gray-300 px-4 py-2">{{ $dsn->tanggal_lahir }}</td>
                                 <td class="border border-gray-300 px-4 py-2">{{ $dsn->jenis_kelamin }}</td>
-                                {{-- <td class="border border-gray-300 px-4 py-2">{{ $dsn->programStudi->nama_prodi }}</td> --}}
                                 <td class="border border-gray-300 px-4 py-2">
                                     <div class="flex justify-center space-x-2">
                                         <button data-modal-target="editModal-{{ $dsn->id }}" data-modal-toggle="editModal-{{ $dsn->id }}" class="flex items-center justify-center w-full sm:w-20 md:w-20 px-3 py-1 bg-yellow-400 text-white rounded-lg hover:bg-yellow-600 transition duration-200 mb-2 sm:mb-0">Edit</button>
@@ -275,27 +286,48 @@
                                         <form id="delete-form-{{ $dsn->id }}" action="{{ route('dosen.destroy', $dsn->id) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button data-modal-target="popup-modal" data-modal-toggle="popup-modal" class="flex w-full sm:w-20 md:w-20 px-3 py-1 text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center" type="button" onclick="openDeleteModal('{{ $dsn->id }}')">
+                                            <button data-modal-target="popup-modal-{{ $dsn->id }}" data-modal-toggle="popup-modal-{{ $dsn->id }}"
+                                                class="flex w-full sm:w-20 md:w-20 px-3 py-1 text-white bg-red-600 hover:bg-red-800
+                                                focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm
+                                                px-5 py-2.5 text-center" type="button">
                                                 Hapus
                                             </button>
-                                            <div id="popup-modal" tabindex="-1" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-full max-h-full bg-black bg-opacity-45">
+
+                                            <!-- Modal -->
+                                            <div id="popup-modal-{{ $dsn->id }}" tabindex="-1"
+                                                class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50
+                                                justify-center items-center w-full md:inset-0 h-full max-h-full bg-black bg-opacity-45">
                                                 <div class="relative p-4 w-full max-w-md max-h-full">
                                                     <div class="relative bg-white rounded-lg shadow-sm">
-                                                        <button type="button" class="absolute top-3 end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="popup-modal">
+                                                        <button type="button" class="absolute top-3 end-2.5 text-gray-400 bg-transparent
+                                                            hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto
+                                                            inline-flex justify-center items-center" data-modal-hide="popup-modal-{{ $dsn->id }}">
                                                             <svg class="w-3 h-3" aria-hidden="true" fill="none" viewBox="0 0 14 14">
-                                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
                                                             </svg>
                                                             <span class="sr-only">Close modal</span>
                                                         </button>
                                                         <div class="p-4 md:p-5 text-center">
-                                                            <svg class="mx-auto mb-4 text-gray-400 w-12 h-12" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                                            <svg class="mx-auto mb-4 text-gray-400 w-12 h-12" aria-hidden="true"
+                                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                                                             </svg>
-                                                            <h3 class="mb-5 text-lg font-normal text-gray-500">Apakah anda yakin ingin menghapus Data Dosen ini?</h3>
-                                                            <button id="confirm-delete" type="button" class="w-full sm:w-20 md:w-20 text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 justify-center" onclick="event.preventDefault(); this.closest('form').submit();">
+                                                            <h3 class="mb-5 text-lg font-normal text-gray-500">
+                                                                Apakah anda yakin ingin menghapus data dosen ini?
+                                                            </h3>
+                                                            <button type="submit" class="w-full sm:w-20 md:w-20 text-white bg-red-600
+                                                                hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300
+                                                                font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 justify-center">
                                                                 Ya
                                                             </button>
-                                                            <button data-modal-hide="popup-modal" type="button" class="w-full sm:w-20 md:w-20 py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-grey-200 rounded-lg border border-gray-200 hover:bg-gray-500 hover:text-white focus:z-10 focus:ring-4 focus:ring-gray-100 justify-center">Tidak</button>
+                                                            <button data-modal-hide="popup-modal-{{ $dsn->id }}" type="button"
+                                                                class="w-full sm:w-20 md:w-20 py-2.5 px-5 ms-3 text-sm font-medium text-gray-900
+                                                                focus:outline-none bg-grey-200 rounded-lg border border-gray-200
+                                                                hover:bg-gray-500 hover:text-white focus:z-10 focus:ring-4 focus:ring-gray-100 justify-center">
+                                                                Tidak
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>

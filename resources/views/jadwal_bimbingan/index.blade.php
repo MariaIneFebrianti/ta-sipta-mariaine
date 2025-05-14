@@ -31,7 +31,55 @@
             <h1 class="text-2xl font-bold  text-left mb-4 md:mb-0 md:w-auto md:flex-1">Data Jadwal Bimbingan</h1>
             @include('layouts.breadcrumb')
         </div>
-        <div class="mt-3 p-5 rounded-md bg-gray-50 border border-gray-200">
+        <div class="mt-3 p-5 max-h-[500px] overflow-y-auto rounded-md bg-gray-50 border border-gray-200">
+            @if($userRole === 'Koordinator Program Studi')
+                <form id="searchForm" action="{{ route('jadwal_bimbingan.dropdown-search') }}" method="GET" class="mb-4">
+                    <div class="flex flex-col md:flex-row gap-4 w-full mb-4">
+                        <!-- Dropdown Nama Dosen -->
+                        <div class="flex-1 min-w-[200px]">
+                            <label for="nama_dosen" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Nama Dosen</label>
+                            <select name="nama_dosen" id="nama_dosen"
+                                class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+                                onchange="document.getElementById('searchForm').submit();">
+                                <option value="">Semua Dosen</option>
+                                @foreach($dosen as $d)
+                                    <option value="{{ $d->nama_dosen }}" {{ request()->get('nama_dosen') == $d->nama_dosen ? 'selected' : '' }}>
+                                        {{ $d->nama_dosen }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Tanggal (Kalender) -->
+                        <div class="flex-1 min-w-[200px]">
+                            <label for="tanggal" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Tanggal</label>
+                            <input type="date" name="tanggal" id="tanggal"
+                                class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+                                value="{{ request()->get('tanggal') }}"
+                                onchange="document.getElementById('searchForm').submit();">
+                        </div>
+
+                        <!-- Status -->
+                        <div class="flex-1 min-w-[200px]">
+                            <label for="status" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Status</label>
+                            <select name="status" id="status"
+                                class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
+                                onchange="document.getElementById('searchForm').submit();">
+                                <option value="">Semua Status</option>
+                                @foreach(['Selesai', 'Sedang Berlangsung', 'Terjadwal'] as $status)
+                                    <option value="{{ $status }}" {{ request()->get('status') == $status ? 'selected' : '' }}>
+                                        {{ $status }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            @endif
+
+            
+
+
             @if($userRole === 'Dosen')
                 <!-- Modal toggle -->
                 <div class="flex justify-between mb-4 flex-wrap">
@@ -228,6 +276,7 @@
                 </nav>
             @endif
         </div>
+
     </div>
 
     <script>

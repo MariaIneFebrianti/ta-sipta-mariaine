@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\DosenImport;
 use App\Models\Dosen;
 use App\Models\Mahasiswa;
 use App\Models\ProgramStudi;
@@ -9,6 +10,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
+
 
 
 class DosenController extends Controller
@@ -33,7 +36,6 @@ class DosenController extends Controller
             'tempat_lahir' => 'required|string|max:255',
             'tanggal_lahir' => 'required|date',
             'jenis_kelamin' => 'required|string|max:10',
-            'prodi_id' => 'required|string|max:255',
         ]);
 
         // Tentukan nilai default untuk password dan role
@@ -106,10 +108,12 @@ class DosenController extends Controller
 
     public function search(Request $request)
     {
+        // Mendapatkan role pengguna yang sedang login
+        $userRole = Auth::user()->role;
         $programStudi = ProgramStudi::all();
         $search = $request->input('search');
 
-        // Mengambil data pengguna berdasarkan pencarian nama, nip, tempat lahir, atau jenis kelamin
+        // Mengambil data dosen berdasarkan pencarian
         $dosen = Dosen::when($search, function ($query) use ($search) {
             return $query->where(function ($query) use ($search) {
                 $query->where('nama_dosen', 'like', "%$search%")
@@ -117,11 +121,12 @@ class DosenController extends Controller
                     ->orWhere('tempat_lahir', 'like', "%$search%")
                     ->orWhere('jenis_kelamin', 'like', "%$search%");
             });
-        })
-            ->paginate(5);
+        })->paginate(5);
 
-        return view('dosen.index', compact('dosen', 'programStudi'));
+        // Mengirimkan data ke view
+        return view('dosen.index', compact('dosen', 'programStudi', 'userRole'));
     }
+
 
     public function destroy(string $id)
     {
@@ -145,5 +150,19 @@ class DosenController extends Controller
         })->get();
 
         return view('dosen.mahasiswa_pengajuan_bimbingan', compact('mahasiswa'));
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:csv,xlsx,xls|max:2048',
+        ]);
+
+        try {
+            Excel::import(new DosenImport, $request->file('file'));
+            return redirect()->route('dosen.index')->with('success', 'Data dosen berhasil diimpor.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal mengimpor data dosen: ' . $e->getMessage());
+        }
     }
 }
