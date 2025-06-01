@@ -16,7 +16,9 @@ return new class extends Migration
             $table->foreignId('mahasiswa_id')->constrained('mahasiswa')->onDelete('cascade');
             $table->foreignId('pendaftaran_bimbingan_id')->constrained('pendaftaran_bimbingan')->onDelete('cascade');
             $table->text('permasalahan')->nullable();
-            $table->string('file_bimbingan')->nullable();
+            $table->string('file_bimbingan');
+            $table->enum('rekomendasi_utama', ['Ya', 'Tidak'])->default('Tidak');
+            $table->enum('rekomendasi_pendamping', ['Ya', 'Tidak'])->default('Tidak');
             $table->timestamps();
         });
     }

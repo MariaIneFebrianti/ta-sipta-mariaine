@@ -13,12 +13,15 @@ return new class extends Migration
     {
         Schema::create('dosen', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('nama_dosen');
             $table->integer('nip')->unique();
             $table->string('tempat_lahir');
             $table->date('tanggal_lahir');
             $table->string('jenis_kelamin');
+            // Jabatan & Program Studi (jika Kaprodi)
+            $table->enum('jabatan', ['Koordinator Program Studi', 'Super Admin'])->nullable();
+            $table->foreignId('program_studi_id')->nullable()->constrained('program_studi')->onDelete('set null');
             $table->timestamps();
         });
     }
