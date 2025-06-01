@@ -11,14 +11,21 @@ use Symfony\Component\Clock\now;
 use App\Models\PengajuanPembimbing;
 use App\Http\Controllers\Controller;
 use App\Models\PendaftaranBimbingan;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+
+\Carbon\Carbon::setLocale('id');
+
 
 class JadwalBimbinganController extends Controller
 {
     public function index()
     {
-        $userRole = Auth::user()->role;
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
+
+        $user = Auth::user();
         $today = Carbon::today();
         $dosen = Dosen::all();
 
@@ -35,15 +42,18 @@ class JadwalBimbinganController extends Controller
             ->where('status', '!=', 'Terjadwal')
             ->update(['status' => 'Terjadwal']);
 
-        if ($userRole === 'Mahasiswa') {
+        if ($user->role === 'Mahasiswa') {
             // Ambil data pengajuan pembimbing mahasiswa yang sedang login
-            $pengajuanPembimbing = PengajuanPembimbing::where('mahasiswa_id', Auth::user()->mahasiswa->id)->first();
+            $pengajuanPembimbing = PengajuanPembimbing::where('mahasiswa_id', Auth::user()->mahasiswa->id)
+                ->where('validasi', 'Acc')
+                ->first();
 
             if ($pengajuanPembimbing) {
                 $jadwalBimbingan = JadwalBimbingan::where(function ($query) use ($pengajuanPembimbing) {
                     $query->where('dosen_id', $pengajuanPembimbing->pembimbing_utama_id)
                         ->orWhere('dosen_id', $pengajuanPembimbing->pembimbing_pendamping_id);
-                })->with('dosen')->paginate(10);
+                })
+                    ->with('dosen')->paginate(10);
 
                 // Tambahkan properti sudahMendaftar untuk masing-masing jadwal
                 $mahasiswaId = Auth::user()->mahasiswa->id;
@@ -58,19 +68,76 @@ class JadwalBimbinganController extends Controller
                 // Jika mahasiswa belum punya pembimbing, kosongkan jadwal
                 $jadwalBimbingan = collect([]);
             }
-        } elseif ($userRole === 'Dosen') {
+        } elseif ($user->role === 'Dosen') {
             // Hanya lihat jadwal bimbingan milik dosen yang login
+            // $dosenId = Auth::user()->dosen->id;
+            // $jadwalBimbingan = JadwalBimbingan::where('dosen_id', $dosenId)
+            //     ->with('dosen')
+            //     ->paginate(10);
+            // Ambil ID dosen dari user yang login
             $dosenId = Auth::user()->dosen->id;
+
+            // Ambil semua jadwal bimbingan milik dosen tersebut
             $jadwalBimbingan = JadwalBimbingan::where('dosen_id', $dosenId)
                 ->with('dosen')
                 ->paginate(10);
+
+            // Cek apakah jadwal sudah dipakai di logbook
+            // foreach ($jadwalBimbingan as $jadwal) {
+            //     $isUsed = PendaftaranBimbingan::where('jadwal_bimbingan_id', $jadwal->id)
+            //         ->whereHas('logbooks')
+            //         ->exists();
+            //     $jadwal->isUsedInLogbook = $isUsed;
+            // }
+
+            // Cek apakah jadwal sudah dipakai di logbook
+            $jadwalBimbingan->getCollection()->transform(function ($jadwal) {
+                $jadwal->isUsedInLogbook = PendaftaranBimbingan::where('jadwal_bimbingan_id', $jadwal->id)
+                    ->whereHas('logbooks')
+                    ->exists();
+                return $jadwal;
+            });
         } else {
-            // Koordinator Program Studi bisa melihat semua jadwal bimbingan
-            $jadwalBimbingan = JadwalBimbingan::with('dosen')->paginate(10);
+            abort(403);
         }
 
-        return view('jadwal_bimbingan.index', compact('jadwalBimbingan', 'userRole', 'dosen'));
+        return view('jadwal_bimbingan.index', compact('jadwalBimbingan', 'dosen', 'user'));
     }
+
+    public function indexKaprodi()
+    {
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
+
+        $user = Auth::user();
+        $today = Carbon::today();
+        $dosen = Dosen::all();
+
+        // Update status berdasarkan tanggal
+        JadwalBimbingan::where('tanggal', '<', $today)
+            ->where('status', '!=', 'Selesai')
+            ->update(['status' => 'Selesai']);
+
+        JadwalBimbingan::where('tanggal', '=', $today)
+            ->where('status', '!=', 'Sedang Berlangsung')
+            ->update(['status' => 'Sedang Berlangsung']);
+
+        JadwalBimbingan::where('tanggal', '>', $today)
+            ->where('status', '!=', 'Terjadwal')
+            ->update(['status' => 'Terjadwal']);
+
+        if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi' || $user->role === 'Dosen' && $user->dosen->jabatan === 'Super Admin') {
+            // Koordinator Program Studi dan Admin bisa melihat semua jadwal bimbingan
+            $jadwalBimbingan = JadwalBimbingan::with('dosen')->paginate(10);
+        } else {
+            abort(403);
+        }
+
+        return view('jadwal_bimbingan.index_kaprodi', compact('jadwalBimbingan', 'dosen', 'user'));
+    }
+
+
     public function store(Request $request)
     {
         // Validasi input
@@ -162,7 +229,9 @@ class JadwalBimbinganController extends Controller
 
     public function dropdownSearch(Request $request)
     {
-        $userRole = Auth::user()->role;
+        // $userRole = Auth::user()->role;
+
+        $user = Auth::user();
 
         // Ambil semua data untuk dropdown
         $dosen = Dosen::all();
@@ -192,6 +261,14 @@ class JadwalBimbinganController extends Controller
             ->with('dosen')
             ->paginate(10);
 
-        return view('jadwal_bimbingan.index', compact('jadwalBimbingan', 'dosen', 'statusList', 'userRole'));
+        return view('jadwal_bimbingan.index_kaprodi', compact('jadwalBimbingan', 'dosen', 'statusList', 'user'));
+    }
+    public function destroy(string $id)
+    {
+        // Temukan user dan mahasiswa yang akan dihapus
+        $jadwalBimbingan = JadwalBimbingan::findOrFail($id);
+        $jadwalBimbingan->delete();
+
+        return redirect()->route('jadwal_bimbingan.index')->with('success', 'Berhasil membatalkan jadwal bimbingan.');
     }
 }

@@ -11,10 +11,18 @@ class TahunAjaranController extends Controller
 {
     public function index()
     {
-        $userRole = Auth::user()->role;
-        $tahunAjaran = TahunAjaran::paginate(5);
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
+        $user = Auth::user();
 
-        return view('tahun_ajaran.index', compact('tahunAjaran', 'userRole'));
+        if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
+            $tahunAjaran = TahunAjaran::paginate(5);
+        } else {
+            abort(403);
+        }
+
+        return view('tahun_ajaran.index', compact('tahunAjaran', 'user'));
     }
 
     public function store(Request $request)
@@ -40,15 +48,24 @@ class TahunAjaranController extends Controller
 
     public function search(Request $request)
     {
-        $userRole = Auth::user()->role;
-        $search = $request->input('search');
-        $tahunAjaran = TahunAjaran::when($search, function ($query) use ($search) {
-            return $query->where(function ($query) use ($search) {
-                $query->where('tahun_ajaran', 'like', "%$search%");
-            });
-        })->paginate(5);
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
 
-        return view('tahun_ajaran.index', compact('tahunAjaran', 'userRole'));
+        $user = Auth::user();
+
+        $search = $request->input('search');
+        if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
+            $tahunAjaran = TahunAjaran::when($search, function ($query) use ($search) {
+                return $query->where(function ($query) use ($search) {
+                    $query->where('tahun_ajaran', 'like', "%$search%");
+                });
+            })->paginate(5);
+        } else {
+            abort(403);
+        }
+
+        return view('tahun_ajaran.index', compact('tahunAjaran', 'user'));
     }
 
     public function destroy(string $id)

@@ -16,10 +16,13 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
-        $userRole = Auth::user()->role;
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
+
         $user = $request->user();
 
-        return view('profile.edit', compact('user', 'userRole'));
+        return view('profile.edit', compact('user'));
     }
 
     /**

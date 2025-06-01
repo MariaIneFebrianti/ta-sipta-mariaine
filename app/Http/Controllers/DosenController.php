@@ -12,19 +12,31 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 
+\Carbon\Carbon::setLocale('id');
+
 
 
 class DosenController extends Controller
 {
     public function index()
     {
-        $userRole = Auth::user()->role;
-        // Mengambil semua data dosen dengan relasi user
-        $dosen = Dosen::with('user')->paginate(5);
-        // Mengambil semua data program studi
-        $programStudi = ProgramStudi::all();
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
+        $user = Auth::user();
 
-        return view('dosen.index', compact('dosen', 'programStudi', 'userRole'));
+        if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi' || $user->role === 'Dosen' && $user->dosen->jabatan === 'Super Admin') {
+            // Mengambil semua data dosen dengan relasi user
+            $dosen = Dosen::with('user')
+                ->orderBy('nama_dosen', 'asc')
+                ->paginate(5);
+            // Mengambil semua data program studi
+            $programStudi = ProgramStudi::all();
+        } else {
+            abort(403);
+        }
+
+        return view('dosen.index', compact('dosen', 'programStudi'));
     }
     public function store(Request $request)
     {
@@ -81,7 +93,6 @@ class DosenController extends Controller
             'tempat_lahir' => 'required|string|max:255',
             'tanggal_lahir' => 'required|date',
             'jenis_kelamin' => 'required|string|max:10',
-            'prodi_id' => 'required|exists:program_studi,id',
         ]);
 
         // Temukan dosen dan user yang akan diupdate
@@ -100,7 +111,6 @@ class DosenController extends Controller
             'tempat_lahir' => $request->tempat_lahir,
             'tanggal_lahir' => $request->tanggal_lahir,
             'jenis_kelamin' => $request->jenis_kelamin,
-            'prodi_id' => $request->prodi_id,
         ]);
 
         return redirect()->route('dosen.index')->with('success', 'Data dosen berhasil diupdate.');
@@ -121,7 +131,8 @@ class DosenController extends Controller
                     ->orWhere('tempat_lahir', 'like', "%$search%")
                     ->orWhere('jenis_kelamin', 'like', "%$search%");
             });
-        })->paginate(5);
+        })->orderBy('nama_dosen', 'asc')
+            ->paginate(5);
 
         // Mengirimkan data ke view
         return view('dosen.index', compact('dosen', 'programStudi', 'userRole'));

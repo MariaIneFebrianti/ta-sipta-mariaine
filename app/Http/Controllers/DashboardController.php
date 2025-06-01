@@ -14,12 +14,24 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $userRole = Auth::user()->role;
+
+        // if (Auth::check()) {
+        //     $userRole = Auth::user()->role;
+        // } else {
+        //     return redirect('/login')->with('message', 'Please log in to continue.');
+        // }
+
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
+
+        $user = Auth::user();
+
         $userCount = User::count();
         $mahasiswaCount = Mahasiswa::count();
         $dosenCount = Dosen::count();
         $programstudiCount = ProgramStudi::count();
 
-        return view('dashboard.index', compact('userCount', 'mahasiswaCount', 'dosenCount', 'programstudiCount', 'userRole'));
+        return view('dashboard.index', compact('userCount', 'mahasiswaCount', 'dosenCount', 'programstudiCount', 'user'));
     }
 }

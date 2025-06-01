@@ -14,89 +14,113 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+\Carbon\Carbon::setLocale('id');
+
 
 class LogbookBimbinganController extends Controller
 {
 
     public function indexMahasiswa()
     {
-        $userRole = Auth::user()->role;
-        $mahasiswa = Auth::user();
-        $pengajuan = PengajuanPembimbing::where('mahasiswa_id', $mahasiswa->id)->first();
-        $logbooks = LogbookBimbingan::all();
-        return view('logbook_bimbingan.index_mahasiswa', compact('pengajuan', 'mahasiswa', 'userRole', 'logbooks'));
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
+        $user = Auth::user();
+        if ($user->role === 'Mahasiswa') {
+            $user = Auth::user();
+            $mahasiswa = Auth::user();
+            $pengajuan = PengajuanPembimbing::where('mahasiswa_id', $mahasiswa->id)->first();
+            $logbooks = LogbookBimbingan::all();
+        } else {
+            abort(403);
+        }
+        return view('logbook_bimbingan.index_mahasiswa', compact('pengajuan', 'mahasiswa', 'logbooks', 'user'));
     }
 
-    public function indexKaprodi()
-    {
-        $userRole = Auth::user()->role;
-        $mahasiswa = Mahasiswa::all();
-        $programStudi = ProgramStudi::all();
-        $tahunAjaran = TahunAjaran::all();
-        return view('logbook_bimbingan.index_kaprodi', compact('userRole', 'mahasiswa', 'programStudi', 'tahunAjaran'));
-    }
+    // public function indexKaprodi()
+    // {
+    //     if (!Auth::check()) {
+    //         return redirect('/login')->with('message', 'Please log in to continue.');
+    //     }
+    //     $user = Auth::user();
+    //     $mahasiswa = Mahasiswa::all();
+    //     $programStudi = ProgramStudi::all();
+    //     $tahunAjaran = TahunAjaran::all();
+    //     return view('logbook_bimbingan.index_kaprodi', compact('mahasiswa', 'programStudi', 'tahunAjaran', 'user'));
+    // }
 
 
 
     public function showMahasiswa($dosenId, $mahasiswaId)
     {
-        $userRole = Auth::user()->role;
+
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
 
         // Ambil mahasiswa berdasarkan ID
+        $user = Auth::user();
         $mahasiswa = Mahasiswa::find($mahasiswaId);
 
         // Jika yang login adalah mahasiswa, ambil mahasiswaId dari pengguna yang login
-        if ($userRole == 'Mahasiswa') {
-            $mahasiswaId = Auth::user()->mahasiswa->id;
-        }
 
-        // Ambil pengajuan pembimbing berdasarkan mahasiswa
-        $pengajuan = PengajuanPembimbing::where('mahasiswa_id', $mahasiswaId)->first();
 
-        // Ambil jadwal yang sudah digunakan di tabel logbook_bimbingan
-        $usedJadwalIds = LogbookBimbingan::whereHas('pendaftaranBimbingan', function ($query) use ($mahasiswaId) {
-            $query->where('mahasiswa_id', $mahasiswaId);
-        })->pluck('pendaftaran_bimbingan_id');
+        if ($user->role === 'Mahasiswa' || $user->role === 'Dosen') {
+            if ($user->role == 'Mahasiswa') {
+                $mahasiswaId = Auth::user()->mahasiswa->id;
+            }
 
-        $availablePendaftaranBimbingan = PendaftaranBimbingan::where('mahasiswa_id', $mahasiswaId)
-            ->whereHas('jadwalBimbingan', function ($query) use ($dosenId) {
-                $query->where('dosen_id', $dosenId);
-            })
-            ->whereNotIn('id', function ($query) {
-                $query->select('pendaftaran_bimbingan_id')
-                    ->from('logbook_bimbingan');
-            })
-            ->get();
+            // Ambil pengajuan pembimbing berdasarkan mahasiswa
+            $pengajuan = PengajuanPembimbing::where('mahasiswa_id', $mahasiswaId)->first();
 
-        // Ambil data logbook sesuai dengan role pengguna
-        $logbooks = LogbookBimbingan::whereHas('pendaftaranBimbingan', function ($query) use ($mahasiswaId, $dosenId) {
-            $query->where('mahasiswa_id', $mahasiswaId)
+            // Ambil jadwal yang sudah digunakan di tabel logbook_bimbingan
+            $usedJadwalIds = LogbookBimbingan::whereHas('pendaftaranBimbingan', function ($query) use ($mahasiswaId) {
+                $query->where('mahasiswa_id', $mahasiswaId);
+            })->pluck('pendaftaran_bimbingan_id');
+
+            $availablePendaftaranBimbingan = PendaftaranBimbingan::where('mahasiswa_id', $mahasiswaId)
                 ->whereHas('jadwalBimbingan', function ($query) use ($dosenId) {
                     $query->where('dosen_id', $dosenId);
-                });
-        })->get();
+                })
+                ->whereNotIn('id', function ($query) {
+                    $query->select('pendaftaran_bimbingan_id')
+                        ->from('logbook_bimbingan');
+                })
+                ->get();
 
-        if ($userRole == 'Koordinator Program Studi') {
-            // Jika role adalah Koordinator Program Studi, ambil semua logbook
-            $logbooks = LogbookBimbingan::with('pendaftaranBimbingan.mahasiswa')->get();
+            // Ambil data logbook sesuai dengan role pengguna
+            $logbooks = LogbookBimbingan::whereHas('pendaftaranBimbingan', function ($query) use ($mahasiswaId, $dosenId) {
+                $query->where('mahasiswa_id', $mahasiswaId)
+                    ->whereHas('jadwalBimbingan', function ($query) use ($dosenId) {
+                        $query->where('dosen_id', $dosenId);
+                    });
+            })->get();
+
+            $cekLogbook = $logbooks->count() >= 5;
+        } else {
+            abort(403);
         }
 
-        // Ambil data dosen berdasarkan dosenId
         $dosen = Dosen::find($dosenId);
 
         return view('logbook_bimbingan.show_mahasiswa', compact(
             'pengajuan',
             'mahasiswa',
             'availablePendaftaranBimbingan',
-            'userRole',
             'logbooks',
-            'dosen'
+            'cekLogbook',
+            'dosen',
+            'user'
         ));
     }
 
     public function showKaprodi($mahasiswaId)
     {
-        $userRole = Auth::user()->role;
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
+
+        $user = Auth::user();
 
         // Ambil logbook untuk mahasiswa yang dipilih, termasuk relasi dosen
         $logbooks = LogbookBimbingan::with(['pendaftaranBimbingan.jadwalBimbingan.dosen'])
@@ -108,15 +132,14 @@ class LogbookBimbinganController extends Controller
         // Ambil data mahasiswa untuk ditampilkan
         $mahasiswa = Mahasiswa::find($mahasiswaId);
 
-        return view('logbook_bimbingan.show_kaprodi', compact('userRole', 'logbooks', 'mahasiswa'));
+        return view('logbook_bimbingan.show_kaprodi', compact('logbooks', 'mahasiswa', 'user'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'pendaftaran_bimbingan_id' => 'required|exists:pendaftaran_bimbingan,id', // Validasi yang benar
-            'permasalahan' => 'required|string',
-            'file_bimbingan' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:2048',
+            'file_bimbingan' => 'required|mimes:pdf',
         ]);
 
         // Ambil pendaftaran_bimbingan
@@ -132,17 +155,135 @@ class LogbookBimbinganController extends Controller
 
         $path = null;
         if ($request->hasFile('file_bimbingan')) {
-            $path = $request->file('file_bimbingan')->store('logbooks', 'public');
+            $file_bimbingan = $request->file('file_bimbingan');
+
+            $filename = time() . '.' . $file_bimbingan->getClientOriginalExtension();
+
+            $file_bimbingan->storeAs('logbooks', $filename, 'public');
+
+            $path = 'logbooks/' . $filename;
         }
+
 
         // Simpan logbook
         LogbookBimbingan::create([
             'mahasiswa_id' => $mahasiswa_id, // Gunakan mahasiswa_id yang diambil dari pendaftaran_bimbingan
             'pendaftaran_bimbingan_id' => $request->pendaftaran_bimbingan_id,
-            'permasalahan' => $request->permasalahan,
+            // 'permasalahan' => $permasalahan,
             'file_bimbingan' => $path,
         ]);
 
         return redirect()->back()->with('success', 'Logbook berhasil ditambahkan.');
     }
+
+    public function view($id)
+    {
+        $logbook = LogbookBimbingan::findOrFail($id);
+        $path = storage_path('app/public/' . $logbook->file_bimbingan);
+
+        if (!file_exists($path)) {
+            abort(404, 'File tidak ditemukan');
+        }
+
+        return response()->file($path, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . basename($path) . '"'
+        ]);
+    }
+
+    // Mengupdate permasalahan logbook
+    public function updatePermasalahan(Request $request, $id)
+    {
+        // Validasi inputan
+        $request->validate([
+            'permasalahan' => 'required|string',
+        ]);
+
+        // Cari logbook berdasarkan ID
+        $logbook = LogbookBimbingan::findOrFail($id);
+
+        // Update kolom permasalahan
+        $logbook->update([
+            'permasalahan' => $request->permasalahan,
+        ]);
+
+        return redirect()->back()->with('success', 'Permasalahan berhasil diperbarui.');
+    }
+
+    // public function showFile($id)
+    // {
+    //     // Ambil data logbook berdasarkan ID
+    //     $logbook = LogbookBimbingan::findOrFail($id);
+
+    //     // Buat nama file berdasarkan waktu dan ID
+    //     $timestamp = now()->format('Ymd_His'); // Contoh: 20250518_142030
+    //     $fileName = "file_bimbingan_{$timestamp}.pdf";
+
+    //     // Decode Base64 menjadi binary
+    //     $pdfContent = base64_decode($logbook->file_bimbingan);
+
+    //     // Tampilkan PDF dengan nama file yang baru dibuat
+    //     return response($pdfContent, 200)
+    //         ->header('Content-Type', 'application/pdf')
+    //         ->header('Content-Disposition', 'inline; filename="' . $fileName . '"');
+    // }
+
+    public function showFile($id)
+    {
+        $logbook = LogbookBimbingan::findOrFail($id);
+        $filePath = storage_path('app/public/' . $logbook->file_bimbingan);
+
+        if (!file_exists($filePath)) {
+            abort(404, 'File tidak ditemukan');
+        }
+
+        return response()->file($filePath, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline',
+            'Cache-Control' => 'public, max-age=3600'
+        ]);
+    }
+
+    public function beriRekomendasi($id)
+    {
+        $user = Auth::user();
+        $logbook = LogbookBimbingan::findOrFail($id);
+
+        // Ambil data pengajuan berdasarkan mahasiswa dari logbook
+        $pengajuan = PengajuanPembimbing::where('mahasiswa_id', $logbook->mahasiswa_id)->first();
+
+        if (!$pengajuan) {
+            return redirect()->back()->with('error', 'Data pengajuan pembimbing tidak ditemukan.');
+        }
+
+        if ($user->dosen && $pengajuan->pembimbing_utama_id == $user->dosen->id) {
+            $logbook->rekomendasi_utama = 'Ya';
+            $logbook->save();
+            return back()->with('success', 'Rekomendasi utama berhasil diberikan.');
+        } elseif ($user->dosen && $pengajuan->pembimbing_pendamping_id == $user->dosen->id) {
+            $logbook->rekomendasi_pendamping = 'Ya';
+            $logbook->save();
+            return back()->with('success', 'Rekomendasi pendamping berhasil diberikan.');
+        }
+
+        return back()->with('error', 'Anda tidak memiliki izin untuk memberikan rekomendasi.');
+    }
+
+
+
+
+
+    // public function show($filename)
+    // {
+    //     $path = storage_path('app/public/logbooks/' . $filename);
+
+    //     if (!file_exists($path)) {
+    //         abort(404);
+    //     }
+
+    //     return response()->file($path, [
+    //         'Content-Type' => 'application/pdf',
+    //         'Content-Disposition' => 'inline; filename="' . $filename . '"'
+    //     ]);
+    // }
 }

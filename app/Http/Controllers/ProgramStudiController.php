@@ -11,10 +11,19 @@ class ProgramStudiController extends Controller
 {
     public function index()
     {
-        $userRole = Auth::user()->role;
-        $programStudi = ProgramStudi::paginate(5);
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
+        $user = Auth::user();
 
-        return view('program_studi.index', compact('programStudi', 'userRole'));
+        if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
+
+            $programStudi = ProgramStudi::paginate(5);
+        } else {
+            abort(403);
+        }
+
+        return view('program_studi.index', compact('programStudi', 'user'));
     }
 
     public function store(Request $request)
@@ -42,19 +51,29 @@ class ProgramStudiController extends Controller
 
     public function search(Request $request)
     {
-        $userRole = Auth::user()->role;
-        $search = $request->input('search');
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
 
-        // Mengambil data pengguna berdasarkan pencarian kode prodi atau nama prodi
-        $programStudi = ProgramStudi::when($search, function ($query) use ($search) {
-            return $query->where(function ($query) use ($search) {
-                $query->where('kode_prodi', 'like', "%$search%")
-                    ->orWhere('nama_prodi', 'like', "%$search%");
-            });
-        })
-            ->paginate(5);
+        $user = Auth::user();
 
-        return view('program_studi.index', compact('programStudi', 'userRole'));
+        $search = $request->input('search');;
+
+        if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
+
+            // Mengambil data pengguna berdasarkan pencarian kode prodi atau nama prodi
+            $programStudi = ProgramStudi::when($search, function ($query) use ($search) {
+                return $query->where(function ($query) use ($search) {
+                    $query->where('kode_prodi', 'like', "%$search%")
+                        ->orWhere('nama_prodi', 'like', "%$search%");
+                });
+            })
+                ->paginate(5);
+        } else {
+            abort(403);
+        }
+
+        return view('program_studi.index', compact('programStudi', 'user'));
     }
 
     public function destroy(string $id)

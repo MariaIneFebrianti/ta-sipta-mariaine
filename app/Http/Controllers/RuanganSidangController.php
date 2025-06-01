@@ -12,11 +12,20 @@ class RuanganSidangController extends Controller
 {
     public function index()
     {
-        $userRole = Auth::user()->role;
-        $ruanganSidang = RuanganSidang::with('programStudi')->paginate(5);
-        $programStudi = ProgramStudi::all();
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
+        $user = Auth::user();
 
-        return view('ruangan_sidang.index', compact('ruanganSidang', 'programStudi', 'userRole'));
+        if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
+
+            $ruanganSidang = RuanganSidang::with('programStudi')->paginate(5);
+            $programStudi = ProgramStudi::all();
+        } else {
+            abort(403);
+        }
+
+        return view('ruangan_sidang.index', compact('ruanganSidang', 'programStudi', 'user'));
     }
 
     public function store(Request $request)
@@ -44,21 +53,30 @@ class RuanganSidangController extends Controller
 
     public function search(Request $request)
     {
-        $userRole = Auth::user()->role;
-        $programStudi = ProgramStudi::all();
-        $search = $request->input('search');
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
+        $user = Auth::user();
 
-        // Mengambil data pengguna berdasarkan pencarian nama ruangan atau program studi
-        $ruanganSidang = RuanganSidang::when($search, function ($query) use ($search) {
-            return $query->where(function ($query) use ($search) {
-                $query->where('nama_ruangan', 'like', "%$search%")
-                    ->orWhereHas('programStudi', function ($query) use ($search) {
-                        $query->where('nama_prodi', 'like', "%$search%");
-                    });
-            });
-        })->paginate(5);
+        if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
 
-        return view('ruangan_sidang.index', compact('ruanganSidang', 'programStudi', 'userRole'));
+            $programStudi = ProgramStudi::all();
+            $search = $request->input('search');
+
+            // Mengambil data pengguna berdasarkan pencarian nama ruangan atau program studi
+            $ruanganSidang = RuanganSidang::when($search, function ($query) use ($search) {
+                return $query->where(function ($query) use ($search) {
+                    $query->where('nama_ruangan', 'like', "%$search%")
+                        ->orWhereHas('programStudi', function ($query) use ($search) {
+                            $query->where('nama_prodi', 'like', "%$search%");
+                        });
+                });
+            })->paginate(5);
+        } else {
+            abort(403);
+        }
+
+        return view('ruangan_sidang.index', compact('ruanganSidang', 'programStudi', 'user'));
     }
 
     public function destroy(string $id)

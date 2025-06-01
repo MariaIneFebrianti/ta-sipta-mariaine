@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Proposal;
 use App\Models\User;
 use App\Models\Mahasiswa;
 use App\Models\TahunAjaran;
@@ -9,35 +10,67 @@ use App\Models\ProgramStudi;
 use Illuminate\Http\Request;
 use App\Models\RuanganSidang;
 use App\Imports\MahasiswaImport;
+use App\Models\Dosen;
+use App\Models\PengajuanPembimbing;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
 
+\Carbon\Carbon::setLocale('id');
+
+
 
 class MahasiswaController extends Controller
 {
-    // public function index()
+    public function index(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
+
+        $user = Auth::user();
+        if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
+            $mahasiswa = Mahasiswa::with('user')->orderBy('mahasiswa.nama_mahasiswa', 'asc')->paginate(5);
+
+            $programStudi = ProgramStudi::all();
+            $tahunAjaran = TahunAjaran::all();
+        } else {
+            abort(403);
+        }
+
+        return view('mahasiswa.index', compact('programStudi', 'tahunAjaran', 'mahasiswa', 'user'));
+    }
+
+    // public function index(Request $request)
     // {
-    //     $userRole = Auth::user()->role;
-    //     // Mengambil semua data mahasiswa dengan relasi user
-    //     $mahasiswa = Mahasiswa::with('user')->paginate(5);
+    //     if (!Auth::check()) {
+    //         return redirect('/login')->with('message', 'Please log in to continue.');
+    //     }
+
+    //     $user = Auth::user();
+
+    //     if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
+    //         $programStudiId = $user->dosen->program_studi_id;
+
+    //         // Ambil mahasiswa yang program studinya sama dengan kaprodi
+    //         $mahasiswa = Mahasiswa::with('user', 'proposal')
+    //             ->where('program_studi_id', $programStudiId)
+    //             ->orderBy('nama_mahasiswa', 'asc')
+    //             ->paginate(5);
+    //     } elseif ($user->role === 'Dosen' && $user->dosen->jabatan === 'Super Admin') {
+    //         // Kalau bukan kaprodi, ambil semua mahasiswa
+    //         $mahasiswa = Mahasiswa::with('user', 'proposal')
+    //             ->orderBy('nama_mahasiswa', 'asc')
+    //             ->paginate(5);
+    //     } else {
+    //         abort(403);
+    //     }
+
     //     $programStudi = ProgramStudi::all();
     //     $tahunAjaran = TahunAjaran::all();
 
-    //     return view('mahasiswa.index', compact('mahasiswa', 'programStudi', 'tahunAjaran', 'userRole'));
+    //     return view('mahasiswa.index', compact('programStudi', 'tahunAjaran', 'mahasiswa'));
     // }
-
-
-    public function index(Request $request)
-    {
-        $userRole = Auth::user()->role;
-        // $mahasiswa = Mahasiswa::with('user')->paginate(5);
-        $mahasiswa = Mahasiswa::with('user')->orderBy('mahasiswa.nama_mahasiswa', 'asc')->paginate(5);
-        $programStudi = ProgramStudi::all();
-        $tahunAjaran = TahunAjaran::all();
-
-        return view('mahasiswa.index', compact('programStudi', 'tahunAjaran', 'mahasiswa', 'userRole'));
-    }
 
 
     public function store(Request $request)
@@ -128,7 +161,6 @@ class MahasiswaController extends Controller
 
     public function search(Request $request)
     {
-        $userRole = Auth::user()->role;
         $programStudi = ProgramStudi::all();
         $tahunAjaran = TahunAjaran::all();
         $search = $request->input('search'); // Ambil input pencarian
@@ -142,12 +174,11 @@ class MahasiswaController extends Controller
             });
         })->paginate(5);
 
-        return view('mahasiswa.index', compact('mahasiswa', 'programStudi', 'tahunAjaran', 'userRole'));
+        return view('mahasiswa.index', compact('mahasiswa', 'programStudi', 'tahunAjaran'));
     }
 
     public function dropdownSearch(Request $request)
     {
-        $userRole = Auth::user()->role;
         $programStudi = ProgramStudi::all();
         $tahunAjaran = TahunAjaran::all();
 
@@ -169,7 +200,7 @@ class MahasiswaController extends Controller
             ->orderBy('nama_mahasiswa', 'asc')
             ->paginate(5);
 
-        return view('mahasiswa.index', compact('mahasiswa', 'programStudi', 'tahunAjaran', 'userRole'));
+        return view('mahasiswa.index', compact('mahasiswa', 'programStudi', 'tahunAjaran'));
     }
 
 

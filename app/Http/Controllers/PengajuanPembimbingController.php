@@ -8,40 +8,103 @@ use App\Models\Mahasiswa;
 use App\Models\PengajuanPembimbing;
 use Illuminate\Http\Request;
 
+\Carbon\Carbon::setLocale('id');
+
+
 class PengajuanPembimbingController extends Controller
 {
+    // public function index()
+    // {
+    //     if (!Auth::check()) {
+    //         return redirect('/login')->with('message', 'Please log in to continue.');
+    //     }
+
+    //     $user = Auth::user();
+    //     $dosen = $user->dosen;
+    //     $pengajuanQuery = PengajuanPembimbing::with(['pembimbingUtama', 'pembimbingPendamping', 'mahasiswa']);
+
+    //     if ($user->role === 'Mahasiswa') {
+    //         $pengajuanPembimbing = $pengajuanQuery
+    //             ->where('mahasiswa_id', $user->mahasiswa->id)
+    //             ->paginate(5);
+    //     } elseif ($user->role === 'Dosen' && $dosen) {
+
+    //         if ($dosen->jabatan === 'Super Admin') {
+    //             $pengajuanPembimbing = $pengajuanQuery->paginate(5);
+    //         } else {
+    //             $pengajuanPembimbing = $pengajuanQuery
+    //                 ->where(function ($query) use ($dosen) {
+    //                     $query->where('pembimbing_utama_id', $dosen->id)
+    //                         ->orWhere('pembimbing_pendamping_id', $dosen->id);
+    //                 })
+    //                 ->where('validasi', 'Acc')
+    //                 ->paginate(5);
+    //         }
+    //     } else {
+    //         abort(403, 'Unauthorized access.');
+    //     }
+
+    //     $dosen = Dosen::all();
+    //     return view('pengajuan_pembimbing.index', compact('pengajuanPembimbing', 'dosen', 'user'));
+    // }
+
+
     public function index()
     {
-        $userRole = Auth::user()->role;
-        if ($userRole === 'Mahasiswa') {
-            // Mahasiswa hanya melihat pengajuannya sendiri
-            $pengajuanPembimbing = PengajuanPembimbing::where('mahasiswa_id', Auth::user()->mahasiswa->id)
-                ->with(['pembimbingUtama', 'pembimbingPendamping', 'mahasiswa'])
-                ->paginate(5);
-        } elseif ($userRole === 'Dosen') {
-            // Ambil ID dosen dari user yang login
-            // $dosenId = Auth::user()->dosen->id;
-            $dosenId = Auth::user()->dosen->id;
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
 
-            // Query hanya menampilkan pengajuan di mana dosen login sebagai pembimbing utama atau pendamping
-            $pengajuanPembimbing = PengajuanPembimbing::where(function ($query) use ($dosenId) {
-                $query->where('pembimbing_utama_id', $dosenId)
-                    ->orWhere('pembimbing_pendamping_id', $dosenId);
-            })
+        $user = Auth::user();
+        $dosen = $user->dosen;
+        $pengajuanQuery = PengajuanPembimbing::with(['pembimbingUtama', 'pembimbingPendamping', 'mahasiswa']);
+
+        if ($user->role === 'Mahasiswa') {
+            $pengajuanPembimbing = $pengajuanQuery
+                ->where('mahasiswa_id', $user->mahasiswa->id)
+                ->paginate(5);
+        } elseif ($user->role === 'Dosen' && $dosen) {
+            $pengajuanPembimbing = $pengajuanQuery
+                ->where(function ($query) use ($dosen) {
+                    $query->where('pembimbing_utama_id', $dosen->id)
+                        ->orWhere('pembimbing_pendamping_id', $dosen->id);
+                })
                 ->where('validasi', 'Acc')
-                ->with(['pembimbingUtama', 'pembimbingPendamping', 'mahasiswa'])
                 ->paginate(5);
         } else {
-            // Jika role lain (Kooordinator Program Studi atau Super Admin), tampilkan semua pengajuan
-            $pengajuanPembimbing = PengajuanPembimbing::with(['pembimbingUtama', 'pembimbingPendamping', 'mahasiswa'])
-                ->paginate(5);
+            abort(403, 'Unauthorized access.');
         }
 
         $dosen = Dosen::all();
-        // $mahasiswa = Mahasiswa::all();
-        // $mahasiswa = Mahasiswa::find($id);
-        return view('pengajuan_pembimbing.index', compact('pengajuanPembimbing', 'dosen', 'userRole'));
+        return view('pengajuan_pembimbing.index', compact('pengajuanPembimbing', 'dosen', 'user'));
     }
+
+    public function indexKaprodi()
+    {
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
+
+        $user = Auth::user();
+        $dosen = $user->dosen;
+        $pengajuanQuery = PengajuanPembimbing::with(['pembimbingUtama', 'pembimbingPendamping', 'mahasiswa']);
+
+        if ($dosen->jabatan === 'Koordinator Program Studi') {
+            $pengajuanPembimbing = $pengajuanQuery
+                ->whereHas('mahasiswa', function ($query) use ($dosen) {
+                    $query->where('program_studi_id', $dosen->program_studi_id);
+                })
+                ->paginate(5);
+        } elseif ($dosen->jabatan === 'Super Admin') {
+            $pengajuanPembimbing = $pengajuanQuery->paginate(5);
+        } else {
+            abort(403, 'Unauthorized access.');
+        }
+
+        $dosen = Dosen::all();
+        return view('pengajuan_pembimbing.index_kaprodi', compact('pengajuanPembimbing', 'dosen', 'user'));
+    }
+
 
     public function store(Request $request)
     {
@@ -83,85 +146,141 @@ class PengajuanPembimbingController extends Controller
         // Update field validasi
         $pengajuanPembimbing->validasi = 'Acc';
         $pengajuanPembimbing->save();
-        return redirect()->route('pengajuan_pembimbing.index')->with('success', 'Pengajuan Pembimbing berhasil diperbarui');
+        return redirect()->route('pengajuan_pembimbing.index_kaprodi')->with('success', 'Pengajuan Pembimbing berhasil diperbarui');
     }
 
     public function search(Request $request)
     {
-        $pengajuanPembimbing = PengajuanPembimbing::all();
         $search = $request->input('search'); // Ambil input pencarian
+        $user = Auth::user();
 
-        // Mengambil data pengguna berdasarkan pencarian nama mahasiswa atau tahun ajaran
-        $pengajuanPembimbing = PengajuanPembimbing::when($search, function ($query) use ($search) {
-            return $query->where(function ($query) use ($search) {
-                $query->where('mahasiswa', function ($query) use ($search) {
-                    $query->where('nama_mahasiswa', 'like', "%$search%");
-                })
-                    ->orWhereHas('tahunAjaran', function ($query) use ($search) {
-                        $query->where('tahun_ajaran', 'like', "%$search%");
-                    });
+        // Pastikan user adalah dosen
+        if (!$user || !$user->dosen) {
+            return redirect('/login')->with('message', 'Unauthorized');
+        }
+
+        $jabatan = $user->dosen->jabatan;
+        $programStudiId = $user->dosen->program_studi_id;
+
+        // Query awal
+        $pengajuanPembimbing = PengajuanPembimbing::with(['mahasiswa', 'tahunAjaran', 'pembimbingUtama', 'pembimbingPendamping'])
+            ->when($search, function ($query) use ($search) {
+                $query->whereHas('mahasiswa', function ($q) use ($search) {
+                    $q->where('nama_mahasiswa', 'like', "%$search%");
+                })->orWhereHas('tahunAjaran', function ($q) use ($search) {
+                    $q->where('tahun_ajaran', 'like', "%$search%");
+                });
             });
-        })
-            ->paginate(5);
 
-        return view('ruangan_sidang.index', compact('ruanganSidang', 'programStudi'));
+        // Jika Kaprodi, filter berdasarkan program studi
+        if ($jabatan === 'Koordinator Program Studi') {
+            $pengajuanPembimbing->whereHas('mahasiswa', function ($query) use ($programStudiId) {
+                $query->where('program_studi_id', $programStudiId);
+            });
+        }
+
+        $pengajuanPembimbing = $pengajuanPembimbing->paginate(5);
+
+        return view('pengajuan_pembimbing.index', compact('pengajuanPembimbing'));
     }
+
 
     public function dropdownSearch(Request $request)
     {
-        $userRole = Auth::user()->role;
+        $user = Auth::user();
 
-        // Ambil semua dosen
-        $dosen = Dosen::all();
+        if (!$user || !$user->dosen) {
+            return redirect('/login')->with('message', 'Unauthorized');
+        }
 
-        // Ambil nilai dari dropdown
+        $dosen = $user->dosen;
+        $dosenId = $dosen->id;
+        $jabatan = $dosen->jabatan;
+        $programStudiId = $dosen->program_studi_id;
+
+        $dosen = Dosen::all(); // untuk dropdown
+
+        // Ambil nilai dari form
         $pembimbingUtamaId = $request->input('pembimbing_utama_id');
         $pembimbingPendampingId = $request->input('pembimbing_pendamping_id');
-        $validasi = $request->input('validasi'); // Ambil nilai validasi
+        $validasi = $request->input('validasi');
+        $searchType = $request->input('search_type');
 
-        // Query untuk mencari pengajuan pembimbing
-        $pengajuanPembimbing = PengajuanPembimbing::when($pembimbingUtamaId, function ($query) use ($pembimbingUtamaId) {
-            return $query->where('pembimbing_utama_id', $pembimbingUtamaId);
-        })
-            ->when($pembimbingPendampingId, function ($query) use ($pembimbingPendampingId) {
-                return $query->where('pembimbing_pendamping_id', $pembimbingPendampingId);
-            })
-            ->when($validasi, function ($query) use ($validasi) {
-                return $query->where('validasi', $validasi);
-            })
-            ->with(['pembimbingUtama', 'pembimbingPendamping', 'mahasiswa']) // Pastikan memuat relasi
-            ->paginate(5);
+        // Query dasar
+        $pengajuanPembimbing = PengajuanPembimbing::with(['pembimbingUtama', 'pembimbingPendamping', 'mahasiswa']);
 
-        return view('pengajuan_pembimbing.index', compact('pengajuanPembimbing', 'dosen', 'userRole'));
+        if ($jabatan === 'Koordinator Program Studi') {
+            $pengajuanPembimbing
+                ->when($pembimbingUtamaId, fn($query) => $query->where('pembimbing_utama_id', $pembimbingUtamaId))
+                ->when($pembimbingPendampingId, fn($query) => $query->where('pembimbing_pendamping_id', $pembimbingPendampingId))
+                ->when($validasi, fn($query) => $query->where('validasi', $validasi))
+                ->whereHas('mahasiswa', function ($query) use ($programStudiId) {
+                    $query->where('program_studi_id', $programStudiId);
+                });
+        } else {
+            if ($searchType === 'Utama') {
+                $pengajuanPembimbing->where('pembimbing_utama_id', $dosenId);
+            } elseif ($searchType === 'Pendamping') {
+                $pengajuanPembimbing->where('pembimbing_pendamping_id', $dosenId);
+            } else {
+                $pengajuanPembimbing = PengajuanPembimbing::where(function ($query) use ($dosenId) {
+                    $query->where('pembimbing_utama_id', $dosenId)
+                        ->orWhere('pembimbing_pendamping_id', $dosenId);
+                })
+                    ->where('validasi', 'Acc')
+                    ->with(['pembimbingUtama', 'pembimbingPendamping', 'mahasiswa']);
+            }
+        }
+
+        $pengajuanPembimbing = $pengajuanPembimbing->paginate(5);
+
+        return view('pengajuan_pembimbing.index_kaprodi', compact('pengajuanPembimbing', 'dosen', 'user'));
     }
 
+    public function dropdownSearchDosen(Request $request)
+    {
+        $user = Auth::user();
 
-    // public function dropdownSearch(Request $request)
-    // {
-    //     $userRole = Auth::user()->role;
+        if (!$user || !$user->dosen) {
+            return redirect('/login')->with('message', 'Unauthorized');
+        }
 
-    //     // Ambil semua pembimbing
-    //     // $pembimbingUtama = Dosen::all(); // Ambil semua dosen untuk pembimbing utama
-    //     // $pembimbingPendamping = Dosen::all(); // Ambil semua dosen untuk pembimbing pendamping
+        $dosen = $user->dosen;
+        $dosenId = $dosen->id;
+        $jabatan = $dosen->jabatan;
+        $programStudiId = $dosen->program_studi_id;
 
-    //     $dosen = Dosen::all();
+        $dosen = Dosen::all(); // untuk dropdown
 
-    //     // Ambil nilai dari dropdown
-    //     $pembimbingUtamaId = $request->input('pembimbing_utama_id');
-    //     $pembimbingPendampingId = $request->input('pembimbing_pendamping_id');
+        // Ambil nilai dari form
+        $pembimbingUtamaId = $request->input('pembimbing_utama_id');
+        $pembimbingPendampingId = $request->input('pembimbing_pendamping_id');
+        $validasi = $request->input('validasi');
+        $searchType = $request->input('search_type');
 
-    //     // Query untuk mencari pengajuan pembimbing
-    //     $pengajuanPembimbing = PengajuanPembimbing::when($pembimbingUtamaId, function ($query) use ($pembimbingUtamaId) {
-    //         return $query->where('pembimbing_utama_id', $pembimbingUtamaId);
-    //     })
-    //         ->when($pembimbingPendampingId, function ($query) use ($pembimbingPendampingId) {
-    //             return $query->where('pembimbing_pendamping_id', $pembimbingPendampingId);
-    //         })
-    //         ->with(['pembimbingUtama', 'pembimbingPendamping', 'mahasiswa']) // Pastikan memuat relasi
-    //         ->paginate(5);
+        // Query dasar
+        $pengajuanPembimbing = PengajuanPembimbing::with(['pembimbingUtama', 'pembimbingPendamping', 'mahasiswa']);
 
-    //     return view('pengajuan_pembimbing.index', compact('pengajuanPembimbing', 'dosen', 'userRole'));
-    // }
+
+        if ($searchType === 'Utama') {
+            $pengajuanPembimbing->where('pembimbing_utama_id', $dosenId);
+        } elseif ($searchType === 'Pendamping') {
+            $pengajuanPembimbing->where('pembimbing_pendamping_id', $dosenId);
+        } else {
+            $pengajuanPembimbing = PengajuanPembimbing::where(function ($query) use ($dosenId) {
+                $query->where('pembimbing_utama_id', $dosenId)
+                    ->orWhere('pembimbing_pendamping_id', $dosenId);
+            })
+                ->where('validasi', 'Acc')
+                ->with(['pembimbingUtama', 'pembimbingPendamping', 'mahasiswa']);
+        }
+
+
+        $pengajuanPembimbing = $pengajuanPembimbing->paginate(5);
+
+        return view('pengajuan_pembimbing.index', compact('pengajuanPembimbing', 'dosen', 'user'));
+    }
+
 
     public function destroy(string $id)
     {
