@@ -27,4 +27,8 @@ class JadwalBimbingan extends Model
     {
         return $this->hasOne(PendaftaranBimbingan::class, 'jadwal_bimbingan_id');
     }
+    public function logbooks()
+    {
+        return $this->hasMany(LogbookBimbingan::class);
+    }
 }

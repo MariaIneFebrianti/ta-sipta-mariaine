@@ -34,6 +34,11 @@ class Mahasiswa extends Model
         return $this->belongsTo(TahunAjaran::class, 'tahun_ajaran_id'); // Relasi ke tabel tahun_ajaran
     }
 
+    public function proposal()
+    {
+        return $this->hasOne(Proposal::class); // jika 1 mahasiswa hanya bisa punya 1 proposal
+    }
+
     public function pengajuanPembimbing()
     {
         return $this->hasOne(PengajuanPembimbing::class, 'mahasiswa_id');
@@ -41,6 +46,26 @@ class Mahasiswa extends Model
 
     public function logbooks()
     {
-        return $this->hasMany(LogbookBimbingan::class, 'pendaftaran_bimbingan_id');
+        return $this->hasMany(LogbookBimbingan::class);
+    }
+
+    public function nilai()
+    {
+        return $this->hasOne(Nilai::class, 'mahasiswa_id');
+    }
+
+    public function jadwalSeminarProposal()
+    {
+        return $this->hasOne(JadwalSeminarProposal::class, 'mahasiswa_id');
+    }
+
+    public function jadwalSidangTugasAkhir()
+    {
+        return $this->hasOne(JadwalSidangTugasAkhir::class, 'mahasiswa_id');
+    }
+
+    public function pendaftaranSidang()
+    {
+        return $this->hasOne(PendaftaranSidang::class);
     }
 }

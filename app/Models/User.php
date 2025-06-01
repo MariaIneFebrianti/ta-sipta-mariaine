@@ -52,8 +52,37 @@ class User extends Authenticatable
         return $this->hasOne(Mahasiswa::class);
     }
 
+    // public function dosen()
+    // {
+    //     return $this->belongsTo(Dosen::class, 'dosen_id');
+    // }
+
     public function dosen()
     {
-        return $this->hasOne(Dosen::class);
+        return $this->hasOne(Dosen::class, 'user_id');
+    }
+
+    public function isPengujiUtama()
+    {
+        // Logika untuk memeriksa apakah user adalah penguji utama
+        return $this->role === 'penguji_utama'; // Sesuaikan dengan logika Anda
+    }
+
+    public function isPengujiPendamping()
+    {
+        // Logika untuk memeriksa apakah user adalah penguji pendamping
+        return $this->role === 'penguji_pendamping'; // Sesuaikan dengan logika Anda
+    }
+
+    public function isPembimbingUtama()
+    {
+        // Logika untuk memeriksa apakah user adalah pembimbing utama
+        return $this->role === 'pembimbing_utama'; // Sesuaikan dengan logika Anda
+    }
+
+    public function isPembimbingPendamping()
+    {
+        // Logika untuk memeriksa apakah user adalah pembimbing pendamping
+        return $this->role === 'pembimbing_pendamping'; // Sesuaikan dengan logika Anda
     }
 }

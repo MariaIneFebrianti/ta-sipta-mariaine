@@ -23,4 +23,9 @@ class PendaftaranBimbingan extends Model
     {
         return $this->belongsTo(JadwalBimbingan::class, 'jadwal_bimbingan_id');
     }
+
+    public function logbooks()
+    {
+        return $this->hasMany(LogbookBimbingan::class, 'pendaftaran_bimbingan_id');
+    }
 }
