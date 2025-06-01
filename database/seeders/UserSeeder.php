@@ -119,7 +119,7 @@ class UserSeeder extends Seeder
                 'email' => 'antonius@gmail.com',
                 'email_verified_at' => now(),
                 'password' => Hash::make('11111111'),
-                'role' => 'Koordinator Program Studi',
+                'role' => 'Dosen',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

@@ -58,7 +58,7 @@ class MahasiswaSeeder extends Seeder
                 'tempat_lahir' => 'Cilacap',
                 'tanggal_lahir' => '2000-02-04',
                 'jenis_kelamin' => 'Laki-laki',
-                'program_studi_id' => 1,
+                'program_studi_id' => 2,
                 'tahun_ajaran_id' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
