@@ -15,27 +15,27 @@ class RuanganSidangSeeder extends Seeder
     {
         DB::table('ruangan_sidang')->insert([
             [
-                'program_studi_id' => '1',
+                'tempat' => 'Lantai 1 GTIL',
                 'nama_ruangan' => 'Lab. Jaringan Komputer'
             ],
             [
-                'program_studi_id' => '1',
+                'tempat' => 'Lantai 2 GTIL',
                 'nama_ruangan' => 'Lab. Sistem Informasi'
             ],
             [
-                'program_studi_id' => '1',
+                'tempat' => 'Lantai 2 GTIL',
                 'nama_ruangan' => 'Lab. Pemrograman Dasar'
             ],
             [
-                'program_studi_id' => '2',
+                'tempat' => 'Lantai 1 GTIL',
                 'nama_ruangan' => 'Lab. Keamanan Jaringan'
             ],
             [
-                'program_studi_id' => '3',
+                'tempat' => 'Lantai 3 GTIL',
                 'nama_ruangan' => 'Lab. Multimedia'
             ],
             [
-                'program_studi_id' => '3',
+                'tempat' => 'Lantai 3 GTIL',
                 'nama_ruangan' => 'Lab. Desain Komunikasi Visual'
             ],
         ]);
