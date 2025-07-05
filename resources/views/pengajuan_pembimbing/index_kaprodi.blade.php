@@ -10,53 +10,84 @@
 
     <div class="px-10 py-8 mt-3 p-5 rounded-md bg-white border border-gray-200">
         @include('components.alert-global')
-                {{-- @if(auth()->user()->role === 'Dosen' && auth()->user()->dosen && auth()->user()->dosen->jabatan === 'Koordinator Program Studi') --}}
-            <form id="searchForm" action="{{ route('pengajuan_pembimbing.index_kaprodi.dropdown-search') }}" method="GET" class="mb-4">
-                <div class="flex flex-col md:flex-row gap-4 w-full mb-4">
-                    <!-- Dropdown Nama Dosen -->
-                    <div class="flex-1 min-w-[200px]">
-                        <label for="pembimbing_utama_id" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Pembimbing Utama</label>
-                        <select name="pembimbing_utama_id" id="pembimbing_utama_id"
-                            class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-                            onchange="document.getElementById('searchForm').submit();">
-                            <option value="">Semua Pembimbing Utama</option>
-                            @foreach($dosen as $d)
-                                <option value="{{ $d->id }}" {{ request()->get('pembimbing_utama_id') == $d->id ? 'selected' : '' }}>
-                                    {{ $d->nama_dosen }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+            <div class="flex flex-col gap-2 mb-4">
+                <form id="searchForm" action="{{ route('pengajuan_pembimbing.index_kaprodi.dropdown-search') }}" method="GET" class="w-full">
+                    <div class="flex flex-wrap gap-4">
+                        {{-- Tahun Ajaran --}}
+                        <div class="flex-1 min-w-[200px]">
+                            <label for="tahun_ajaran_id" class="block text-sm font-medium text-gray-700 mb-2">Tahun Ajaran</label>
+                            <select name="tahun_ajaran_id" id="tahun_ajaran_id"
+                                class="block w-full p-2 border border-gray-300 rounded-lg"
+                                onchange="this.form.submit()">
+                                <option value="">Semua Tahun Ajaran</option>
+                                @foreach ($tahunAjaranList as $tahun)
+                                    <option value="{{ $tahun->id }}" {{ request('tahun_ajaran_id') == $tahun->id ? 'selected' : '' }}>
+                                        {{ $tahun->tahun_ajaran }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
 
-                    <!-- Tanggal (Kalender) -->
-                    <div class="flex-1 min-w-[200px]">
-                        <label for="pembimbing_pendamping_id" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Pembimbing Pendamping</label>
-                        <select name="pembimbing_pendamping_id" id="pembimbing_pendamping_id"
-                            class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-                            onchange="document.getElementById('searchForm').submit();">
-                            <option value="">Semua Pembimbing Pendamping</option>
-                            @foreach($dosen as $d)
-                                <option value="{{ $d->id }}" {{ request()->get('pembimbing_pendamping_id') == $d->id ? 'selected' : '' }}>
-                                    {{ $d->nama_dosen }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                        {{-- Pembimbing Utama --}}
+                        <div class="flex-1 min-w-[200px]">
+                            <label for="pembimbing_utama_id" class="block text-sm font-medium text-gray-900 mb-2">Pembimbing Utama</label>
+                            <select name="pembimbing_utama_id" id="pembimbing_utama_id"
+                                class="block w-full p-2 border border-gray-300 rounded-lg"
+                                onchange="this.form.submit()">
+                                <option value="">Semua Pembimbing Utama</option>
+                                @foreach($dosen as $d)
+                                    <option value="{{ $d->id }}" {{ request()->get('pembimbing_utama_id') == $d->id ? 'selected' : '' }}>
+                                        {{ $d->nama_dosen }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
 
-                    <!-- Status -->
-                    <div class="flex-1 min-w-[200px]">
-                        <label for="validasi" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Status Validasi</label>
-                        <select name="validasi" id="validasi"
-                            class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-                            onchange="document.getElementById('searchForm').submit();">
-                            <option value="">Semua Status</option>
-                            <option value="Menunggu" {{ request('validasi') == 'Menunggu' ? 'selected' : '' }}>Menunggu</option>
-                            <option value="Acc" {{ request('validasi') == 'Acc' ? 'selected' : '' }}>Acc</option>
-                        </select>
+                        {{-- Pembimbing Pendamping --}}
+                        <div class="flex-1 min-w-[200px]">
+                            <label for="pembimbing_pendamping_id" class="block text-sm font-medium text-gray-900 mb-2">Pembimbing Pendamping</label>
+                            <select name="pembimbing_pendamping_id" id="pembimbing_pendamping_id"
+                                class="block w-full p-2 border border-gray-300 rounded-lg"
+                                onchange="this.form.submit()">
+                                <option value="">Semua Pembimbing Pendamping</option>
+                                @foreach($dosen as $d)
+                                    <option value="{{ $d->id }}" {{ request()->get('pembimbing_pendamping_id') == $d->id ? 'selected' : '' }}>
+                                        {{ $d->nama_dosen }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Validasi --}}
+                        <div class="flex-1 min-w-[200px]">
+                            <label for="validasi" class="block text-sm font-medium text-gray-900 mb-2">Status Validasi</label>
+                            <select name="validasi" id="validasi"
+                                class="block w-full p-2 border border-gray-300 rounded-lg"
+                                onchange="this.form.submit()">
+                                <option value="">Semua Status</option>
+                                <option value="Menunggu" {{ request('validasi') == 'Menunggu' ? 'selected' : '' }}>Menunggu</option>
+                                <option value="Acc" {{ request('validasi') == 'Acc' ? 'selected' : '' }}>Acc</option>
+                            </select>
+                        </div>
                     </div>
+                </form>
+
+                <!-- Tombol Cetak -->
+                {{-- <div class="ml-auto"> --}}
+                <div class="ml-auto flex justify-end mb-1 mt-1">
+                    <a href="{{ route('pengajuan_pembimbing.rekap_dosen', ['tahun_ajaran' => request('tahun_ajaran_id')]) }}"
+                        target="_blank"
+                        class="text-sm flex items-center justify-center w-full px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-700 transition duration-200">
+                        <svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M13 11.15V4a1 1 0 1 0-2 0v7.15L8.78 8.374a1 1 0 1 0-1.56 1.25l4 5a1 1 0 0 0 1.56 0l4-5a1 1 0 1 0-1.56-1.25L13 11.15Z" clip-rule="evenodd" />
+                            <path fill-rule="evenodd" d="M9.657 15.874 7.358 13H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2.358l-2.3 2.874a3 3 0 0 1-4.685 0ZM17 16a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2H17Z" clip-rule="evenodd" />
+                        </svg>
+                        Cetak Rekap Dosen
+                    </a>
                 </div>
-            </form>
-        {{-- @endif --}}
+            </div>
+
+
 
         @if($pengajuanPembimbing->isEmpty())
             <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative text-center" role="alert">

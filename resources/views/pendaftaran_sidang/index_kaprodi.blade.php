@@ -8,6 +8,20 @@
         <x-breadcrumb parent="Pendaftaran Sidang" />
     </div>
     <div class="px-10 py-8 mt-3 p-5 rounded-md bg-white border border-gray-200">
+        <form method="GET" action="{{ route('pendaftaran_sidang.dropdown_search') }}" id="filterForm" class="w-full max-w-sm mb-4">
+            <label for="tahun" class="block mb-2 text-sm font-medium text-gray-900">Pilih Tahun Pendaftaran</label>
+            <select name="tahun" id="tahun"
+                class="w-full p-2.5 border border-gray-300 rounded-lg"
+                onchange="document.getElementById('filterForm').submit()">
+                <option value="">Semua Tahun</option>
+                @foreach ($tahunList as $thn)
+                    <option value="{{ $thn }}" {{ request('tahun') == $thn ? 'selected' : '' }}>
+                        {{ $thn }}
+                    </option>
+                @endforeach
+            </select>
+        </form>
+
         <!-- Main modal -->
         @if($pendaftaran->isEmpty())
             <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative text-center" role="alert">

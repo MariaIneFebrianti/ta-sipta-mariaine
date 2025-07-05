@@ -12,6 +12,19 @@
         @if ($user->role === 'Dosen')
             <form id="searchForm" action="{{ route('pengajuan_pembimbing.index.dropdown-search_dosen') }}" method="GET" class="mb-4">
                 <div class="flex flex-col md:flex-row gap-4 w-full mb-4">
+                    <div class="min-w-[200px]">
+                        <label for="tahun_ajaran_id" class="block text-sm font-medium text-gray-700 mb-2">Tahun Ajaran</label>
+                        <select name="tahun_ajaran_id" id="tahun_ajaran_id"
+                            class="block w-full p-2 border border-gray-300 rounded-lg"
+                            onchange="this.form.submit()">
+                            <option value="">Semua Tahun Ajaran</option>
+                            @foreach ($tahunAjaranList as $tahun)
+                                <option value="{{ $tahun->id }}" {{ request('tahun_ajaran_id') == $tahun->id ? 'selected' : '' }}>
+                                    {{ $tahun->tahun_ajaran }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                     <!-- Sebagai dosen pembimbing -->
                     <div class="w-1/4 min-w-[310px]">
                         <label for="search_type" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Sebagai pembimbing:</label>

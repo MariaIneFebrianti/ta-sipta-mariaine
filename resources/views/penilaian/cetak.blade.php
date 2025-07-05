@@ -231,7 +231,7 @@
                 </tbody>
             </table>
 
-            <div class="footer" style="margin-top: 40px;">
+            <div class="footer" style="margin-top: 15px;">
                 <table style="width: 30%; margin-left: auto;">
                     <tr>
                         <td style="text-align: center; font-size: 16px;">
