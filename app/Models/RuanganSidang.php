@@ -11,8 +11,8 @@ class RuanganSidang extends Model
 
     protected $table = 'ruangan_sidang';
     protected $fillable = [
-        'program_studi_id',
         'nama_ruangan',
+        'tempat',
     ];
 
     public function programStudi()

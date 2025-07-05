@@ -15,6 +15,9 @@ class Dosen extends Model
         'tempat_lahir',
         'tanggal_lahir',
         'jenis_kelamin',
+        'jabatan',
+        'program_studi_id',
+        'ttd_dosen',
     ];
 
     public function user()

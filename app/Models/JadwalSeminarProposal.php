@@ -10,7 +10,6 @@ class JadwalSeminarProposal extends Model
     use HasFactory;
     protected $table = 'jadwal_seminar_proposal';
 
-
     protected $fillable = [
         'mahasiswa_id',
         'penguji_utama_id',
@@ -39,5 +38,10 @@ class JadwalSeminarProposal extends Model
     public function ruanganSidang()
     {
         return $this->belongsTo(RuanganSidang::class);
+    }
+
+    public function proposal()
+    {
+        return $this->hasOne(Proposal::class, 'mahasiswa_id');
     }
 }

@@ -23,7 +23,6 @@ class LogbookBimbingan extends Model
         return $this->belongsTo(Mahasiswa::class, 'mahasiswa_id');
     }
 
-    // Relasi ke Dosen
     public function dosen()
     {
         return $this->belongsTo(Dosen::class, 'dosen_id');
@@ -37,5 +36,10 @@ class LogbookBimbingan extends Model
     public function pendaftaranBimbingan()
     {
         return $this->belongsTo(PendaftaranBimbingan::class, 'pendaftaran_bimbingan_id');
+    }
+
+    public function proposal()
+    {
+        return $this->hasOne(Proposal::class);
     }
 }

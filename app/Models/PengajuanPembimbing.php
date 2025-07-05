@@ -29,6 +29,11 @@ class PengajuanPembimbing extends Model
 
     public function mahasiswa()
     {
-        return $this->belongsTo(Mahasiswa::class, 'mahasiswa_id'); // Sesuaikan dengan kolom yang benar
+        return $this->belongsTo(Mahasiswa::class, 'mahasiswa_id');
+    }
+
+    public function proposal()
+    {
+        return $this->hasOne(Proposal::class);
     }
 }

@@ -13,6 +13,7 @@ class JadwalSidangTugasAkhir extends Model
 
     protected $fillable = [
         'mahasiswa_id',
+        'jenis_sidang',
         'pembimbing_utama_id',
         'pembimbing_pendamping_id',
         'penguji_utama_id',
@@ -23,39 +24,55 @@ class JadwalSidangTugasAkhir extends Model
         'ruangan_sidang_id',
     ];
 
-    // Relasi ke mahasiswa
     public function mahasiswa()
     {
-        return $this->belongsTo(Mahasiswa::class);
+        return $this->belongsTo(Mahasiswa::class, 'mahasiswa_id');
     }
 
-    // Relasi ke pembimbing utama
     public function pembimbingUtama()
     {
         return $this->belongsTo(Dosen::class, 'pembimbing_utama_id');
     }
 
-    // Relasi ke pembimbing pendamping
     public function pembimbingPendamping()
     {
         return $this->belongsTo(Dosen::class, 'pembimbing_pendamping_id');
     }
 
-    // Relasi ke penguji utama
     public function pengujiUtama()
     {
         return $this->belongsTo(Dosen::class, 'penguji_utama_id');
     }
 
-    // Relasi ke penguji pendamping
     public function pengujiPendamping()
     {
         return $this->belongsTo(Dosen::class, 'penguji_pendamping_id');
     }
 
-    // Relasi ke ruangan sidang
     public function ruanganSidang()
     {
         return $this->belongsTo(RuanganSidang::class, 'ruangan_sidang_id');
+    }
+
+    public function rubrik()
+    {
+        return RubrikNilai::where('peran', $this->peran)->get();
+    }
+
+    // public function riwayatSidang()
+    // {
+    //     return $this->hasOne(RiwayatSidang::class, 'hasil_akhir_ta_id');
+    // }
+
+    public function hasilSidang()
+    {
+        return $this->hasOne(HasilSidang::class, 'jadwal_sidang_tugas_akhir_id');
+    }
+
+
+
+    public function riwayatSidang()
+    {
+        return $this->hasOne(RiwayatSidang::class, 'jadwal_sidang_tugas_akhir_id');
     }
 }

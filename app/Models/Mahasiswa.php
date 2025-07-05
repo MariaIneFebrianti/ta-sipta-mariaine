@@ -17,6 +17,7 @@ class Mahasiswa extends Model
         'jenis_kelamin',
         'program_studi_id',
         'tahun_ajaran_id',
+        'ttd_mahasiswa',
     ];
 
     public function user()
@@ -31,12 +32,12 @@ class Mahasiswa extends Model
 
     public function tahunAjaran()
     {
-        return $this->belongsTo(TahunAjaran::class, 'tahun_ajaran_id'); // Relasi ke tabel tahun_ajaran
+        return $this->belongsTo(TahunAjaran::class, 'tahun_ajaran_id');
     }
 
     public function proposal()
     {
-        return $this->hasOne(Proposal::class); // jika 1 mahasiswa hanya bisa punya 1 proposal
+        return $this->hasOne(Proposal::class);
     }
 
     public function pengajuanPembimbing()
@@ -49,10 +50,10 @@ class Mahasiswa extends Model
         return $this->hasMany(LogbookBimbingan::class);
     }
 
-    public function nilai()
-    {
-        return $this->hasOne(Nilai::class, 'mahasiswa_id');
-    }
+    // public function nilai()
+    // {
+    //     return $this->hasOne(Nilai::class, 'mahasiswa_id');
+    // }
 
     public function jadwalSeminarProposal()
     {
@@ -67,5 +68,33 @@ class Mahasiswa extends Model
     public function pendaftaranSidang()
     {
         return $this->hasOne(PendaftaranSidang::class);
+    }
+
+    public function penilaianSempro()
+    {
+        return $this->hasMany(PenilaianSempro::class);
+    }
+
+
+    public function penilaianTA()
+    {
+        return $this->hasMany(PenilaianTA::class);
+    }
+
+
+    public function hasilAkhirSempro()
+    {
+        return $this->hasOne(HasilAkhirSempro::class); // atau sesuai nama modelnya
+    }
+
+
+    public function hasilAkhirTA()
+    {
+        return $this->hasOne(HasilAkhirTA::class);
+    }
+
+    public function hasilSidang()
+    {
+        return $this->hasOne(HasilSidang::class);
     }
 }
