@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use App\Models\PendaftaranSidang;
 use Illuminate\Support\Facades\Auth;
 
+\Carbon\Carbon::setLocale('id');
+
+
 class PendaftaranSidangController extends Controller
 {
     public function index()
@@ -42,6 +45,14 @@ class PendaftaranSidangController extends Controller
 
         $user = Auth::user();
         if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
+            // $pendaftaran = PendaftaranSidang::with('mahasiswa')->get();
+            $programStudiId = $user->dosen->program_studi_id;
+            $pendaftaran = PendaftaranSidang::with(['mahasiswa' => function ($query) use ($programStudiId) {
+                $query->where('program_studi_id', $programStudiId);
+            }])->whereHas('mahasiswa', function ($query) use ($programStudiId) {
+                $query->where('program_studi_id', $programStudiId);
+            })->get();
+        } elseif ($user->role === 'Dosen' && $user->dosen->jabatan === 'Super Admin') {
             $pendaftaran = PendaftaranSidang::with('mahasiswa')->get();
         } else {
             abort(403);

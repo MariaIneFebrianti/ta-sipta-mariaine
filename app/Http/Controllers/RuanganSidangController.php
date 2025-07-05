@@ -17,9 +17,9 @@ class RuanganSidangController extends Controller
         }
         $user = Auth::user();
 
-        if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
+        if ($user->role === 'Dosen' && ($user->dosen->jabatan === 'Koordinator Program Studi' || $user->dosen->jabatan === 'Super Admin')) {
 
-            $ruanganSidang = RuanganSidang::with('programStudi')->paginate(5);
+            $ruanganSidang = RuanganSidang::with('programStudi')->paginate(10);
             $programStudi = ProgramStudi::all();
         } else {
             abort(403);
@@ -31,9 +31,10 @@ class RuanganSidangController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_ruangan' => 'required|string|max:255',
-            'prodi_id' => 'required|exists:program_studi,id',
+            'nama_ruangan' => 'required|string|max:50|unique:ruangan_sidang,nama_ruangan',
+            'tempat' => 'required|string|max:50',
         ]);
+
         RuanganSidang::create($request->all());
 
         return redirect()->route('ruangan_sidang.index')->with('success', 'Program Studi berhasil ditambahkan');
@@ -42,9 +43,10 @@ class RuanganSidangController extends Controller
     public function update(Request $request, string $id)
     {
         $request->validate([
-            'nama_ruangan' => 'required|string|max:255',
-            'prodi_id' => 'required|exists:program_studi,id',
+            'nama_ruangan' => 'required|string|max:50|unique:ruangan_sidang,nama_ruangan,' . $id,
+            'tempat' => 'required|string|max:50',
         ]);
+
         $ruanganSidang = RuanganSidang::findOrFail($id);
         $ruanganSidang->update($request->all());
 
@@ -58,7 +60,7 @@ class RuanganSidangController extends Controller
         }
         $user = Auth::user();
 
-        if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
+        if ($user->role === 'Dosen' && ($user->dosen->jabatan === 'Koordinator Program Studi' || $user->dosen->jabatan === 'Super Admin')) {
 
             $programStudi = ProgramStudi::all();
             $search = $request->input('search');
@@ -67,11 +69,9 @@ class RuanganSidangController extends Controller
             $ruanganSidang = RuanganSidang::when($search, function ($query) use ($search) {
                 return $query->where(function ($query) use ($search) {
                     $query->where('nama_ruangan', 'like', "%$search%")
-                        ->orWhereHas('programStudi', function ($query) use ($search) {
-                            $query->where('nama_prodi', 'like', "%$search%");
-                        });
+                        ->orWhere('tempat', 'like', "%$search%");
                 });
-            })->paginate(5);
+            })->paginate(10);
         } else {
             abort(403);
         }

@@ -100,8 +100,11 @@ class JadwalBimbinganController extends Controller
         } else {
             abort(403);
         }
+        $mahasiswa = Auth::user();
+        $pengajuan = PengajuanPembimbing::where('mahasiswa_id', $mahasiswa->id)->first();
 
-        return view('jadwal_bimbingan.index', compact('jadwalBimbingan', 'dosen', 'user'));
+
+        return view('jadwal_bimbingan.index', compact('jadwalBimbingan', 'dosen', 'user', 'pengajuan'));
     }
 
     public function indexKaprodi()
@@ -136,13 +139,11 @@ class JadwalBimbinganController extends Controller
 
         return view('jadwal_bimbingan.index_kaprodi', compact('jadwalBimbingan', 'dosen', 'user'));
     }
-
-
     public function store(Request $request)
     {
         // Validasi input
         $request->validate([
-            'tanggal' => 'required|date',
+            'tanggal' => 'required|date|after_or_equal:today',
             'waktu' => 'required',
             'kuota' => 'required|integer|min:1',
         ]);
@@ -154,11 +155,11 @@ class JadwalBimbinganController extends Controller
 
         // Tentukan status berdasarkan tanggal bimbingan
         if ($tanggalBimbingan->gt($today)) {
-            $status = 'Terjadwal'; // Jika tanggal bimbingan di masa depan
+            $status = 'Terjadwal';
         } elseif ($tanggalBimbingan->eq($today)) {
-            $status = 'Sedang Berlangsung'; // Jika jadwal untuk hari ini
+            $status = 'Sedang Berlangsung';
         } else {
-            $status = 'Selesai'; // Ini jarang terjadi, kecuali user input tanggal yang sudah lewat
+            $status = 'Selesai';
         }
 
         // Simpan data ke database
@@ -167,27 +168,27 @@ class JadwalBimbinganController extends Controller
             'tanggal' => $request->tanggal,
             'waktu' => $request->waktu,
             'kuota' => $request->kuota,
-            'status' => $status, // Status ditentukan otomatis
+            'status' => $status,
         ]);
 
         return redirect()->route('jadwal_bimbingan.index')->with('success', 'Jadwal Bimbingan berhasil ditambahkan.');
     }
 
-    public function update(Request $request, $id)
-    {
-        // Validasi input
-        $request->validate([
-            'dosen_id' => 'required|exists:dosen,id',
-            'tanggal' => 'required|date',
-            'waktu' => 'required',
-            'kuota' => 'required|integer|max:2',
-        ]);
+    // public function update(Request $request, $id)
+    // {
+    //     // Validasi input
+    //     $request->validate([
+    //         'dosen_id' => 'required|exists:dosen,id',
+    //         'tanggal' => 'required|date',
+    //         'waktu' => 'required',
+    //         'kuota' => 'required|integer|max:2',
+    //     ]);
 
-        $jadwalBimbingan = JadwalBimbingan::findOrFail($id);
-        $jadwalBimbingan->update($request->all());
+    //     $jadwalBimbingan = JadwalBimbingan::findOrFail($id);
+    //     $jadwalBimbingan->update($request->all());
 
-        return redirect()->route('jadwal_bimbingan.index')->with('success', 'Jadwal Bimbingan berhasil diperbarui.');
-    }
+    //     return redirect()->route('jadwal_bimbingan.index')->with('success', 'Jadwal Bimbingan berhasil diperbarui.');
+    // }
 
     public function daftarBimbingan(Request $request, $id)
     {

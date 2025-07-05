@@ -17,8 +17,8 @@ class UserController extends Controller
         }
 
         $user = Auth::user();
-        if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
-            $user = User::paginate(5);
+        if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi' || $user->role === 'Dosen' && $user->dosen->jabatan === 'Super Admin') {
+            $user = User::paginate(10);
         } else {
             abort(403);
         }
@@ -43,7 +43,7 @@ class UserController extends Controller
                         ->orWhere('email', 'like', "%$search%")
                         ->orWhere('role', 'like', "%$search%");
                 });
-            })->paginate(5);
+            })->paginate(10);
         } else {
             abort(403);
         }
@@ -97,7 +97,7 @@ class UserController extends Controller
             $user = User::when($role, function ($query) use ($role) {
                 return $query->where('role', $role);
             })
-                ->paginate(5);
+                ->paginate(10);
         } else {
             abort(403);
         }

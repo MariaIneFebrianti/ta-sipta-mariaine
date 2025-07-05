@@ -16,9 +16,8 @@ class ProgramStudiController extends Controller
         }
         $user = Auth::user();
 
-        if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
-
-            $programStudi = ProgramStudi::paginate(5);
+        if ($user->role === 'Dosen' && ($user->dosen->jabatan === 'Koordinator Program Studi' || $user->dosen->jabatan === 'Super Admin')) {
+            $programStudi = ProgramStudi::paginate(10);
         } else {
             abort(403);
         }
@@ -29,8 +28,8 @@ class ProgramStudiController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'kode_prodi' => 'required|string|max:255',
-            'nama_prodi' => 'required|string|max:255'
+            'kode_prodi' => 'required|string|max:50|unique:program_studi,kode_prodi',
+            'nama_prodi' => 'required|string|max:100|unique:program_studi,nama_prodi',
         ]);
         ProgramStudi::create($request->all());
 
@@ -40,9 +39,10 @@ class ProgramStudiController extends Controller
     public function update(Request $request, string $id)
     {
         $request->validate([
-            'kode_prodi' => 'required|string|max:255',
-            'nama_prodi' => 'required|string|max:255'
+            'kode_prodi' => 'required|string|max:50|unique:program_studi,kode_prodi,' . $id,
+            'nama_prodi' => 'required|string|max:100|unique:program_studi,nama_prodi,' . $id,
         ]);
+
         $programStudi = ProgramStudi::findOrFail($id);
         $programStudi->update($request->all());
 
@@ -59,7 +59,7 @@ class ProgramStudiController extends Controller
 
         $search = $request->input('search');;
 
-        if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
+        if ($user->role === 'Dosen' && ($user->dosen->jabatan === 'Koordinator Program Studi' || $user->dosen->jabatan === 'Super Admin')) {
 
             // Mengambil data pengguna berdasarkan pencarian kode prodi atau nama prodi
             $programStudi = ProgramStudi::when($search, function ($query) use ($search) {
@@ -68,7 +68,7 @@ class ProgramStudiController extends Controller
                         ->orWhere('nama_prodi', 'like', "%$search%");
                 });
             })
-                ->paginate(5);
+                ->paginate(10);
         } else {
             abort(403);
         }

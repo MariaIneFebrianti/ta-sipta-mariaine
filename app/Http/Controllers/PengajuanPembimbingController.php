@@ -62,7 +62,7 @@ class PengajuanPembimbingController extends Controller
         if ($user->role === 'Mahasiswa') {
             $pengajuanPembimbing = $pengajuanQuery
                 ->where('mahasiswa_id', $user->mahasiswa->id)
-                ->paginate(5);
+                ->paginate(10);
         } elseif ($user->role === 'Dosen' && $dosen) {
             $pengajuanPembimbing = $pengajuanQuery
                 ->where(function ($query) use ($dosen) {
@@ -70,13 +70,22 @@ class PengajuanPembimbingController extends Controller
                         ->orWhere('pembimbing_pendamping_id', $dosen->id);
                 })
                 ->where('validasi', 'Acc')
-                ->paginate(5);
+                ->paginate(10);
         } else {
             abort(403, 'Unauthorized access.');
         }
 
         $dosen = Dosen::all();
-        return view('pengajuan_pembimbing.index', compact('pengajuanPembimbing', 'dosen', 'user'));
+        // Ambil mahasiswa berdasarkan ID
+        // $mahasiswaId = Auth::user()->mahasiswa_id;
+        // $mahasiswa = Mahasiswa::find($mahasiswaId);
+
+        // $mahasiswa = Mahasiswa::find($mahasiswaId);
+        // $proposal = $mahasiswa->proposal;
+        $mahasiswa = $user->mahasiswa;
+        $proposal = $mahasiswa ? $mahasiswa->proposal : null;
+
+        return view('pengajuan_pembimbing.index', compact('pengajuanPembimbing', 'dosen', 'user', 'proposal'));
     }
 
     public function indexKaprodi()
@@ -94,9 +103,9 @@ class PengajuanPembimbingController extends Controller
                 ->whereHas('mahasiswa', function ($query) use ($dosen) {
                     $query->where('program_studi_id', $dosen->program_studi_id);
                 })
-                ->paginate(5);
+                ->paginate(10);
         } elseif ($dosen->jabatan === 'Super Admin') {
-            $pengajuanPembimbing = $pengajuanQuery->paginate(5);
+            $pengajuanPembimbing = $pengajuanQuery->paginate(10);
         } else {
             abort(403, 'Unauthorized access.');
         }
@@ -110,7 +119,7 @@ class PengajuanPembimbingController extends Controller
     {
         $request->validate([
             'pembimbing_utama_id' => 'required|exists:dosen,id',
-            'pembimbing_pendamping_id' => 'required|exists:dosen,id',
+            'pembimbing_pendamping_id' => 'required|exists:dosen,id|different:pembimbing_utama_id',
         ]);
 
         $mahasiswaId = Auth::user()->mahasiswa->id;
@@ -127,7 +136,7 @@ class PengajuanPembimbingController extends Controller
     public function validasi($id)
     {
         $pengajuan = PengajuanPembimbing::findOrFail($id);
-        $pengajuan->validasi = 'Acc';  // Set validasi menjadi Acc
+        $pengajuan->validasi = 'Acc';
         $pengajuan->save();
 
         return redirect()->back()->with('success', 'Status validasi berhasil diperbarui menjadi Acc.');
@@ -137,7 +146,7 @@ class PengajuanPembimbingController extends Controller
     {
         $request->validate([
             'pembimbing_utama_id' => 'required|exists:dosen,id',
-            'pembimbing_pendamping_id' => 'required|exists:dosen,id',
+            'pembimbing_pendamping_id' => 'required|exists:dosen,id|different:pembimbing_utama_id',
         ]);
 
         $pengajuanPembimbing = PengajuanPembimbing::findOrFail($id);
@@ -179,11 +188,10 @@ class PengajuanPembimbingController extends Controller
             });
         }
 
-        $pengajuanPembimbing = $pengajuanPembimbing->paginate(5);
+        $pengajuanPembimbing = $pengajuanPembimbing->paginate(10);
 
         return view('pengajuan_pembimbing.index', compact('pengajuanPembimbing'));
     }
-
 
     public function dropdownSearch(Request $request)
     {
@@ -217,6 +225,11 @@ class PengajuanPembimbingController extends Controller
                 ->whereHas('mahasiswa', function ($query) use ($programStudiId) {
                     $query->where('program_studi_id', $programStudiId);
                 });
+        } elseif ($jabatan === 'Super Admin') {
+            $pengajuanPembimbing
+                ->when($pembimbingUtamaId, fn($query) => $query->where('pembimbing_utama_id', $pembimbingUtamaId))
+                ->when($pembimbingPendampingId, fn($query) => $query->where('pembimbing_pendamping_id', $pembimbingPendampingId))
+                ->when($validasi, fn($query) => $query->where('validasi', $validasi));
         } else {
             if ($searchType === 'Utama') {
                 $pengajuanPembimbing->where('pembimbing_utama_id', $dosenId);
@@ -232,7 +245,7 @@ class PengajuanPembimbingController extends Controller
             }
         }
 
-        $pengajuanPembimbing = $pengajuanPembimbing->paginate(5);
+        $pengajuanPembimbing = $pengajuanPembimbing->paginate(10);
 
         return view('pengajuan_pembimbing.index_kaprodi', compact('pengajuanPembimbing', 'dosen', 'user'));
     }
@@ -276,7 +289,7 @@ class PengajuanPembimbingController extends Controller
         }
 
 
-        $pengajuanPembimbing = $pengajuanPembimbing->paginate(5);
+        $pengajuanPembimbing = $pengajuanPembimbing->paginate(10);
 
         return view('pengajuan_pembimbing.index', compact('pengajuanPembimbing', 'dosen', 'user'));
     }

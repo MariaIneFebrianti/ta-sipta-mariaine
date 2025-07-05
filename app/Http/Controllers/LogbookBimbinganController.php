@@ -61,6 +61,7 @@ class LogbookBimbinganController extends Controller
         // Ambil mahasiswa berdasarkan ID
         $user = Auth::user();
         $mahasiswa = Mahasiswa::find($mahasiswaId);
+        $proposal = $mahasiswa->proposal;
 
         // Jika yang login adalah mahasiswa, ambil mahasiswaId dari pengguna yang login
 
@@ -110,7 +111,8 @@ class LogbookBimbinganController extends Controller
             'logbooks',
             'cekLogbook',
             'dosen',
-            'user'
+            'user',
+            'proposal'
         ));
     }
 
@@ -131,8 +133,9 @@ class LogbookBimbinganController extends Controller
 
         // Ambil data mahasiswa untuk ditampilkan
         $mahasiswa = Mahasiswa::find($mahasiswaId);
+        $proposal = $mahasiswa->proposal;
 
-        return view('logbook_bimbingan.show_kaprodi', compact('logbooks', 'mahasiswa', 'user'));
+        return view('logbook_bimbingan.show_kaprodi', compact('logbooks', 'mahasiswa', 'user', 'proposal'));
     }
 
     public function store(Request $request)

@@ -29,63 +29,43 @@ class MahasiswaController extends Controller
         }
 
         $user = Auth::user();
-        if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
-            $mahasiswa = Mahasiswa::with('user')->orderBy('mahasiswa.nama_mahasiswa', 'asc')->paginate(5);
 
-            $programStudi = ProgramStudi::all();
-            $tahunAjaran = TahunAjaran::all();
+        if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
+            $programStudiId = $user->dosen->program_studi_id;
+
+            // Ambil mahasiswa yang program studinya sama dengan kaprodi
+            $mahasiswa = Mahasiswa::with('user', 'proposal')
+                ->where('program_studi_id', $programStudiId)
+                ->orderBy('nama_mahasiswa', 'asc')
+                ->paginate(10);
+        } elseif ($user->role === 'Dosen' && $user->dosen->jabatan === 'Super Admin') {
+            // Kalau bukan kaprodi, ambil semua mahasiswa
+            $mahasiswa = Mahasiswa::with('user', 'proposal')
+                ->orderBy('nama_mahasiswa', 'asc')
+                ->paginate(10);
         } else {
             abort(403);
         }
 
+        $programStudi = ProgramStudi::all();
+        $tahunAjaran = TahunAjaran::all();
+
         return view('mahasiswa.index', compact('programStudi', 'tahunAjaran', 'mahasiswa', 'user'));
     }
-
-    // public function index(Request $request)
-    // {
-    //     if (!Auth::check()) {
-    //         return redirect('/login')->with('message', 'Please log in to continue.');
-    //     }
-
-    //     $user = Auth::user();
-
-    //     if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
-    //         $programStudiId = $user->dosen->program_studi_id;
-
-    //         // Ambil mahasiswa yang program studinya sama dengan kaprodi
-    //         $mahasiswa = Mahasiswa::with('user', 'proposal')
-    //             ->where('program_studi_id', $programStudiId)
-    //             ->orderBy('nama_mahasiswa', 'asc')
-    //             ->paginate(5);
-    //     } elseif ($user->role === 'Dosen' && $user->dosen->jabatan === 'Super Admin') {
-    //         // Kalau bukan kaprodi, ambil semua mahasiswa
-    //         $mahasiswa = Mahasiswa::with('user', 'proposal')
-    //             ->orderBy('nama_mahasiswa', 'asc')
-    //             ->paginate(5);
-    //     } else {
-    //         abort(403);
-    //     }
-
-    //     $programStudi = ProgramStudi::all();
-    //     $tahunAjaran = TahunAjaran::all();
-
-    //     return view('mahasiswa.index', compact('programStudi', 'tahunAjaran', 'mahasiswa'));
-    // }
 
 
     public function store(Request $request)
     {
         // Validasi input
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email',
-            'nim' => 'required|integer|unique:mahasiswa,nim',
-            'tempat_lahir' => 'required|string|max:255',
-            'tanggal_lahir' => 'required|date',
-            'jenis_kelamin' => 'required|string|max:10',
-            'program_studi_id' => 'required|string|max:255',
-            'tahun_ajaran_id' => 'required|string|max:255',
-
+            'name' => 'required|string|max:100|unique:users,name',
+            'email' => 'required|string|email|max:100|unique:users,email',
+            'nim' => 'required|integer|digits_between:1,9|unique:mahasiswa,nim',
+            'tempat_lahir' => 'required|string|max:100',
+            'tanggal_lahir' => 'required|date|before:today',
+            'jenis_kelamin' => 'required|string|max:9',
+            'program_studi_id' => 'required|exists:program_studi,id',
+            'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id',
         ]);
 
         // Tentukan nilai default untuk password dan role
@@ -123,22 +103,29 @@ class MahasiswaController extends Controller
 
         return redirect()->route('mahasiswa.index')->with('success', 'Data mahasiswa berhasil ditambahkan.');
     }
+
     public function update(Request $request, $id)
     {
-        // Validasi input
+        // Temukan mahasiswa dan user terkait
+        $mahasiswa = Mahasiswa::findOrFail($id);
+        $user = User::findOrFail($mahasiswa->user_id);
+
         $request->validate([
-            'name' => 'required|string|max:255',
-            'nim' => 'required|integer|unique:mahasiswa,nim,' . $id,
-            'tempat_lahir' => 'required|string|max:255',
-            'tanggal_lahir' => 'required|date',
-            'jenis_kelamin' => 'required|string|max:10',
+            'name' => 'required|string|max:100|unique:users,name,' . $user->id,
+            'nim' => 'required|integer|digits_between:1,9|unique:mahasiswa,nim,' . $id,
+            'tempat_lahir' => 'required|string|max:100',
+            'tanggal_lahir' => 'required|date|before:today',
+            'jenis_kelamin' => 'required|string|max:9',
             'program_studi_id' => 'required|exists:program_studi,id',
             'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id',
         ]);
 
-        // Temukan mahasiswa dan user yang akan diupdate
-        $mahasiswa = Mahasiswa::findOrFail($id);
-        $user = User::findOrFail($mahasiswa->user_id); // Dapatkan user_id dari mahasiswa
+        // Jika mahasiswa login sendiri, validasi upload tanda tangan
+        if (Auth::user()->id === $user->id && $request->hasFile('ttd_mahasiswa')) {
+            $request->validate([
+                'ttd_mahasiswa' => 'image|mimes:jpg,jpeg,png|max:2048',
+            ]);
+        }
 
         // Update data user
         $user->update([
@@ -156,29 +143,79 @@ class MahasiswaController extends Controller
             'tahun_ajaran_id' => $request->tahun_ajaran_id,
         ]);
 
-        return redirect()->route('mahasiswa.index')->with('success', 'Data mahasiswa berhasil diupdate.');
+        // Simpan tanda tangan jika diunggah oleh mahasiswa sendiri
+        if (Auth::user()->id === $user->id && $request->hasFile('ttd_mahasiswa')) {
+            $file = $request->file('ttd_mahasiswa');
+            $filename = 'ttd_mahasiswa_' . $mahasiswa->id . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('public/ttd_mahasiswa', $filename);
+
+            $mahasiswa->update([
+                'ttd_mahasiswa' => 'storage/ttd_mahasiswa/' . $filename,
+            ]);
+        }
+
+        // Redirect sesuai role
+        // if ($user->role === 'Mahasiswa') {
+        //     return redirect()->route('dashboard')->with('success', 'Data mahasiswa berhasil diupdate.');
+        // } else {
+        //     return redirect()->route('mahasiswa.index')->with('success', 'Data mahasiswa berhasil diupdate.');
+        // }
+
+        if (request()->routeIs('mahasiswa.profile.update')) {
+            // Sedang edit dirinya sendiri
+            return redirect()->route('dashboard')->with('success', 'Profil berhasil diperbarui.');
+        } else {
+            return redirect()->route('mahasiswa.index')->with('success', 'Data mahasiswa berhasil diupdate.');
+        }
     }
+
 
     public function search(Request $request)
     {
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
+
+        $user = Auth::user();
+        $search = $request->input('search'); // Ambil input pencarian
+        $query = Mahasiswa::with('user', 'proposal');
+
+        // Cek role dan jabatan
+        if ($user->role === 'Dosen') {
+            $jabatan = $user->dosen->jabatan;
+
+            if ($jabatan === 'Koordinator Program Studi') {
+                // Batasi ke program studi kaprodi
+                $programStudiId = $user->dosen->program_studi_id;
+                $query->where('program_studi_id', $programStudiId);
+            } elseif ($jabatan !== 'Super Admin') {
+                // Kalau bukan Super Admin juga, tolak akses
+                abort(403);
+            }
+        }
+
+        // Tambahkan kondisi pencarian
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_mahasiswa', 'like', "%$search%")
+                    ->orWhere('nim', 'like', "%$search%");
+                // Tambahkan kolom lain jika perlu
+            });
+        }
+
+        $mahasiswa = $query->orderBy('nama_mahasiswa', 'asc')->paginate(10);
+
         $programStudi = ProgramStudi::all();
         $tahunAjaran = TahunAjaran::all();
-        $search = $request->input('search'); // Ambil input pencarian
 
-        // Mengambil data pengguna berdasarkan pencarian nama, nim, tempat lahir, jenis kelamin, atau program studi
-        $mahasiswa = Mahasiswa::when($search, function ($query) use ($search) {
-            return $query->where(function ($query) use ($search) {
-                $query->where('nama_mahasiswa', 'like', "%$search%")
-                    ->orWhere('nim', 'like', "%$search%");
-                // ->orWhere('tempat_lahir', 'like', "%$search%");
-            });
-        })->paginate(5);
-
-        return view('mahasiswa.index', compact('mahasiswa', 'programStudi', 'tahunAjaran'));
+        return view('mahasiswa.index', compact('mahasiswa', 'programStudi', 'tahunAjaran', 'user'));
     }
+
 
     public function dropdownSearch(Request $request)
     {
+        $user = Auth::user();
+
         $programStudi = ProgramStudi::all();
         $tahunAjaran = TahunAjaran::all();
 
@@ -198,9 +235,9 @@ class MahasiswaController extends Controller
                 return $query->where('jenis_kelamin', $jenisKelamin);
             })
             ->orderBy('nama_mahasiswa', 'asc')
-            ->paginate(5);
+            ->paginate(10);
 
-        return view('mahasiswa.index', compact('mahasiswa', 'programStudi', 'tahunAjaran'));
+        return view('mahasiswa.index', compact('mahasiswa', 'programStudi', 'tahunAjaran', 'user'));
     }
 
 
@@ -214,6 +251,29 @@ class MahasiswaController extends Controller
 
         return redirect()->route('mahasiswa.index')->with('success', 'Data mahasiswa berhasil dihapus.');
     }
+
+    public function unggahTTD(Request $request)
+    {
+        $request->validate([
+            'ttd_mahasiswa' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        $user = Auth::user();
+        $mahasiswa = $user->mahasiswa;
+
+        if ($request->hasFile('ttd_mahasiswa')) {
+            $file = $request->file('ttd_mahasiswa');
+            $filename = 'ttd_' . $mahasiswa->id . '.' . $file->getClientOriginalExtension();
+            $file->storeAs('ttd_mahasiswa', $filename);
+
+            $mahasiswa->update([
+                'ttd_mahasiswa' => 'ttd_mahasiswa/' . $filename
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Tanda tangan berhasil diunggah.');
+    }
+
 
     public function import(Request $request)
     {
