@@ -45,7 +45,6 @@ class PendaftaranSidangController extends Controller
 
         $user = Auth::user();
         if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
-            // $pendaftaran = PendaftaranSidang::with('mahasiswa')->get();
             $programStudiId = $user->dosen->program_studi_id;
             $pendaftaran = PendaftaranSidang::with(['mahasiswa' => function ($query) use ($programStudiId) {
                 $query->where('program_studi_id', $programStudiId);
@@ -58,7 +57,12 @@ class PendaftaranSidangController extends Controller
             abort(403);
         }
 
-        return view('pendaftaran_sidang.index_kaprodi', compact('pendaftaran'));
+        $tahunList = PendaftaranSidang::selectRaw('YEAR(tanggal_pendaftaran) as tahun')
+            ->distinct()
+            ->orderBy('tahun', 'desc')
+            ->pluck('tahun');
+
+        return view('pendaftaran_sidang.index_kaprodi', compact('pendaftaran', 'tahunList'));
     }
 
     public function store(Request $request)
@@ -73,18 +77,6 @@ class PendaftaranSidangController extends Controller
         ]);
 
         $mahasiswaId = Auth::user()->mahasiswa->id;
-
-        // $data = [
-        //     'mahasiswa_id' => $mahasiswaId,
-        //     'tanggal_pendaftaran' => $request->tanggal_pendaftaran,
-        //     'file_tugas_akhir' => $request->file('file_tugas_akhir')->store('sidang'),
-        //     'file_bebas_pinjaman_administrasi' => $request->file('file_bebas_pinjaman_administrasi')->store('sidang'),
-        //     'file_slip_pembayaran_semester_akhir' => $request->file('file_slip_pembayaran_semester_akhir')->store('sidang'),
-        //     'file_transkip_sementara' => $request->file('file_transkip_sementara')->store('sidang'),
-        //     'file_bukti_pembayaran_sidang_ta' => $request->file('file_bukti_pembayaran_sidang_ta')->store('sidang'),
-        // ];
-
-        // PendaftaranSidang::create($data);
 
         // Proses file upload
         $file_tugas_akhir = time() . '.' . $request->file('file_tugas_akhir')->getClientOriginalExtension();
@@ -151,5 +143,36 @@ class PendaftaranSidangController extends Controller
             'Content-Disposition' => 'inline',
             'Cache-Control' => 'public, max-age=3600'
         ]);
+    }
+
+    public function dropdownSearch(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
+
+        $user = Auth::user();
+        $tahun = $request->input('tahun');
+
+        $tahunList = PendaftaranSidang::selectRaw('YEAR(tanggal_pendaftaran) as tahun')
+            ->distinct()
+            ->orderBy('tahun', 'desc')
+            ->pluck('tahun');
+
+        $query = PendaftaranSidang::with('mahasiswa')
+            ->when($tahun, function ($query) use ($tahun) {
+                $query->whereYear('tanggal_pendaftaran', $tahun);
+            });
+
+        if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
+            $programStudiId = $user->dosen->program_studi_id;
+            $query->whereHas('mahasiswa', function ($subQuery) use ($programStudiId) {
+                $subQuery->where('program_studi_id', $programStudiId);
+            });
+        }
+
+        $pendaftaran = $query->orderBy('tanggal_pendaftaran', 'desc')->get();
+
+        return view('pendaftaran_sidang.index_kaprodi', compact('pendaftaran', 'tahunList', 'user'));
     }
 }

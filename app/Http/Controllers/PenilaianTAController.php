@@ -20,121 +20,6 @@ use App\Models\{Dosen, HasilAkhirTA, PenilaianTA, Mahasiswa, RubrikNilai, Jadwal
 
 class PenilaianTAController extends Controller
 {
-    // public function store(Request $request)
-    // {
-    //     $request->validate([
-    //         'mahasiswa_id' => ['required', 'exists:mahasiswa,id'],
-    //         'dosen_id' => ['required', 'exists:dosen,id'],
-    //         'jadwal_sidang_tugas_akhir_id' => ['required', 'exists:jadwal_sidang_tugas_akhir,id'],
-    //         'nilai' => ['required', 'array'],
-    //         'nilai.*' => ['nullable', 'numeric', 'min:0', 'max:100'],
-    //     ]);
-
-    //     $mahasiswaId = $request->mahasiswa_id;
-    //     $dosenId = $request->dosen_id;
-    //     $jadwalId = $request->jadwal_sidang_tugas_akhir_id;
-
-    //     $mahasiswa = Mahasiswa::findOrFail($mahasiswaId);
-    //     $programStudiId = $mahasiswa->program_studi_id;
-
-    //     $jenisDosen = null;
-
-    //     // Simpan penilaian individu per rubrik
-    //     foreach ($request->nilai as $rubrikId => $nilai) {
-    //         $rubrik = RubrikNilai::where('id', $rubrikId)
-    //             ->where('program_studi_id', $programStudiId)
-    //             ->first();
-
-    //         if (!$rubrik) continue;
-
-    //         if (!$jenisDosen) {
-    //             $jenisDosen = $rubrik->jenis_dosen;
-    //         }
-
-    //         PenilaianTA::updateOrCreate(
-    //             [
-    //                 'mahasiswa_id' => $mahasiswaId,
-    //                 'dosen_id' => $dosenId,
-    //                 'rubrik_id' => $rubrikId,
-    //                 'jadwal_sidang_tugas_akhir_id' => $jadwalId,
-    //             ],
-    //             ['nilai' => $nilai]
-    //         );
-    //     }
-
-    //     if (!$jenisDosen) {
-    //         return back()->with('error', 'Rubrik tidak ditemukan atau tidak valid.');
-    //     }
-
-    //     // Rekap nilai akhir per jenis dosen
-    //     $penilaian = PenilaianTA::where('mahasiswa_id', $mahasiswaId)
-    //         ->where('jadwal_sidang_tugas_akhir_id', $jadwalId)
-    //         ->with('rubrik')
-    //         ->get()
-    //         ->groupBy(fn($item) => $item->rubrik->jenis_dosen);
-
-    //     $nilai = [
-    //         'Pembimbing Utama' => optional($penilaian->get('Pembimbing Utama'))->sum(fn($p) => $p->nilai * $p->rubrik->persentase / 100),
-    //         'Pembimbing Pendamping' => optional($penilaian->get('Pembimbing Pendamping'))->sum(fn($p) => $p->nilai * $p->rubrik->persentase / 100),
-    //         'Penguji Utama' => optional($penilaian->get('Penguji Utama'))->sum(fn($p) => $p->nilai * $p->rubrik->persentase / 100),
-    //         'Penguji Pendamping' => optional($penilaian->get('Penguji Pendamping'))->sum(fn($p) => $p->nilai * $p->rubrik->persentase / 100),
-    //     ];
-
-    //     $semuaAda = collect($nilai)->every(fn($n) => $n !== null);
-
-    //     // Simpan hasil akhir TA (rekapan per sidang)
-    //     $hasilAkhir = HasilAkhirTA::updateOrCreate(
-    //         [
-    //             'mahasiswa_id' => $mahasiswaId,
-    //             'jadwal_sidang_tugas_akhir_id' => $jadwalId,
-    //         ],
-    //         [
-    //             'nilai_pembimbing_utama' => $nilai['Pembimbing Utama'],
-    //             'nilai_pembimbing_pendamping' => $nilai['Pembimbing Pendamping'],
-    //             'nilai_penguji_utama' => $nilai['Penguji Utama'],
-    //             'nilai_penguji_pendamping' => $nilai['Penguji Pendamping'],
-    //             'total_akhir' => $semuaAda
-    //                 ? ($nilai['Pembimbing Utama'] * 0.3) +
-    //                 ($nilai['Pembimbing Pendamping'] * 0.3) +
-    //                 ($nilai['Penguji Utama'] * 0.2) +
-    //                 ($nilai['Penguji Pendamping'] * 0.2)
-    //                 : null,
-    //         ]
-    //     );
-
-
-    //     // Simpan ke hasil sidang & riwayat sidang (jika nilai lengkap)
-    //     if ($hasilAkhir->total_akhir !== null) {
-    //         $statusSidang = $hasilAkhir->total_akhir >= 60 ? 'Lulus' : 'Sidang Ulang';
-
-    //         // Update atau buat hasil sidang (per mahasiswa)
-    //         $hasilSidang = HasilSidang::updateOrCreate(
-    //             ['mahasiswa_id' => $mahasiswaId],
-    //             [
-    //                 'status_kelulusan' => $statusSidang,
-    //                 'tahun_lulus' => $statusSidang === 'Lulus' ? now()->format('Y') : null,
-    //             ]
-    //         );
-
-    //         // Simpan riwayat sidang + hubungan ke hasil_akhir_ta
-    //         RiwayatSidang::create([
-    //             'hasil_sidang_id' => $hasilSidang->id,
-    //             'jadwal_sidang_tugas_akhir_id' => $jadwalId,
-    //             'hasil_akhir_ta_id' => $hasilAkhir->id,
-    //             'status_sidang' => $statusSidang,
-    //         ]);
-
-    //         // Update status_kelulusan terakhir
-    //         $riwayatTerakhir = RiwayatSidang::where('hasil_sidang_id', $hasilSidang->id)->latest()->first();
-    //         if ($riwayatTerakhir) {
-    //             $hasilSidang->update(['status_kelulusan' => $riwayatTerakhir->status_sidang]);
-    //         }
-    //     }
-
-    //     return back()->with('success', 'Nilai berhasil disimpan.');
-    // }
-
-
     public function store(Request $request)
     {
         $request->validate([
@@ -154,7 +39,7 @@ class PenilaianTAController extends Controller
 
         $jenisDosen = null;
 
-        // Simpan penilaian individu per rubrik
+        // Simpan nilai per rubrik
         foreach ($request->nilai as $rubrikId => $nilai) {
             $rubrik = RubrikNilai::where('id', $rubrikId)
                 ->where('program_studi_id', $programStudiId)
@@ -181,7 +66,7 @@ class PenilaianTAController extends Controller
             return back()->with('error', 'Rubrik tidak ditemukan atau tidak valid.');
         }
 
-        // Rekap nilai akhir per jenis dosen
+        // Ambil penilaian lengkap & hitung berdasarkan jenis dosen
         $penilaian = PenilaianTA::where('mahasiswa_id', $mahasiswaId)
             ->where('jadwal_sidang_tugas_akhir_id', $jadwalId)
             ->with('rubrik')
@@ -197,12 +82,12 @@ class PenilaianTAController extends Controller
 
         $semuaAda = collect($nilai)->every(fn($n) => $n !== null);
 
-        // 🔍 Cari kaprodi berdasarkan program studi mahasiswa
+        // Cari Kaprodi dari program studi yang sama
         $kaprodi = Dosen::where('jabatan', 'Koordinator Program Studi')
             ->where('program_studi_id', $programStudiId)
             ->first();
 
-        // Simpan hasil akhir TA
+        // Simpan hasil akhir sidang
         $hasilAkhir = HasilAkhirTA::updateOrCreate(
             [
                 'mahasiswa_id' => $mahasiswaId,
@@ -223,23 +108,21 @@ class PenilaianTAController extends Controller
             ]
         );
 
-        // Simpan ke hasil sidang & riwayat sidang jika nilai lengkap
-        $nilaiPengujiUtama = $hasilAkhir->nilai_penguji_utama;
-        $nilaiPengujiPendamping = $hasilAkhir->nilai_penguji_pendamping;
-
-        if ($nilaiPengujiUtama !== null && $nilaiPengujiPendamping !== null) {
-            $rataRataNilai = ($nilaiPengujiUtama + $nilaiPengujiPendamping) / 2;
+        // Jika total_akhir sudah ada, lanjut proses HasilSidang dan RiwayatSidang
+        if ($hasilAkhir->total_akhir !== null) {
+            $rataRataNilai = ($hasilAkhir->nilai_penguji_utama + $hasilAkhir->nilai_penguji_pendamping) / 2;
 
             if ($rataRataNilai < 50) {
                 $statusSidang = 'Sidang Ulang';
-            } elseif ($rataRataNilai >= 50 && $rataRataNilai < 80) {
+            } elseif ($rataRataNilai < 80) {
                 $statusSidang = 'Revisi';
-            } elseif ($rataRataNilai >= 80 && $rataRataNilai <= 100) {
+            } elseif ($rataRataNilai <= 100) {
                 $statusSidang = 'Lulus';
             } else {
-                $statusSidang = 'Tidak Valid'; // Antisipasi jika nilai > 100 atau input aneh
+                $statusSidang = 'Tidak Valid';
             }
 
+            // Simpan/update hasil sidang (per mahasiswa)
             $hasilSidang = HasilSidang::updateOrCreate(
                 ['mahasiswa_id' => $mahasiswaId],
                 [
@@ -248,19 +131,29 @@ class PenilaianTAController extends Controller
                 ]
             );
 
-            RiwayatSidang::create([
-                'hasil_sidang_id' => $hasilSidang->id,
-                'jadwal_sidang_tugas_akhir_id' => $jadwalId,
-                'hasil_akhir_ta_id' => $hasilAkhir->id,
-                'status_sidang' => $statusSidang,
-            ]);
+            // Cek apakah RiwayatSidang sudah ada untuk mahasiswa + jadwal ini
+            $sudahAdaRiwayat = RiwayatSidang::where('hasil_sidang_id', $hasilSidang->id)
+                ->where('jadwal_sidang_tugas_akhir_id', $jadwalId)
+                ->exists();
 
-            $riwayatTerakhir = RiwayatSidang::where('hasil_sidang_id', $hasilSidang->id)->latest()->first();
+            if (!$sudahAdaRiwayat) {
+                RiwayatSidang::create([
+                    'hasil_sidang_id' => $hasilSidang->id,
+                    'jadwal_sidang_tugas_akhir_id' => $jadwalId,
+                    'hasil_akhir_ta_id' => $hasilAkhir->id,
+                    'status_sidang' => $statusSidang,
+                ]);
+            }
+
+            // Update status_kelulusan terakhir berdasarkan riwayat terakhir
+            $riwayatTerakhir = RiwayatSidang::where('hasil_sidang_id', $hasilSidang->id)
+                ->latest()
+                ->first();
+
             if ($riwayatTerakhir) {
                 $hasilSidang->update(['status_kelulusan' => $riwayatTerakhir->status_sidang]);
             }
         }
-
 
         return back()->with('success', 'Nilai berhasil disimpan.');
     }
@@ -455,11 +348,6 @@ class PenilaianTAController extends Controller
             default => null,
         };
 
-        // // Ambil rubrik berdasarkan peran
-        // $rubrik = RubrikNilai::where('jenis_dosen', $peran)
-        //     ->orderBy('id')
-        //     ->get();
-
         $programStudiId = $sidang->mahasiswa->program_studi_id;
 
         $rubrik = RubrikNilai::where('jenis_dosen', $peran)
@@ -545,7 +433,6 @@ class PenilaianTAController extends Controller
                 ['program_studi_id', $mahasiswa->program_studi_id]
             ])->orderBy('id')->get();
 
-            // ✅ Tambahkan filter jadwal_sidang_tugas_akhir_id
             $existing = PenilaianTA::where([
                 ['mahasiswa_id', $mahasiswaId],
                 ['dosen_id', $dosenId],
@@ -597,7 +484,6 @@ class PenilaianTAController extends Controller
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', "inline; filename=\"{$filename}\"");
     }
-
     public function lihatNilaiTA($jadwal)
     {
         $hasilAkhir = HasilAkhirTA::with(['mahasiswa', 'jadwalSidangTugasAkhir', 'kaprodi'])
