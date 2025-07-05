@@ -7,38 +7,6 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script src="https://cdn.tailwindcss.com"></script>
     <title>SIPTA JKB PNC</title>
-    {{-- <style>
-        .active {
-            background-color: blue; /* Ganti dengan warna biru yang diinginkan */
-            color: white; /* Tulisan berwarna putih */
-        }
-    </style> --}}
-    {{-- <style>
-        .active {
-            background-color: blue; /* Ganti dengan warna biru yang diinginkan */
-            color: white
-        }
-
-        .active svg {
-            fill: white; /* Mengubah warna ikon menjadi putih saat aktif */
-        }
-
-        button:hover,
-        a:hover {
-            background-color: blue; /* Mengubah latar belakang menjadi biru saat hover */
-            color: white; /* Mengubah teks menjadi putih saat hover */
-        }
-
-        button:hover svg,
-        a:hover svg {
-            fill: white; /* Mengubah warna ikon menjadi putih saat hover */
-        }
-
-        .submenu {
-            margin-left: 48px; /* Jarak ke kiri dari menu utama */
-        }
-    </style> --}}
-
     <style>
         .active {
             background-color: blue; /* Warna latar biru saat aktif */
@@ -75,8 +43,6 @@
     <div class="overlay" id="overlay"></div>
 
     @include('layouts.navbar')
-
-    @include('layouts.breadcrumb')
 
     <!-- Tambahkan flex-1 agar main mengambil sisa tinggi layar -->
     <main class="container mx-auto mt-4 flex-1">
@@ -125,53 +91,3 @@
         searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length); // Pindahkan kursor ke akhir
     };
 </script>
-
-{{-- <script>
-    let selectedCategory = 'All categories';
-
-    function toggleDropdown() {
-        const dropdown = document.getElementById('dropdown');
-        dropdown.classList.toggle('hidden');
-    }
-
-    function setCategory(category) {
-        selectedCategory = category;
-        document.getElementById('dropdown-button').innerText = category;
-        toggleDropdown();
-    }
-</script> --}}
-
-
-{{-- <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll("[data-collapse-toggle]").forEach(function(button) {
-            button.addEventListener("click", function() {
-                let targetId = this.getAttribute("data-collapse-toggle");
-                let targetMenu = document.getElementById(targetId);
-
-                if (targetMenu.classList.contains("hidden")) {
-                    targetMenu.classList.remove("hidden");
-                } else {
-                    targetMenu.classList.add("hidden");
-                }
-            });
-        });
-    });
-</script> --}}
-{{-- <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const userMenuButton = document.getElementById("user-menu-button");
-        const userDropdown = document.getElementById("user-dropdown");
-
-        userMenuButton.addEventListener("click", function () {
-            userDropdown.classList.toggle("hidden");
-        });
-
-        // Menutup dropdown jika klik di luar area dropdown
-        document.addEventListener("click", function (event) {
-            if (!userMenuButton.contains(event.target) && !userDropdown.contains(event.target)) {
-                userDropdown.classList.add("hidden");
-            }
-        });
-    });
-  </script> --}}

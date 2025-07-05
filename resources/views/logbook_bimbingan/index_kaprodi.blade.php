@@ -1,4 +1,4 @@
-@extends('layout')
+{{-- @extends('layout')
 @section('breadcrumb-parent')
         <li>
             @section('breadcrumb-parent')
@@ -35,40 +35,6 @@
     <div class="mt-3 p-5 rounded-md bg-gray-50 border border-gray-200">
         <div class="overflow-x-auto">
 
-            <!-- Dropdown Search (3 dropdown sejajar) -->
-            {{-- <form action="{{ route('mahasiswa.dropdown-search') }}" method="GET" class="max-w-md w-full" id="searchForm">
-                <div class="flex flex-col md:flex-row gap-4 w-full mb-4">
-                    <!-- Program Studi -->
-                    <div class="flex-1 min-w-[200px]">
-                        <label for="program_studi" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Program Studi</label>
-                        <select name="program_studi" id="program_studi"
-                            class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-                            onchange="document.getElementById('searchForm').submit();">
-                            <option value="">Semua Program Studi</option>
-                            @foreach($programStudi as $prodi)
-                                <option value="{{ $prodi->id }}" {{ request()->get('program_studi') == $prodi->id ? 'selected' : '' }}>
-                                    {{ $prodi->nama_prodi }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <!-- Tahun Ajaran -->
-                    <div class="flex-1 min-w-[200px]">
-                        <label for="tahun_ajaran" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Tahun Ajaran</label>
-                        <select name="tahun_ajaran" id="tahun_ajaran"
-                            class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-                            onchange="document.getElementById('searchForm').submit();">
-                            <option value="">Semua Tahun Ajaran</option>
-                            @foreach($tahunAjaran as $tahun)
-                                <option value="{{ $tahun->id }}" {{ request()->get('tahun_ajaran') == $tahun->id ? 'selected' : '' }}>
-                                    {{ $tahun->tahun_ajaran }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-            </form> --}}
-
             <table class="mb-4 table-auto w-full border-collapse border border-gray-200">
                 <thead class="bg-gray-100">
                     <tr class="text-center">
@@ -102,4 +68,4 @@
         </div>
     </div>
 </div>
-@endsection
+@endsection --}}

@@ -1,86 +1,15 @@
-@extends('layout')
-@section('breadcrumb-parent')
-    <li>
-        @section('breadcrumb-parent')
-            <li class="inline-flex items-center">
-                <a href="/data-master" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
-                    <svg class="w-4 h-4 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 22 22">
-                        <path fill-rule="evenodd" d="M5 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7.414A2 2 0 0 0 20.414 6L18 3.586A2 2 0 0 0 16.586 3H5Zm3 11a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6H8v-6Zm1-7V5h6v2a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd"/>
-                        <path fill-rule="evenodd" d="M14 17h-4v-2h4v2Z" clip-rule="evenodd"/>
-                    </svg>
-                    Bimbingan
-                </a>
-            </li>
-        @endsection
-    </li>
-@endsection
-@section('breadcrumb-item')
-        <li>
-        <div class="flex items-center">
-            <svg class="rtl:rotate-180 w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
-            </svg>
-            <span class="text-sm font-medium text-gray-500">Jadwal Bimbingan</span>
-        </div>
-    </li>
-@endsection
+@extends('layouts.app')
 
 @section('content')
-    <div class="sm:ml-64">
-        <div class="mt-8 flex flex-col md:flex-row items-center h-auto rounded-md bg-gray-50 border border-gray-200 p-5">
-            <h1 class="text-2xl font-bold  text-left mb-4 md:mb-0 md:w-auto md:flex-1">Data Jadwal Bimbingan</h1>
-            @include('layouts.breadcrumb')
+    <div class="p-4 sm:ml-64">
+        <div class="px-10 py-6 mt-1 flex flex-col md:flex-row items-center h-auto rounded-md bg-white border border-gray-200 p-5">
+            <h1 class="text-2xl font-bold  text-left mb-4 md:mb-0 md:w-auto md:flex-1">Jadwal Bimbingan</h1>
+            <x-breadcrumb parent="Bimbingan" item="Jadwal Bimbingan" />
         </div>
-        <div class="mt-3 p-5 max-h-[500px] overflow-y-auto rounded-md bg-gray-50 border border-gray-200">
-            @if($userRole === 'Koordinator Program Studi')
-                <form id="searchForm" action="{{ route('jadwal_bimbingan.dropdown-search') }}" method="GET" class="mb-4">
-                    <div class="flex flex-col md:flex-row gap-4 w-full mb-4">
-                        <!-- Dropdown Nama Dosen -->
-                        <div class="flex-1 min-w-[200px]">
-                            <label for="nama_dosen" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Nama Dosen</label>
-                            <select name="nama_dosen" id="nama_dosen"
-                                class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-                                onchange="document.getElementById('searchForm').submit();">
-                                <option value="">Semua Dosen</option>
-                                @foreach($dosen as $d)
-                                    <option value="{{ $d->nama_dosen }}" {{ request()->get('nama_dosen') == $d->nama_dosen ? 'selected' : '' }}>
-                                        {{ $d->nama_dosen }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+        <div class="px-10 py-8 mt-3 p-5 max-h-[500px] overflow-y-auto rounded-md bg-white border border-gray-200">
+            @include('components.alert-global')
 
-                        <!-- Tanggal (Kalender) -->
-                        <div class="flex-1 min-w-[200px]">
-                            <label for="tanggal" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Tanggal</label>
-                            <input type="date" name="tanggal" id="tanggal"
-                                class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-                                value="{{ request()->get('tanggal') }}"
-                                onchange="document.getElementById('searchForm').submit();">
-                        </div>
-
-                        <!-- Status -->
-                        <div class="flex-1 min-w-[200px]">
-                            <label for="status" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Status</label>
-                            <select name="status" id="status"
-                                class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-                                onchange="document.getElementById('searchForm').submit();">
-                                <option value="">Semua Status</option>
-                                @foreach(['Selesai', 'Sedang Berlangsung', 'Terjadwal'] as $status)
-                                    <option value="{{ $status }}" {{ request()->get('status') == $status ? 'selected' : '' }}>
-                                        {{ $status }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                </form>
-            @endif
-
-            
-
-
-            @if($userRole === 'Dosen')
+            @if(auth()->user()->role === 'Dosen' && auth()->user()->dosen)
                 <!-- Modal toggle -->
                 <div class="flex justify-between mb-4 flex-wrap">
                     <button data-modal-target="crud-modal" data-modal-toggle="crud-modal" class="focus:outline-none text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-4">
@@ -89,25 +18,6 @@
                         </svg>
                         Tambah Jadwal Bimbingan
                     </button>
-                    {{-- <div class="flex justify-end mb-4 flex-grow ">
-                        <form action="{{ route('mahasiswa.search') }}" method="GET" class="max-w-md  w-full" id="search-form">
-                            <label for="default-search" class="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">Search</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
-                                    </svg>
-                                </div>
-                                <input type="search" id="search-input" name="search"
-                                    class="block w-full p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                    placeholder="Cari data mahasiswa disini"
-                                    required
-                                    value="{{ request('search') }}" style="min-width: 300px"
-                                    oninput="document.querySelector('#search-form').submit();" />
-                                <button type="submit" class="text-white absolute end-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Search</button>
-                            </div>
-                        </form>
-                    </div> --}}
                 </div>
 
                 <!-- Main modal -->
@@ -167,116 +77,185 @@
                         </div>
                     </div>
                 </div>
-            @endif
-
-            @if($jadwalBimbingan->isEmpty())
-                <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative text-center" role="alert">
-                    <strong class="font-bold">Perhatian!</strong>
-                    @if($userRole === 'Mahasiswa')
-                        <span class="block sm:inline">Belum ada jadwal bimbingan dari dosen pembimbing Anda!</span>
-                    @elseif($userRole === 'Dosen')
-                        <span class="block sm:inline">Tidak ada data jadwal bimbingan Anda.</span>
-                    @elseif($userRole === 'Koordinator Program Studi')
-                        <span class="block sm:inline">Data jadwal bimbingan tidak ada.</span>
-                    @endif
-                </div>
-            @else
-                @if($userRole === 'Mahasiswa')
-                <div class="overflow-x-auto">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        @foreach($jadwalBimbingan as $jadwal)
-                            <div class="bg-white rounded-lg shadow-lg p-6 {{ $jadwal->kuota == 0 ? 'bg-gray-200' : '' }}">
-                                <h3 class="text-xl font-semibold text-gray-800">{{ $jadwal->dosen->nama_dosen }}</h3>
-                                <p class="text-gray-600">Tanggal: <strong>{{ $jadwal->tanggal }}</strong></p>
-                                <p class="text-gray-600">Waktu: <strong>{{ $jadwal->waktu }}</strong></p>
-                                <p class="text-gray-600">Kuota Tersisa:
-                                    <strong class="{{ $jadwal->kuota == 0 ? 'text-red-500' : 'text-red-600' }}">
-                                        {{ $jadwal->kuota }}
-                                    </strong>
-                                </p>
-
-                                @if ($jadwal->kuota > 0)
-                                    @if (!$jadwal->sudahMendaftar)
-                                        <form action="{{ route('jadwal_bimbingan.daftar', $jadwal->id) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="mt-4 w-full bg-green-600 text-white font-semibold py-2 rounded-lg hover:bg-green-600 transition">
-                                                Daftar Bimbingan
-                                            </button>
-                                        </form>
-                                    @else
-                                    <button type="button" class="mt-4 w-full bg-yellow-300 text-black font-semibold py-2 rounded-lg pointer-events-none" disabled>
-                                        Anda sudah Mendaftar!
-                                        </button>
-                                    @endif
-                                @else
-                                    <button type="button"  class="mt-4 w-full bg-red-600 text-white py-2 rounded-lg pointer-events-none" disabled>
-                                        Maaf, Kuota Penuh!
-                                    </button>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
-                        @if(session('success'))
-                            <div id="popup" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50">
-                                <div class="bg-white p-6 rounded-lg shadow-lg text-center">
-                                <h2 class="text-lg font-semibold text-green-600">{{ session('success') }}</h2>
-                                <p class="mt-2 text-gray-700">
-                                    Nama Dosen: <strong>{{ session('dosen') }}</strong> <br>
-                                    Tanggal: <strong>{{ session('tanggal') }}</strong> <br>
-                                    Pukul: <strong>{{ session('waktu') }}</strong>
-                                </p>
-                                    <div class="mt-4 flex justify-center gap-4">
-                                        <button onclick="document.getElementById('popup').style.display='none'"
-                                            class="px-4 py-2 bg-gray-400 text-white rounded-lg">Kembali</button>
-                                        <a href="{{ route('logbook_bimbingan.index_mahasiswa') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg">
-                                            Lihat Logbook Bimbingan
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
+                @if($jadwalBimbingan->isEmpty())
+                    <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative text-center" role="alert">
+                        <strong class="font-bold">Perhatian!</strong>
+                        @if(auth()->user()->role === 'Mahasiswa')
+                            <span class="block sm:inline">Belum ada jadwal bimbingan dari dosen pembimbing Anda!</span>
+                        @elseif(auth()->user()->role === 'Dosen' && auth()->user()->dosen)
+                            <span class="block sm:inline">Tidak ada data jadwal bimbingan Anda.</span>
                         @endif
                     </div>
-                @endif
-
-                @if(in_array($userRole, ['Dosen', 'Koordinator Program Studi']))
-                <div class="overflow-x-auto">
+                @else
+                    <div class="overflow-x-auto">
                         <table class="mb-4 table-auto w-full border-collapse border border-gray-200">
                             <thead class="bg-gray-100">
                                 <tr class="text-center">
-                                        <th class="w-1/12 border border-gray-300 px-4 py-2">No.</th>
-                                        @if($userRole === 'Koordinator Program Studi')
-                                            <th class="w-2/12 border border-gray-300 px-4 py-2">Nama Dosen</th>
+                                    <th class="w-1/12 border border-gray-300 px-4 py-2">No.</th>
+                                        @if(auth()->user()->role === 'Dosen' && auth()->user()->dosen && auth()->user()->dosen->jabatan === 'Koordinator Program Studi')
+                                            <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Nama Dosen</th>
                                         @endif
-                                        <th class="w-2/12 border border-gray-300 px-4 py-2">Tanggal</th>
-                                        <th class="w-2/12 border border-gray-300 px-4 py-2">Waktu</th>
-                                        <th class="w-2/12 border border-gray-300 px-4 py-2">Kuota</th>
-                                        <th class="w-3/12 border border-gray-300 px-4 py-2">Status</th>
+                                        <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Tanggal</th>
+                                        <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Waktu</th>
+                                        <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Kuota</th>
+                                        <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Status</th>
+                                        <th class="w-4 border border-gray-300 px-4 py-2">Aksi</th>
                                     </tr>
                             </thead>
                             <tbody>
                                 @foreach($jadwalBimbingan as $jadwal)
                                     <tr class="hover:bg-gray-50 text-center">
-                                        <td class="border border-gray-300 px-4 py-2 text-center">{{ $loop->iteration + ($jadwalBimbingan->currentPage() - 1) * $jadwalBimbingan->perPage() }}</td>
-                                        @if($userRole === 'Koordinator Program Studi')
-                                            <td class="border border-gray-300 px-4 py-2">{{ $jadwal->dosen->nama_dosen }}</td>
+                                        <td class="border border-gray-300 px-4 py-2 text-center whitespace-nowrap">{{ $loop->iteration + ($jadwalBimbingan->currentPage() - 1) * $jadwalBimbingan->perPage() }}</td>
+                                        @if(auth()->user()->role === 'Dosen' && auth()->user()->dosen && auth()->user()->dosen->jabatan === 'Koordinator Program Studi')
+                                            <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $jadwal->dosen->nama_dosen }}</td>
                                         @endif
-                                        <td class="border border-gray-300 px-4 py-2">{{ $jadwal->tanggal }}</td>
-                                        <td class="border border-gray-300 px-4 py-2">{{ $jadwal->waktu }}</td>
-                                        <td class="border border-gray-300 px-4 py-2">{{ $jadwal->kuota }}</td>
-                                        <td class="border border-gray-300 px-4 py-2">{{ $jadwal->status }}</td>
+                                        <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ \Carbon\Carbon::parse($jadwal->tanggal)->translatedFormat('d F Y') }}</td>
+                                        <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $jadwal->waktu }}</td>
+                                        <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $jadwal->kuota }}</td>
+                                        <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $jadwal->status }}</td>
+                                        <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">
+                                            <div class="flex justify-center space-x-2">
+                                                @if ($jadwal->isUsedInLogbook)
+                                                    <button class="text-sm items-center flex justify-center w-full px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-200 disabled cursor-not-allowed">
+                                                        <svg class="mr-1 w-5 h-5 text-white dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                                            <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm7.707-3.707a1 1 0 0 0-1.414 1.414L10.586 12l-2.293 2.293a1 1 0 1 0 1.414 1.414L12 13.414l2.293 2.293a1 1 0 0 0 1.414-1.414L13.414 12l2.293-2.293a1 1 0 0 0-1.414-1.414L12 10.586 9.707 8.293Z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                        Batalkan Jadwal
+                                                    </button>
+                                                @else
+                                                    <button data-modal-target="popup-modal-{{ $jadwal->id }}" data-modal-toggle="popup-modal-{{ $jadwal->id }}" class="text-sm items-center flex justify-center w-full px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200">
+                                                        <svg class="mr-1 w-5 h-5 text-white dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                                            <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm7.707-3.707a1 1 0 0 0-1.414 1.414L10.586 12l-2.293 2.293a1 1 0 1 0 1.414 1.414L12 13.414l2.293 2.293a1 1 0 0 0 1.414-1.414L13.414 12l2.293-2.293a1 1 0 0 0-1.414-1.414L12 10.586 9.707 8.293Z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                        Batalkan Jadwal
+                                                    </button>
+                                                @endif
+                                                <!-- Modal -->
+                                                <div id="popup-modal-{{ $jadwal->id }}" tabindex="-1"
+                                                    class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-full max-h-full bg-black bg-opacity-45">
+                                                    <div class="relative p-4 w-full max-w-md max-h-full">
+                                                        <div class="relative bg-white rounded-lg shadow-sm">
+                                                            <button type="button" class="absolute top-3 end-2.5 text-gray-400 bg-transparent
+                                                                hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto
+                                                                inline-flex justify-center items-center" data-modal-hide="popup-modal-{{ $jadwal->id }}">
+                                                                <svg class="w-3 h-3" aria-hidden="true" fill="none" viewBox="0 0 14 14">
+                                                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                                                </svg>
+                                                                <span class="sr-only">Close modal</span>
+                                                            </button>
+                                                            <div class="p-4 md:p-5 text-center">
+                                                                <svg class="mx-auto mb-4 text-gray-400 w-12 h-12" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                                                </svg>
+                                                                <h3 class="mb-5 text-lg font-normal text-gray-500">
+                                                                    Apakah anda yakin ingin membatalkan <br> jadwal bimbingan ini?
+                                                                </h3>
+                                                                <form id="delete-form-{{ $jadwal->id }}" action="{{ route('jadwal_bimbingan.destroy', $jadwal->id) }}" method="POST" class="inline">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                    <button type="submit" class="w-full sm:w-20 md:w-20 text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 justify-center">
+                                                                        Ya
+                                                                    </button>
+                                                                </form>
+                                                                <button data-modal-hide="popup-modal-{{ $jadwal->id }}" type="button" class="w-full sm:w-20 md:w-20 py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-grey-200 rounded-lg border border-gray-200 hover:bg-gray-500 hover:text-white focus:z-10 focus:ring-4 focus:ring-gray-100 justify-center">
+                                                                        Tidak
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
+                    <nav aria-label="Page navigation example">
+                        {{ $jadwalBimbingan->links() }} <!-- Ini akan menghasilkan pagination -->
+                    </nav>
                 @endif
+            @endif
 
-                <nav aria-label="Page navigation example">
-                    {{ $jadwalBimbingan->links() }} <!-- Ini akan menghasilkan pagination -->
-                </nav>
+            @if(auth()->user()->role === 'Mahasiswa')
+                @if (!$pengajuan)
+                    <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative text-center" role="alert">
+                        <strong class="font-bold">Perhatian!</strong>
+                        <span class="block sm:inline">Belum ada jadwal bimbingan. Anda belum mengajukan pembimbing tugas akhir Anda.</span>
+                    </div>
+                @elseif ($pengajuan && $pengajuan->validasi === 'Menunggu')
+                    <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative text-center" role="alert">
+                        <strong class="font-bold">Perhatian!</strong>
+                        <span class="block sm:inline">Belum ada jadwal bimbingan. Tunggu Koordinator Program Studi memberikan validasi pengajuan pembimbing Anda.</span>
+                    </div>
+                @elseif ($jadwalBimbingan->isEmpty())
+                    <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative text-center" role="alert">
+                        <strong class="font-bold">Perhatian!</strong>
+                        @if(auth()->user()->role === 'Mahasiswa')
+                            <span class="block sm:inline">Belum ada jadwal bimbingan dari dosen pembimbing Anda!</span>
+                        @elseif(auth()->user()->role === 'Dosen' && auth()->user()->dosen)
+                            <span class="block sm:inline">Tidak ada data jadwal bimbingan Anda.</span>
+                        @endif
+                    </div>
+                @else
+                    {{-- @if(auth()->user()->role === 'Mahasiswa') --}}
+                        <div class="overflow-x-auto">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                @foreach($jadwalBimbingan as $jadwal)
+                                    <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-6 {{ $jadwal->kuota == 0 ? 'bg-gray-200' : '' }}">
+                                        <h3 class="text-xl font-semibold text-gray-800">{{ $jadwal->dosen->nama_dosen }}</h3>
+                                        <p class="text-gray-600">Tanggal: <strong>{{ \Carbon\Carbon::parse($jadwal->tanggal)->translatedFormat('d F Y') }}</strong></p>
+                                        <p class="text-gray-600">Waktu: <strong>{{ $jadwal->waktu }}</strong></p>
+                                        <p class="text-gray-600">Kuota Tersisa:
+                                            <strong class="{{ $jadwal->kuota == 0 ? 'text-red-500' : 'text-red-600' }}">
+                                                {{ $jadwal->kuota }}
+                                            </strong>
+                                        </p>
+
+                                        @if ($jadwal->kuota > 0)
+                                            @if (!$jadwal->sudahMendaftar)
+                                                <form action="{{ route('jadwal_bimbingan.daftar', $jadwal->id) }}" method="POST">
+                                                    @csrf
+                                                    <button type="submit" class="mt-4 w-full bg-green-600 text-white font-semibold py-2 rounded-lg hover:bg-green-600 transition">
+                                                        Daftar Bimbingan
+                                                    </button>
+                                                </form>
+                                            @else
+                                            <button type="button" class="mt-4 w-full bg-yellow-300 text-black font-semibold py-2 rounded-lg pointer-events-none" disabled>
+                                                Anda sudah Mendaftar!
+                                                </button>
+                                            @endif
+                                        @else
+                                            <button type="button"  class="mt-4 w-full bg-red-600 text-white py-2 rounded-lg pointer-events-none" disabled>
+                                                Maaf, Kuota Penuh!
+                                            </button>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                                @if(session('success'))
+                                    <div id="popup" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50">
+                                        <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+                                        <h2 class="text-lg font-semibold text-green-600">{{ session('success') }}</h2>
+                                        <p class="mt-2 text-gray-700">
+                                            Nama Dosen: <strong>{{ session('dosen') }}</strong> <br>
+                                            Tanggal: <strong>{{ \Carbon\Carbon::parse(session('tanggal'))->translatedFormat('d F Y') }}</strong> <br>
+                                            Pukul: <strong>{{ session('waktu') }}</strong>
+                                        </p>
+                                            <div class="mt-4 flex justify-center gap-4">
+                                                <button onclick="document.getElementById('popup').style.display='none'"
+                                                    class="px-4 py-2 bg-gray-400 text-white rounded-lg">Kembali</button>
+                                                <a href="{{ route('logbook_bimbingan.index_mahasiswa') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                                                    Lihat Logbook Bimbingan
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                        </div>
+                @endif
             @endif
         </div>
-
     </div>
 
     <script>
