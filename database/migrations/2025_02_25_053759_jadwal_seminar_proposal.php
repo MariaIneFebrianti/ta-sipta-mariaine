@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('jadwal_seminar_proposal', function (Blueprint $table) {
             $table->id();
             $table->foreignId('mahasiswa_id')->constrained('mahasiswa')->onDelete('cascade');
+            $table->string('jenis_sidang', 16)->default('Seminar Proposal');
             $table->foreignId('penguji_utama_id')->constrained('dosen')->onDelete('cascade');
             $table->foreignId('penguji_pendamping_id')->constrained('dosen')->onDelete('cascade');
             $table->date('tanggal');

@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('proposal', function (Blueprint $table) {
             $table->id();
             $table->foreignId('mahasiswa_id')->constrained('mahasiswa')->onDelete('cascade');
-            $table->string('judul_proposal');
+            $table->string('judul_proposal', 100)->unique();
             $table->string('file_proposal');
+            $table->string('revisi_judul_proposal')->nullable()->unique();
+            $table->string('revisi_file_proposal')->nullable();
             $table->timestamps();
         });
     }

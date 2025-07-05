@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('jadwal_sidang_tugas_akhir', function (Blueprint $table) {
             $table->id();
             $table->foreignId('mahasiswa_id')->constrained('mahasiswa')->onDelete('cascade');
+            $table->enum('jenis_sidang', ['Sidang Reguler', 'Sidang Ulang']);
             $table->foreignId('pembimbing_utama_id')->constrained('dosen')->onDelete('cascade');
             $table->foreignId('pembimbing_pendamping_id')->constrained('dosen')->onDelete('cascade');
             $table->foreignId('penguji_utama_id')->constrained('dosen')->onDelete('cascade');

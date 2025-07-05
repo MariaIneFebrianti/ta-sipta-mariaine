@@ -17,7 +17,7 @@ return new class extends Migration
             $table->date('tanggal');
             $table->time('waktu');
             $table->integer('kuota');
-            $table->string('status')->default('Terjadwal');
+            $table->string('status', 20)->default('Terjadwal');
             $table->timestamps();
         });
     }

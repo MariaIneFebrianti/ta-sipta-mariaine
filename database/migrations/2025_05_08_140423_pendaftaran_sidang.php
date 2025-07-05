@@ -13,17 +13,14 @@ return new class extends Migration
     {
         Schema::create('pendaftaran_sidang', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('mahasiswa_id');
+            $table->foreignId('mahasiswa_id')->constrained('mahasiswa')->onDelete('cascade');
             $table->date('tanggal_pendaftaran');
-            $table->string('file_tugas_akhir');
-            $table->string('file_bebas_pinjaman_administrasi');
-            $table->string('file_slip_pembayaran_semester_akhir');
-            $table->string('file_transkip_sementara');
-            $table->string('file_bukti_pembayaran_sidang_ta');
+            $table->string('file_tugas_akhir')->nullable(); //nullable buat uji coba
+            $table->string('file_bebas_pinjaman_administrasi')->nullable();
+            $table->string('file_slip_pembayaran_semester_akhir')->nullable();
+            $table->string('file_transkip_sementara')->nullable();
+            $table->string('file_bukti_pembayaran_sidang_ta')->nullable();
             $table->timestamps();
-
-            // Foreign key constraint
-            $table->foreign('mahasiswa_id')->references('id')->on('mahasiswa')->onDelete('cascade');
         });
     }
 
