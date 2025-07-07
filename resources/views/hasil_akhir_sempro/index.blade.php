@@ -26,7 +26,7 @@
                         <div class="w-1/6 min-w-[200px]">
                             <label for="status_kelulusan" class="block text-sm font-medium text-gray-900 mb-1">Status Kelulusan</label>
                             <select name="status_kelulusan" id="status_kelulusan"
-                                class="w-full p-2.5 border border-gray-300 rounded-lg"
+                            class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
                                 onchange="document.getElementById('searchForm').submit();">
                                 <option value="">Semua Status</option>
                                 @foreach ($statusList as $status)
@@ -39,7 +39,7 @@
                         <div class="w-1/6 min-w-[200px]">
                             <label for="tahun_ajaran" class="block text-sm font-medium text-gray-900 mb-1">Tahun Ajaran</label>
                             <select name="tahun_ajaran" id="tahun_ajaran"
-                                    class="w-full p-2.5 border border-gray-300 rounded-lg"
+                            class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
                                     onchange="document.getElementById('searchForm').submit();">
                                 <option value="">Semua Tahun Ajaran</option>
                                 @foreach ($tahunAjaranList as $ta)

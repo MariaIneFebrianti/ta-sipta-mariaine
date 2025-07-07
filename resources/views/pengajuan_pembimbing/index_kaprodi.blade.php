@@ -17,7 +17,7 @@
                         <div class="flex-1 min-w-[200px]">
                             <label for="tahun_ajaran_id" class="block text-sm font-medium text-gray-700 mb-2">Tahun Ajaran</label>
                             <select name="tahun_ajaran_id" id="tahun_ajaran_id"
-                                class="block w-full p-2 border border-gray-300 rounded-lg"
+                            class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
                                 onchange="this.form.submit()">
                                 <option value="">Semua Tahun Ajaran</option>
                                 @foreach ($tahunAjaranList as $tahun)
@@ -32,7 +32,7 @@
                         <div class="flex-1 min-w-[200px]">
                             <label for="pembimbing_utama_id" class="block text-sm font-medium text-gray-900 mb-2">Pembimbing Utama</label>
                             <select name="pembimbing_utama_id" id="pembimbing_utama_id"
-                                class="block w-full p-2 border border-gray-300 rounded-lg"
+                            class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
                                 onchange="this.form.submit()">
                                 <option value="">Semua Pembimbing Utama</option>
                                 @foreach($dosen as $d)
@@ -47,7 +47,7 @@
                         <div class="flex-1 min-w-[200px]">
                             <label for="pembimbing_pendamping_id" class="block text-sm font-medium text-gray-900 mb-2">Pembimbing Pendamping</label>
                             <select name="pembimbing_pendamping_id" id="pembimbing_pendamping_id"
-                                class="block w-full p-2 border border-gray-300 rounded-lg"
+                            class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
                                 onchange="this.form.submit()">
                                 <option value="">Semua Pembimbing Pendamping</option>
                                 @foreach($dosen as $d)
@@ -62,7 +62,7 @@
                         <div class="flex-1 min-w-[200px]">
                             <label for="validasi" class="block text-sm font-medium text-gray-900 mb-2">Status Validasi</label>
                             <select name="validasi" id="validasi"
-                                class="block w-full p-2 border border-gray-300 rounded-lg"
+                            class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
                                 onchange="this.form.submit()">
                                 <option value="">Semua Status</option>
                                 <option value="Menunggu" {{ request('validasi') == 'Menunggu' ? 'selected' : '' }}>Menunggu</option>
@@ -82,7 +82,7 @@
                             <path fill-rule="evenodd" d="M13 11.15V4a1 1 0 1 0-2 0v7.15L8.78 8.374a1 1 0 1 0-1.56 1.25l4 5a1 1 0 0 0 1.56 0l4-5a1 1 0 1 0-1.56-1.25L13 11.15Z" clip-rule="evenodd" />
                             <path fill-rule="evenodd" d="M9.657 15.874 7.358 13H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2.358l-2.3 2.874a3 3 0 0 1-4.685 0ZM17 16a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2H17Z" clip-rule="evenodd" />
                         </svg>
-                        Cetak Rekap Dosen
+                        Cetak Rekap Dosen Pembimbing
                     </a>
                 </div>
             </div>

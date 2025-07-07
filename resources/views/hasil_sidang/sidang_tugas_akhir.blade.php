@@ -20,7 +20,7 @@
                         Status Kelulusan
                     </label>
                     <select name="status_kelulusan" id="status_kelulusan"
-                            class="w-full p-2.5 border border-gray-300 rounded-lg"
+                            class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
                             onchange="document.getElementById('searchForm').submit();">
                         <option value="">Semua Status</option>
                         @foreach ($statusList as $status)
@@ -36,7 +36,7 @@
                         Tahun Lulus
                     </label>
                     <select name="tahun_lulus" id="tahun_lulus"
-                            class="w-full p-2.5 border border-gray-300 rounded-lg"
+                            class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
                             onchange="document.getElementById('searchForm').submit();">
                         <option value="">Semua Tahun</option>
                         @foreach ($tahunList as $tahun)
@@ -52,7 +52,7 @@
                         Tahun Ajaran
                     </label>
                     <select name="tahun_ajaran" id="tahun_ajaran"
-                            class="w-full p-2.5 border border-gray-300 rounded-lg"
+                            class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
                             onchange="document.getElementById('searchForm').submit();">
                         <option value="">Semua Tahun Ajaran</option>
                         @foreach ($tahunAjaranList as $ta)
@@ -65,21 +65,29 @@
             </form>
 
             {{-- Tombol Cetak --}}
-            {{-- <div class="ml-auto">
-                <a href="{{ route('penilaian_ta.rekap_nilai') }}" target="_blank"
-                class="inline-flex gap-1 items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition">
-                    <svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg"
-                        fill="currentColor" viewBox="0 0 24 24">
-                        <path fill-rule="evenodd"
-                            d="M13 11.15V4a1 1 0 1 0-2 0v7.15L8.78 8.374a1 1 0 1 0-1.56 1.25l4 5a1 1 0 0 0 1.56 0l4-5a1 1 0 1 0-1.56-1.25L13 11.15Z"
-                            clip-rule="evenodd" />
-                        <path fill-rule="evenodd"
-                            d="M9.657 15.874 7.358 13H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2.358l-2.3 2.874a3 3 0 0 1-4.685 0ZM17 16a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2H17Z"
-                            clip-rule="evenodd" />
-                    </svg>
-                    Cetak Rekap Nilai
-                </a>
-            </div> --}}
+            <div class="ml-auto">
+                <form action="{{ route('penilaian_ta.cetak_rekap_yudisium') }}" method="GET" target="_blank">
+                    <input type="hidden" name="tahun_ajaran" value="{{ request('tahun_ajaran') }}">
+                    <input type="hidden" name="status_kelulusan" value="{{ request('status_kelulusan') }}">
+                    <button type="submit"
+                        class="inline-flex gap-1 items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition">
+                        <svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                            fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd"
+                                d="M13 11.15V4a1 1 0 1 0-2 0v7.15L8.78 8.374a1 1 0 1 0-1.56 1.25l4 5a1 1 0 0 0 1.56 0l4-5a1 1 0 1 0-1.56-1.25L13 11.15Z"
+                                clip-rule="evenodd" />
+                            <path fill-rule="evenodd"
+                                d="M9.657 15.874 7.358 13H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2.358l-2.3 2.874a3 3 0 0 1-4.685 0ZM17 16a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2H17Z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        Cetak Mahasiswa Yudisium
+                    </button>
+                </form>
+            </div>
+
+            <p class="text-sm text-gray-700 mt-4">
+                Jumlah Mahasiswa yang Sudah Sidang: <strong>{{ $jumlahMahasiswaSidang }}</strong>
+            </p>
         </div>
 
         @if($hasilSidang->isEmpty())

@@ -60,17 +60,34 @@
             </div>
 
             @if (auth()->user() ->role === 'Dosen' && auth()->user()->dosen && auth()->user()->dosen->jabatan === 'Koordinator Program Studi')
-            <form action="{{ route('jadwal_sidang_tugas_akhir.import') }}" method="POST" enctype="multipart/form-data" id="importForm">
-                @csrf
-                <input type="file" name="file" id="fileInput" accept=".csv, .xlsx, .xls" style="display: none;" onchange="document.getElementById('importForm').submit();">
-                <button type="button" onclick="document.getElementById('fileInput').click();" class="whitespace-nowrap flex items-center gap-2 focus:outline-none text-white bg-blue-500 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-6 py-3 me-2 mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="white" viewBox="0 0 48 48" id="import">
-                        <path d="m18 6-8 7.98h6V28h4V13.98h6L18 6zm14 28.02V20h-4v14.02h-6L30 42l8-7.98h-6z"></path>
-                        <path fill="none" d="M0 0h48v48H0z"></path>
-                    </svg>
-                    Import Jadwal Sidang Tugas Akhir
-                </button>
-            </form>
+                <div class="flex justify-between items-center mb-4 flex-wrap gap-4">
+                    {{-- Import Jadwal Sidang --}}
+                    <form action="{{ route('jadwal_sidang_tugas_akhir.import') }}" method="POST" enctype="multipart/form-data" id="importForm">
+                        @csrf
+                        <input type="file" name="file" id="fileInput" accept=".csv, .xlsx, .xls" style="display: none;" onchange="document.getElementById('importForm').submit();">
+                        <button type="button"
+                            onclick="document.getElementById('fileInput').click();"
+                            class="flex items-center gap-2 text-white bg-blue-500 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-6 py-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="white" viewBox="0 0 48 48" id="import">
+                                <path d="m18 6-8 7.98h6V28h4V13.98h6L18 6zm14 28.02V20h-4v14.02h-6L30 42l8-7.98h-6z"></path>
+                                <path fill="none" d="M0 0h48v48H0z"></path>
+                            </svg>
+                            Import Jadwal Sidang Tugas Akhir
+                        </button>
+                    </form>
+
+                    {{-- Cetak Rekap --}}
+                    <a href="{{ route('rekap.dosen_penguji', ['tahun_ajaran' => request('tahun_ajaran')]) }}"
+                        target="_blank"
+                        class="text-sm flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-700 transition duration-200">
+                        <svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M13 11.15V4a1 1 0 1 0-2 0v7.15L8.78 8.374a1 1 0 1 0-1.56 1.25l4 5a1 1 0 0 0 1.56 0l4-5a1 1 0 1 0-1.56-1.25L13 11.15Z" clip-rule="evenodd" />
+                            <path fill-rule="evenodd" d="M9.657 15.874 7.358 13H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2.358l-2.3 2.874a3 3 0 0 1-4.685 0ZM17 16a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2H17Z" clip-rule="evenodd" />
+                        </svg>
+                        Cetak Rekap Dosen Penguji
+                    </a>
+                </div>
+
             @endif
 
             <div class="overflow-x-auto">

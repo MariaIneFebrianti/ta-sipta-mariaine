@@ -21,18 +21,6 @@
                     Tambah Mahasiswa
                 </button>
 
-                @if (session('success'))
-                    <div class="bg-green-100 text-green-800 p-2 rounded mb-4">
-                        {{ session('success') }}
-                    </div>
-                @endif
-
-                @if (session('error'))
-                    <div class="bg-red-100 text-red-800 p-2 rounded mb-4">
-                        {{ session('error') }}
-                    </div>
-                @endif
-
                 <form action="{{ route('mahasiswa.import') }}" method="POST" enctype="multipart/form-data" id="importForm">
                     @csrf
                     <input type="file" name="file" id="fileInput" accept=".csv, .xlsx, .xls" style="display: none;" onchange="document.getElementById('importForm').submit();">

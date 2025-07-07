@@ -117,7 +117,7 @@
                                 </td>
 
                                 {{-- Bukti Pembayaran Sidang TA --}}
-                                {{-- <td class="border border-gray-300 px-4 py-2 whitespace-nowrap align-middle">
+                                <td class="border border-gray-300 px-4 py-2 whitespace-nowrap align-middle">
                                     @if ($item->file_bukti_pembayaran_sidang_ta)
                                         <a href="{{ route('pendaftaran_sidang.showFile', ['id' => $item->id, 'fileField' => 'file_bukti_pembayaran_sidang_ta']) }}" target="_blank">
                                             <button class="text-sm bg-blue-500 font-medium px-4 py-2 flex items-center justify-center gap-1  mx-auto rounded-lg text-white whitespace-nowrap">
@@ -130,7 +130,7 @@
                                     @else
                                         <span class="text-gray-500">Belum ada file</span>
                                     @endif
-                                </td> --}}
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

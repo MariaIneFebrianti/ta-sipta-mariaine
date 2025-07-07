@@ -102,6 +102,7 @@
             <th rowspan="2">Nama Mahasiswa</th>
             <th rowspan="2">NIM</th>
             <th rowspan="2">Program Studi</th>
+            <th rowspan="2">Tahun Ajaran</th>
             <th colspan="2">Nilai</th>
         </tr>
         <tr>
@@ -116,6 +117,7 @@
                 <td>{{ $item['nama'] }}</td>
                 <td>{{ $item['nim'] }}</td>
                 <td>{{ $item['prodi'] }}</td>
+                <td>{{ $item['tahun_ajaran'] }}</td>
                 <td>{{ $item['total_angka'] }}</td>
                 <td>{{ $item['total_huruf'] }}</td>
             </tr>

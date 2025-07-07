@@ -15,7 +15,7 @@
                     <div class="min-w-[200px]">
                         <label for="tahun_ajaran_id" class="block text-sm font-medium text-gray-700 mb-2">Tahun Ajaran</label>
                         <select name="tahun_ajaran_id" id="tahun_ajaran_id"
-                            class="block w-full p-2 border border-gray-300 rounded-lg"
+                            class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
                             onchange="this.form.submit()">
                             <option value="">Semua Tahun Ajaran</option>
                             @foreach ($tahunAjaranList as $tahun)

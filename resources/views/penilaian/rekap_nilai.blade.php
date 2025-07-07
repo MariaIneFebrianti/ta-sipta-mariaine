@@ -72,7 +72,7 @@
         </div>
     </div>
 
-        @if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi')
+        {{-- @if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') --}}
             @if($rekap->isEmpty())
                 <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative text-center" role="alert">
                     <strong class="font-bold">Perhatian!</strong>
@@ -87,6 +87,7 @@
                                 <th class="border border-gray-300 px-4 py-2 whitespace-nowrap" rowspan="2">Nama</th>
                                 <th class="border border-gray-300 px-4 py-2 whitespace-nowrap" rowspan="2">NIM</th>
                                 <th class="border border-gray-300 px-4 py-2 whitespace-nowrap" rowspan="2">Program Studi</th>
+                                <th class="border border-gray-300 px-4 py-2 whitespace-nowrap" rowspan="2">Tahun Ajaran</th>
                                 <th class="border border-gray-300 px-4 py-2 whitespace-nowrap" colspan="2">Nilai</th>
                             </tr>
                             <tr>
@@ -101,6 +102,7 @@
                                     <td class="border border-gray-300 px-4 py-2 text-center whitespace-nowrap">{{ $item['nama'] }}</td>
                                     <td class="border border-gray-300 px-4 py-2 text-center whitespace-nowrap">{{ $item['nim'] }}</td>
                                     <td class="border border-gray-300 px-4 py-2 text-center whitespace-nowrap">{{ $item['prodi'] }}</td>
+                                    <td class="border border-gray-300 px-4 py-2 text-center whitespace-nowrap">{{ $item['tahun_ajaran'] }}</td>
                                     <td class="border border-gray-300 px-4 py-2 text-center whitespace-nowrap">{{ $item['total_angka'] }}</td>
                                     <td class="border border-gray-300 px-4 py-2 text-center whitespace-nowrap">{{ $item['total_huruf'] }}</td>
                                 </tr>
@@ -113,7 +115,7 @@
                     {{ $hasilAkhirAll->links() }} <!-- Ini akan menghasilkan pagination -->
                 </nav>
             @endif
-        @endif
+        {{-- @endif --}}
     </div>
 </div>
 
