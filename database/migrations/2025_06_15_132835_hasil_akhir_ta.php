@@ -21,7 +21,6 @@ return new class extends Migration
             $table->float('nilai_penguji_utama')->nullable();
             $table->float('nilai_penguji_pendamping')->nullable();
             $table->float('total_akhir')->nullable();
-            $table->string('file_revisi')->nullable();
             $table->timestamps();
         });
     }
