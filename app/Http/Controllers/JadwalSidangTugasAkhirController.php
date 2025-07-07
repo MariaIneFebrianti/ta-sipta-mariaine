@@ -2,48 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Imports\JadwalSidangTugasAkhirImport;
 use App\Models\Dosen;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\JadwalSidangTugasAkhir;
-use App\Models\ProgramStudi;
-use App\Models\RuanganSidang;
 use App\Models\TahunAjaran;
+use App\Models\ProgramStudi;
+use Illuminate\Http\Request;
+use App\Models\RuanganSidang;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Models\JadwalSidangTugasAkhir;
+use App\Imports\JadwalSidangTugasAkhirImport;
 
 \Carbon\Carbon::setLocale('id');
 
 class JadwalSidangTugasAkhirController extends Controller
 {
-    // public function index()
-    // {
-    //     if (!Auth::check()) {
-    //         return redirect('/login')->with('message', 'Please log in to continue.');
-    //     }
-
-    //     // Mengambil data jadwal sidang tugas akhir beserta relasi terkait
-    //     $jadwals = JadwalSidangTugasAkhir::with([
-    //         'mahasiswa',
-    //         'pembimbingUtama',
-    //         'pembimbingPendamping',
-    //         'pengujiUtama',
-    //         'pengujiPendamping',
-    //         'ruanganSidang'
-    //     ])->paginate(10);
-
-    //     $pembimbingUtama = Dosen::all();
-    //     $pembimbingPendamping = Dosen::all();
-    //     $pengujiUtama = Dosen::all();
-    //     $pengujiPendamping = Dosen::all();
-    //     $ruanganSidang = RuanganSidang::all();
-
-
-
-    //     // Menampilkan data ke view
-    //     return view('jadwal_sidang.jadwal_sidang_tugas_akhir', compact('jadwals', 'ruanganSidang', 'pembimbingUtama', 'pembimbingPendamping', 'pengujiUtama', 'pengujiPendamping'));
-    // }
-
     public function index()
     {
         if (!Auth::check()) {
@@ -52,13 +25,16 @@ class JadwalSidangTugasAkhirController extends Controller
 
         // Ambil semua jadwal sidang tugas akhir lengkap dengan relasi
         $jadwals = JadwalSidangTugasAkhir::with([
-            'mahasiswa.programStudi',      // pastikan relasi programStudi ada di model Mahasiswa
+            'mahasiswa.programStudi',
             'pembimbingUtama',
             'pembimbingPendamping',
             'pengujiUtama',
             'pengujiPendamping',
             'ruanganSidang',
-        ])->get(); // Tanpa paginate supaya mudah groupBy
+        ])
+            ->orderBy('created_at', 'desc')
+            ->orderBy('tanggal', 'asc')
+            ->get();
 
         // Group berdasarkan nama program studi mahasiswa
         $jadwalsGrouped = $jadwals->groupBy(function ($item) {
@@ -89,54 +65,6 @@ class JadwalSidangTugasAkhirController extends Controller
         ));
     }
 
-
-    // public function index()
-    // {
-    //     if (!Auth::check()) {
-    //         return redirect('/login')->with('message', 'Please log in to continue.');
-    //     }
-
-    //     $user = Auth::user();
-
-    //     if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
-    //         $dosen = Dosen::where('user_id', Auth::id())
-    //             ->where('jabatan', 'Koordinator Program Studi')
-    //             ->firstOrFail();
-
-    //         $jadwals = JadwalSidangTugasAkhir::whereHas('mahasiswa', function ($query) use ($dosen) {
-    //             $query->where('program_studi_id', $dosen->program_studi_id);
-    //         })
-    //             ->with([
-    //                 'mahasiswa',
-    //                 'pembimbingUtama',
-    //                 'pembimbingPendamping',
-    //                 'pengujiUtama',
-    //                 'pengujiPendamping',
-    //                 'ruanganSidang'
-    //             ])
-    //             ->paginate(10);
-    //     } elseif ($user->role === 'Dosen' || $user->role === 'Mahasiswa') {
-    //         // Mengambil data jadwal sidang tugas akhir beserta relasi terkait
-    //         $jadwals = JadwalSidangTugasAkhir::with([
-    //             'mahasiswa',
-    //             'pembimbingUtama',
-    //             'pembimbingPendamping',
-    //             'pengujiUtama',
-    //             'pengujiPendamping',
-    //             'ruanganSidang'
-    //         ])->paginate(10);
-    //     } else {
-    //         abort(403);
-    //     }
-
-    // $pengujiPendamping = Dosen::all();
-    // $ruanganSidang = RuanganSidang::all();    // $ruanganSidang = RuanganSidang::all();
-
-
-    //     // Menampilkan data ke view
-    //     return view('jadwal_sidang.jadwal_sidang_tugas_akhir', compact('jadwals', 'dosen', 'ruanganSidang', 'pengujiUtama', 'pengujiPendamping'));
-    // }
-
     public function import(Request $request)
     {
         $request->validate([
@@ -154,9 +82,9 @@ class JadwalSidangTugasAkhirController extends Controller
     public function update(Request $request, string $id)
     {
         $request->validate([
-            'pembimbing_utama_id' => 'required|exists:dosen,id',
-            'pembimbing_pendamping_id' => 'required|exists:dosen,id',
-            'penguji_utama_id' => 'required|exists:dosen,id',
+            'pembimbing_utama_id' => 'required|exists:dosen,id|different:pembimbing_pendamping_id|different:penguji_utama_id|different:penguji_pendamping_id',
+            'pembimbing_pendamping_id' => 'required|exists:dosen,id|different:penguji_utama_id|different:penguji_pendamping_id',
+            'penguji_utama_id' => 'required|exists:dosen,id|different:penguji_pendamping_id',
             'penguji_pendamping_id' => 'required|exists:dosen,id',
             'tanggal' => 'required|date|after_or_equal:today',
             'waktu_mulai' => 'required|date_format:H:i:s',
@@ -164,54 +92,77 @@ class JadwalSidangTugasAkhirController extends Controller
             'ruangan_sidang_id' => 'required|exists:ruangan_sidang,id',
         ]);
 
-        $jadwalSidangTugasAkhir = JadwalSidangTugasAkhir::findOrFail($id);
-        $jadwalSidangTugasAkhir->update($request->all());
+        $jadwal = JadwalSidangTugasAkhir::findOrFail($id);
+
+        // Ambil data mahasiswa yang terkait
+        $mahasiswa = $jadwal->mahasiswa;
+
+        // ===== POIN 1: Cek dosen tidak boleh sama =====
+        $dosenDipakai = [
+            $request->pembimbing_utama_id,
+            $request->pembimbing_pendamping_id,
+            $request->penguji_utama_id,
+            $request->penguji_pendamping_id,
+        ];
+
+        if (count(array_unique($dosenDipakai)) < count($dosenDipakai)) {
+            return back()->withErrors(['error' => 'Pembimbing dan penguji tidak boleh sama.'])->withInput();
+        }
+
+        // ===== POIN 2: Cek jadwal tabrakan (tanggal, waktu, ruangan) =====
+        $jadwalBentrok = JadwalSidangTugasAkhir::where('id', '!=', $id)
+            ->where('tanggal', $request->tanggal)
+            ->where('waktu_mulai', $request->waktu_mulai)
+            ->where('waktu_selesai', $request->waktu_selesai)
+            ->where('ruangan_sidang_id', $request->ruangan_sidang_id)
+            ->exists();
+
+        if ($jadwalBentrok) {
+            return back()->withErrors(['error' => 'Jadwal dengan waktu dan ruangan yang sama sudah terpakai.'])->withInput();
+        }
+
+        // ===== POIN 3: Cek dosen bentrok pada waktu yang sama tapi beda ruangan =====
+        $jadwalKonflikDosen = JadwalSidangTugasAkhir::where('id', '!=', $id)
+            ->where('tanggal', $request->tanggal)
+            ->where('waktu_mulai', $request->waktu_mulai)
+            ->where('waktu_selesai', $request->waktu_selesai)
+            ->where(function ($query) use ($request) {
+                $query->whereIn('pembimbing_utama_id', [
+                    $request->pembimbing_utama_id,
+                    $request->pembimbing_pendamping_id,
+                    $request->penguji_utama_id,
+                    $request->penguji_pendamping_id
+                ])
+                    ->orWhereIn('pembimbing_pendamping_id', [
+                        $request->pembimbing_utama_id,
+                        $request->pembimbing_pendamping_id,
+                        $request->penguji_utama_id,
+                        $request->penguji_pendamping_id
+                    ])
+                    ->orWhereIn('penguji_utama_id', [
+                        $request->pembimbing_utama_id,
+                        $request->pembimbing_pendamping_id,
+                        $request->penguji_utama_id,
+                        $request->penguji_pendamping_id
+                    ])
+                    ->orWhereIn('penguji_pendamping_id', [
+                        $request->pembimbing_utama_id,
+                        $request->pembimbing_pendamping_id,
+                        $request->penguji_utama_id,
+                        $request->penguji_pendamping_id
+                    ]);
+            })
+            ->exists();
+
+        if ($jadwalKonflikDosen) {
+            return back()->withErrors(['error' => 'Salah satu dosen telah memiliki jadwal lain di waktu yang sama meskipun ruangan berbeda.'])->withInput();
+        }
+
+        // Update jika semua valid
+        $jadwal->update($request->all());
 
         return redirect()->route('jadwal_sidang_tugas_akhir.index')->with('success', 'Data jadwal sidang tugas akhir berhasil diperbarui');
     }
-
-    // public function dropdownSearch(Request $request)
-    // {
-    //     if (!Auth::check()) {
-    //         return redirect('/login')->with('message', 'Please log in to continue.');
-    //     }
-
-    //     $user = Auth::user();
-
-    //     $programStudi = ProgramStudi::all(); // Ambil daftar prodi
-    //     $pembimbingUtama = Dosen::all();
-    //     $pembimbingPendamping = Dosen::all();
-    //     $pengujiUtama = Dosen::all();
-    //     $pengujiPendamping = Dosen::all();
-    //     $ruanganSidang = RuanganSidang::all();
-
-
-    //     // Ambil input filter
-    //     $programStudiId = $request->input('program_studi');
-
-    //     // Ambil semua jadwal seminar proposal dan filter jika ada pilihan program studi
-    //     $jadwals = JadwalSidangTugasAkhir::with([
-    //         'mahasiswa.programStudi',
-    //         'pembimbingUtama',
-    //         'pembimbingPendamping',
-    //         'pengujiUtama',
-    //         'pengujiPendamping',
-    //         'ruanganSidang',
-    //     ])
-    //         ->when($programStudiId, function ($query) use ($programStudiId) {
-    //             $query->whereHas('mahasiswa', function ($subQuery) use ($programStudiId) {
-    //                 $subQuery->where('program_studi_id', $programStudiId);
-    //             });
-    //         })
-    //         ->get();
-
-    //     // Grouping berdasarkan nama prodi (tetap untuk tampilan per prodi)
-    //     $jadwalsGrouped = $jadwals->groupBy(function ($item) {
-    //         return $item->mahasiswa->programStudi->nama ?? 'Tidak Diketahui';
-    //     });
-
-    //     return view('jadwal_sidang.jadwal_sidang_tugas_akhir', compact('jadwals', 'jadwalsGrouped', 'programStudi', 'user', 'pembimbingUtama', 'pembimbingPendamping', 'pengujiUtama', 'pengujiPendamping', 'ruanganSidang'));
-    // }
 
     public function dropdownSearch(Request $request)
     {
@@ -260,6 +211,8 @@ class JadwalSidangTugasAkhirController extends Controller
                         ->orWhere('penguji_pendamping_id', $dosenId);
                 });
             })
+            ->orderBy('created_at', 'desc') // urutkan berdasarkan waktu pembuatan terbaru
+            ->orderBy('tanggal', 'asc')     // lalu urutkan berdasarkan tanggal sidang
             ->get();
 
         // 🔁 Grouping berdasarkan nama prodi
@@ -284,5 +237,86 @@ class JadwalSidangTugasAkhirController extends Controller
             'dosenId',
             'tahunAjaran'
         ));
+    }
+
+    public function rekapDosenPenguji(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user || $user->dosen->jabatan !== 'Koordinator Program Studi') {
+            return redirect('/login')->with('message', 'Unauthorized');
+        }
+
+        $programStudiId = $user->dosen->program_studi_id;
+        $tahunAjaranId = $request->input('tahun_ajaran');
+
+        $data = JadwalSidangTugasAkhir::with(['mahasiswa'])
+            ->whereHas('mahasiswa', function ($q) use ($programStudiId, $tahunAjaranId) {
+                $q->where('program_studi_id', $programStudiId);
+                if ($tahunAjaranId) {
+                    $q->where('tahun_ajaran_id', $tahunAjaranId);
+                }
+            })
+            ->get();
+
+        $grouped = [];
+
+        foreach ($data as $item) {
+            $mhs = $item->mahasiswa;
+
+            // Penguji Utama
+            if ($item->penguji_utama_id && $item->pengujiUtama) {
+                $nama = $item->pengujiUtama->nama_dosen;
+
+                if (!isset($grouped[$nama])) {
+                    $grouped[$nama] = [
+                        'nama_dosen' => $nama,
+                        'detail' => [],
+                    ];
+                }
+
+                $grouped[$nama]['detail'][] = (object)[
+                    'peran' => 'Penguji Utama',
+                    'nim' => $mhs->nim,
+                    'nama_mahasiswa' => $mhs->nama_mahasiswa,
+                ];
+            }
+
+            // Penguji Pendamping
+            if ($item->penguji_pendamping_id && $item->pengujiPendamping) {
+                $nama = $item->pengujiPendamping->nama_dosen;
+
+                if (!isset($grouped[$nama])) {
+                    $grouped[$nama] = [
+                        'nama_dosen' => $nama,
+                        'detail' => [],
+                    ];
+                }
+
+                $grouped[$nama]['detail'][] = (object)[
+                    'peran' => 'Penguji Pendamping',
+                    'nim' => $mhs->nim,
+                    'nama_mahasiswa' => $mhs->nama_mahasiswa,
+                ];
+            }
+        }
+
+        // Sorting: Dosen by nama_dosen, Mahasiswa by nama_mahasiswa
+        $rekap = collect($grouped)
+            ->sortBy('nama_dosen')
+            ->map(function ($item) {
+                $item['detail'] = collect($item['detail'])
+                    ->sortBy('nama_mahasiswa')
+                    ->values()
+                    ->all();
+                return $item;
+            })
+            ->values()
+            ->all();
+
+        $pdf = Pdf::loadView('jadwal_sidang.rekap_dosen_penguji', compact('rekap'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->stream('rekap_dosen_penguji.pdf');
     }
 }

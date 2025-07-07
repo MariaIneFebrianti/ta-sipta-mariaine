@@ -181,7 +181,7 @@ class PenilaianTAController extends Controller
                     ->orWhere('penguji_utama_id', $dosenId)
                     ->orWhere('penguji_pendamping_id', $dosenId);
             })
-            ->get();
+            ->orderBy('tanggal', 'desc')->get();
 
         foreach ($sidang as $item) {
             // Tentukan peran dosen
@@ -526,8 +526,17 @@ class PenilaianTAController extends Controller
 
     public function indexRekapNilai(Request $request)
     {
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
         $user = Auth::user();
-        $programStudiId = $user->dosen->program_studi_id;
+
+        // Cek apakah user adalah Kaprodi atau bukan
+        if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
+            $programStudiId = $user->dosen->program_studi_id;
+        } else {
+            $programStudiId = null; // Super Admin atau selain Kaprodi bisa lihat semua
+        }
 
         $tahunAjaranList = TahunAjaran::orderBy('tahun_ajaran', 'desc')->get();
         $statusList = HasilSidang::select('status_kelulusan')->distinct()->pluck('status_kelulusan')->filter()->unique();
@@ -535,9 +544,11 @@ class PenilaianTAController extends Controller
         $tahunAjaran = $request->input('tahun_ajaran');
         $status = $request->input('status_kelulusan');
 
-        $hasilAkhirAll = HasilAkhirTA::with(['mahasiswa.programStudi'])
+        $hasilAkhirAll = HasilAkhirTA::with(['mahasiswa.programStudi', 'mahasiswa.tahunAjaran'])
             ->whereHas('mahasiswa', function ($query) use ($programStudiId, $tahunAjaran) {
-                $query->where('program_studi_id', $programStudiId);
+                if ($programStudiId !== null) {
+                    $query->where('program_studi_id', $programStudiId);
+                }
                 if ($tahunAjaran) {
                     $query->where('tahun_ajaran_id', $tahunAjaran);
                 }
@@ -566,6 +577,7 @@ class PenilaianTAController extends Controller
                 'nim' => $item->mahasiswa->nim,
                 'nama' => $item->mahasiswa->nama_mahasiswa,
                 'prodi' => $item->mahasiswa->programStudi->nama_prodi ?? '-',
+                'tahun_ajaran' => $item->mahasiswa->tahunAjaran->tahun_ajaran ?? '-',
                 'total_angka' => $nilai,
                 'total_huruf' => $huruf,
             ];
@@ -573,7 +585,6 @@ class PenilaianTAController extends Controller
 
         return view('penilaian.rekap_nilai', compact('tahunAjaranList', 'statusList', 'rekap', 'hasilAkhirAll', 'user'));
     }
-
     public function cetakRekapNilai(Request $request)
     {
         // dd('Masuk ke cetak!');
@@ -623,5 +634,57 @@ class PenilaianTAController extends Controller
             ->setPaper('A4', 'portrait');
 
         return $pdf->stream('rekap_nilai.pdf'); // Ganti dari download → stream dulu
+    }
+
+    public function cetakMahasiswaYudisium(Request $request)
+    {
+        $tahunAjaran = $request->input('tahun_ajaran');
+        $status = $request->input('status_kelulusan');
+
+        $user = Auth::user();
+        $programStudiId = $user->dosen->program_studi_id;
+
+        $hasilAkhirAll = HasilAkhirTA::with(['mahasiswa.programStudi', 'kaprodi'])
+            ->whereHas('mahasiswa', function ($query) use ($programStudiId, $tahunAjaran) {
+                $query->where('program_studi_id', $programStudiId);
+                if ($tahunAjaran) {
+                    $query->where('tahun_ajaran_id', $tahunAjaran);
+                }
+            })
+            ->whereHas('mahasiswa.hasilSidang', function ($query) use ($status) {
+                if ($status) {
+                    $query->where('status_kelulusan', $status);
+                }
+                $query->where('kelengkapan_yudisium', 'Lengkap');
+            })
+            ->get();
+
+        $kaprodi = $hasilAkhirAll->first()?->kaprodi;
+
+        $rekap = $hasilAkhirAll->map(function ($item) {
+            $nilai = $item->total_akhir;
+            $huruf = match (true) {
+                $nilai >= 80 => 'A',
+                $nilai >= 75 => 'AB',
+                $nilai >= 65 => 'B',
+                $nilai >= 60 => 'BC',
+                $nilai >= 50 => 'C',
+                $nilai >= 40 => 'D',
+                default => 'E',
+            };
+
+            return [
+                'nim' => $item->mahasiswa->nim,
+                'nama' => $item->mahasiswa->nama_mahasiswa,
+                'prodi' => $item->mahasiswa->programStudi->nama_prodi ?? '-',
+                'total_angka' => $nilai,
+                'total_huruf' => $huruf,
+            ];
+        });
+
+        $pdf = PDF::loadView('hasil_sidang.cetak_rekap_yudisium', compact('rekap', 'kaprodi'))
+            ->setPaper('A4', 'portrait');
+
+        return $pdf->stream('rekap_nilai_yudisium.pdf');
     }
 }

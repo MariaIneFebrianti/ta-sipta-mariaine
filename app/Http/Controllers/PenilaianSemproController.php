@@ -37,7 +37,7 @@ class PenilaianSemproController extends Controller
                     $query->where('penguji_utama_id', $dosenId)
                         ->orWhere('penguji_pendamping_id', $dosenId);
                 })
-                ->get();
+                ->orderBy('tanggal', 'desc')->get();
         } elseif ($user->role === 'Dosen') {
             $dosenId = Auth::user()->dosen->id;
 
@@ -52,7 +52,7 @@ class PenilaianSemproController extends Controller
                     $query->where('penguji_utama_id', $dosenId)
                         ->orWhere('penguji_pendamping_id', $dosenId);
                 })
-                ->get();
+                ->orderBy('tanggal', 'desc')->get();
         }
 
         return view('penilaian.proposal', compact('seminar', 'dosenId', 'mahasiswa', 'user'));
@@ -106,7 +106,7 @@ class PenilaianSemproController extends Controller
         // Simpan ke hasil_akhir_sempro
         $hasil = HasilAkhirSempro::firstOrNew([
             'mahasiswa_id' => $mahasiswaId,
-            'jadwal_seminar_proposal_id' => $jadwalId, // typo di kolom ini harus konsisten!
+            'jadwal_seminar_proposal_id' => $jadwalId,
         ]);
 
         if ($peran === 'penguji_utama') {
@@ -117,12 +117,14 @@ class PenilaianSemproController extends Controller
 
         if (!is_null($hasil->nilai_penguji_utama) && !is_null($hasil->nilai_penguji_pendamping)) {
             $hasil->total_akhir = round(($hasil->nilai_penguji_utama + $hasil->nilai_penguji_pendamping) / 2, 2);
-            if ($hasil->total_akhir >= 90) {
-                $hasil->status_sidang = 'Lulus';
-            } elseif ($hasil->total_akhir >= 60) {
-                $hasil->status_sidang = 'Revisi';
-            } else {
+            if ($hasil->total_akhir < 50) {
                 $hasil->status_sidang = 'Ditolak';
+            } elseif ($hasil->total_akhir < 80) {
+                $hasil->status_sidang = 'Revisi';
+            } elseif ($hasil->total_akhir <= 100) {
+                $hasil->status_sidang = 'Lulus';
+            } else {
+                $hasil->status_sidang = 'Tidak Valid';
             }
         }
 

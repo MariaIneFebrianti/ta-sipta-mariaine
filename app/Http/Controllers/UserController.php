@@ -18,7 +18,7 @@ class UserController extends Controller
 
         $user = Auth::user();
         if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi' || $user->role === 'Dosen' && $user->dosen->jabatan === 'Super Admin') {
-            $user = User::paginate(10);
+            $user = User::orderBy('created_at', 'desc')->paginate(10);
         } else {
             abort(403);
         }
@@ -43,7 +43,7 @@ class UserController extends Controller
                         ->orWhere('email', 'like', "%$search%")
                         ->orWhere('role', 'like', "%$search%");
                 });
-            })->paginate(10);
+            })->orderBy('created_at', 'desc')->paginate(10);
         } else {
             abort(403);
         }
@@ -58,26 +58,6 @@ class UserController extends Controller
 
         return redirect()->route('user.index')->with('success', 'Password berhasil direset ke default.');
     }
-
-    // public function update(Request $request, $id)
-    // {
-    //     $user = User::all();
-
-    //     // Validasi input
-    //     $request->validate([
-    //         'role' => 'required|string|max:255',
-    //     ]);
-
-    //     // Temukan mahasiswa dan user yang akan diupdate
-    //     $user = User::findOrFail($id);
-
-    //     // Update data user
-    //     $user->update([
-    //         'role' => $request->role,
-    //     ]);
-
-    //     return redirect()->route('user.index')->with('success', 'Data user berhasil diupdate.');
-    // }
 
     public function dropdownSearch(Request $request)
     {

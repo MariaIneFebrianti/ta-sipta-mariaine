@@ -26,9 +26,17 @@ class HasilSidangController extends Controller
             $hasilSidang = HasilSidang::whereHas('mahasiswa', function ($query) use ($dosen) {
                 $query->where('program_studi_id', $dosen->program_studi_id);
             })
+                ->orderBy('created_at', 'desc') // Tambahkan ini
                 ->paginate(10);
+            // Hitung jumlah mahasiswa di prodi yang sudah sidang
+            $jumlahMahasiswaSidang = HasilSidang::whereHas('mahasiswa', function ($query) use ($dosen) {
+                $query->where('program_studi_id', $dosen->program_studi_id);
+            })->distinct('mahasiswa_id')->count('mahasiswa_id');
         } elseif ($user->role === 'Dosen' && $user->dosen->jabatan === 'Super Admin') {
-            $hasilSidang = HasilSidang::with('mahasiswa')->paginate(10);
+            $hasilSidang = HasilSidang::with('mahasiswa')
+                ->orderBy('created_at', 'desc') // Tambahkan ini
+                ->paginate(10);
+            $jumlahMahasiswaSidang = HasilSidang::distinct('mahasiswa_id')->count('mahasiswa_id');
         } else {
             abort(403);
         }
@@ -38,7 +46,7 @@ class HasilSidangController extends Controller
         $tahunList = HasilSidang::select('tahun_lulus')->distinct()->pluck('tahun_lulus')->filter()->unique()->values();
         $tahunAjaranList = TahunAjaran::orderBy('tahun_ajaran', 'desc')->get(); // untuk dropdown
 
-        return view('hasil_sidang.sidang_tugas_akhir', compact('hasilSidang', 'statusList', 'tahunList', 'tahunAjaranList'));
+        return view('hasil_sidang.sidang_tugas_akhir', compact('hasilSidang', 'statusList', 'tahunList', 'tahunAjaranList', 'jumlahMahasiswaSidang'));
     }
 
     public function show($id)
@@ -66,22 +74,6 @@ class HasilSidangController extends Controller
         }
     }
 
-    // public function show($id)
-    // {
-    //     if (!Auth::check()) {
-    //         return redirect('/login')->with('message', 'Please log in to continue.');
-    //     }
-    //     $user = Auth::user();
-
-    //     if ($user->role === 'Dosen' && ($user->dosen->jabatan === 'Koordinator Program Studi' || $user->dosen->jabatan === 'Super Admin')) {
-    //         // Ambil hasil sidang tertentu beserta relasi mahasiswa dan riwayat sidangnya
-    //         $hasilSidang = HasilSidang::with(['mahasiswa', 'riwayatSidang.jadwalSidangTugasAkhir'])->findOrFail($id);
-    //     } else {
-    //         abort(404);
-    //     }
-    //     return view('hasil_sidang.show_riwayat', compact('hasilSidang'));
-    // }
-
     public function dropdownSearch(Request $request)
     {
         if (!Auth::check()) {
@@ -93,20 +85,24 @@ class HasilSidangController extends Controller
         $tahun = $request->input('tahun_lulus');
         $tahunAjaran = $request->input('tahun_ajaran');
 
-        $hasilSidang = HasilSidang::with('mahasiswa')
+        $query = HasilSidang::with('mahasiswa')
             ->when($status, fn($q) => $q->where('status_kelulusan', $status))
             ->when($tahun, fn($q) => $q->where('tahun_lulus', $tahun))
             ->when($tahunAjaran, function ($query) use ($tahunAjaran) {
                 $query->whereHas('mahasiswa', function ($q) use ($tahunAjaran) {
                     $q->where('tahun_ajaran_id', $tahunAjaran);
                 });
-            })->paginate(10);
+            });
+
+        $hasilSidang = $query->orderBy('created_at', 'desc')->paginate(10); // untuk tampilan
+        $jumlahMahasiswaSidang = $query->get()->pluck('mahasiswa_id')->unique()->count(); // untuk hitung jumlah
+
 
         $statusList = HasilSidang::select('status_kelulusan')->distinct()->pluck('status_kelulusan')->filter()->unique()->values();
         $tahunList = HasilSidang::select('tahun_lulus')->distinct()->pluck('tahun_lulus')->filter()->unique()->values();
         $tahunAjaranList = TahunAjaran::orderBy('tahun_ajaran', 'desc')->get(); // untuk dropdown
 
-        return view('hasil_sidang.sidang_tugas_akhir', compact('hasilSidang', 'statusList', 'tahunList', 'tahunAjaranList'));
+        return view('hasil_sidang.sidang_tugas_akhir', compact('hasilSidang', 'statusList', 'tahunList', 'tahunAjaranList', 'jumlahMahasiswaSidang'));
     }
 
     public function indexMahasiswa()

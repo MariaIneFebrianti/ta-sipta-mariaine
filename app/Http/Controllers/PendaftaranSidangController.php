@@ -37,6 +37,7 @@ class PendaftaranSidangController extends Controller
 
         return view('pendaftaran_sidang.index', compact('pendaftaran', 'user', 'rekomendasi'));
     }
+
     public function indexKaprodi()
     {
         if (!Auth::check()) {
@@ -50,9 +51,9 @@ class PendaftaranSidangController extends Controller
                 $query->where('program_studi_id', $programStudiId);
             }])->whereHas('mahasiswa', function ($query) use ($programStudiId) {
                 $query->where('program_studi_id', $programStudiId);
-            })->get();
+            })->orderBy('tanggal_pendaftaran', 'desc')->get();
         } elseif ($user->role === 'Dosen' && $user->dosen->jabatan === 'Super Admin') {
-            $pendaftaran = PendaftaranSidang::with('mahasiswa')->get();
+            $pendaftaran = PendaftaranSidang::with('mahasiswa')->orderBy('tanggal_pendaftaran', 'desc')->get();
         } else {
             abort(403);
         }

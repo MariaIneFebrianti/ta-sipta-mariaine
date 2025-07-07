@@ -53,7 +53,7 @@ class JadwalBimbinganController extends Controller
                     $query->where('dosen_id', $pengajuanPembimbing->pembimbing_utama_id)
                         ->orWhere('dosen_id', $pengajuanPembimbing->pembimbing_pendamping_id);
                 })
-                    ->with('dosen')->paginate(10);
+                    ->with('dosen')->orderBy('created_at', 'desc')->paginate(10);
 
                 // Tambahkan properti sudahMendaftar untuk masing-masing jadwal
                 $mahasiswaId = Auth::user()->mahasiswa->id;
@@ -69,26 +69,14 @@ class JadwalBimbinganController extends Controller
                 $jadwalBimbingan = collect([]);
             }
         } elseif ($user->role === 'Dosen') {
-            // Hanya lihat jadwal bimbingan milik dosen yang login
-            // $dosenId = Auth::user()->dosen->id;
-            // $jadwalBimbingan = JadwalBimbingan::where('dosen_id', $dosenId)
-            //     ->with('dosen')
-            //     ->paginate(10);
             // Ambil ID dosen dari user yang login
             $dosenId = Auth::user()->dosen->id;
 
             // Ambil semua jadwal bimbingan milik dosen tersebut
             $jadwalBimbingan = JadwalBimbingan::where('dosen_id', $dosenId)
                 ->with('dosen')
+                ->orderBy('created_at', 'desc')
                 ->paginate(10);
-
-            // Cek apakah jadwal sudah dipakai di logbook
-            // foreach ($jadwalBimbingan as $jadwal) {
-            //     $isUsed = PendaftaranBimbingan::where('jadwal_bimbingan_id', $jadwal->id)
-            //         ->whereHas('logbooks')
-            //         ->exists();
-            //     $jadwal->isUsedInLogbook = $isUsed;
-            // }
 
             // Cek apakah jadwal sudah dipakai di logbook
             $jadwalBimbingan->getCollection()->transform(function ($jadwal) {
@@ -106,7 +94,6 @@ class JadwalBimbinganController extends Controller
 
         return view('jadwal_bimbingan.index', compact('jadwalBimbingan', 'dosen', 'user', 'pengajuan'));
     }
-
     public function indexKaprodi()
     {
         if (!Auth::check()) {
@@ -132,7 +119,7 @@ class JadwalBimbinganController extends Controller
 
         if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi' || $user->role === 'Dosen' && $user->dosen->jabatan === 'Super Admin') {
             // Koordinator Program Studi dan Admin bisa melihat semua jadwal bimbingan
-            $jadwalBimbingan = JadwalBimbingan::with('dosen')->paginate(10);
+            $jadwalBimbingan = JadwalBimbingan::with('dosen')->orderBy('created_at', 'desc')->paginate(10);
         } else {
             abort(403);
         }
@@ -174,22 +161,6 @@ class JadwalBimbinganController extends Controller
         return redirect()->route('jadwal_bimbingan.index')->with('success', 'Jadwal Bimbingan berhasil ditambahkan.');
     }
 
-    // public function update(Request $request, $id)
-    // {
-    //     // Validasi input
-    //     $request->validate([
-    //         'dosen_id' => 'required|exists:dosen,id',
-    //         'tanggal' => 'required|date',
-    //         'waktu' => 'required',
-    //         'kuota' => 'required|integer|max:2',
-    //     ]);
-
-    //     $jadwalBimbingan = JadwalBimbingan::findOrFail($id);
-    //     $jadwalBimbingan->update($request->all());
-
-    //     return redirect()->route('jadwal_bimbingan.index')->with('success', 'Jadwal Bimbingan berhasil diperbarui.');
-    // }
-
     public function daftarBimbingan(Request $request, $id)
     {
         $mahasiswa = Auth::user()->mahasiswa;
@@ -230,8 +201,6 @@ class JadwalBimbinganController extends Controller
 
     public function dropdownSearch(Request $request)
     {
-        // $userRole = Auth::user()->role;
-
         $user = Auth::user();
 
         // Ambil semua data untuk dropdown
@@ -260,6 +229,7 @@ class JadwalBimbinganController extends Controller
                 return $query->where('status', $status);
             })
             ->with('dosen')
+            ->orderBy('created_at', 'desc')
             ->paginate(10);
 
         return view('jadwal_bimbingan.index_kaprodi', compact('jadwalBimbingan', 'dosen', 'statusList', 'user'));

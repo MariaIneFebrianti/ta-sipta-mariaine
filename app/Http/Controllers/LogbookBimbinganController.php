@@ -37,20 +37,6 @@ class LogbookBimbinganController extends Controller
         return view('logbook_bimbingan.index_mahasiswa', compact('pengajuan', 'mahasiswa', 'logbooks', 'user'));
     }
 
-    // public function indexKaprodi()
-    // {
-    //     if (!Auth::check()) {
-    //         return redirect('/login')->with('message', 'Please log in to continue.');
-    //     }
-    //     $user = Auth::user();
-    //     $mahasiswa = Mahasiswa::all();
-    //     $programStudi = ProgramStudi::all();
-    //     $tahunAjaran = TahunAjaran::all();
-    //     return view('logbook_bimbingan.index_kaprodi', compact('mahasiswa', 'programStudi', 'tahunAjaran', 'user'));
-    // }
-
-
-
     public function showMahasiswa($dosenId, $mahasiswaId)
     {
 
@@ -62,9 +48,6 @@ class LogbookBimbinganController extends Controller
         $user = Auth::user();
         $mahasiswa = Mahasiswa::find($mahasiswaId);
         $proposal = $mahasiswa->proposal;
-
-        // Jika yang login adalah mahasiswa, ambil mahasiswaId dari pengguna yang login
-
 
         if ($user->role === 'Mahasiswa' || $user->role === 'Dosen') {
             if ($user->role == 'Mahasiswa') {
@@ -167,7 +150,6 @@ class LogbookBimbinganController extends Controller
             $path = 'logbooks/' . $filename;
         }
 
-
         // Simpan logbook
         LogbookBimbingan::create([
             'mahasiswa_id' => $mahasiswa_id, // Gunakan mahasiswa_id yang diambil dari pendaftaran_bimbingan
@@ -194,7 +176,6 @@ class LogbookBimbinganController extends Controller
         ]);
     }
 
-    // Mengupdate permasalahan logbook
     public function updatePermasalahan(Request $request, $id)
     {
         // Validasi inputan
@@ -212,24 +193,6 @@ class LogbookBimbinganController extends Controller
 
         return redirect()->back()->with('success', 'Permasalahan berhasil diperbarui.');
     }
-
-    // public function showFile($id)
-    // {
-    //     // Ambil data logbook berdasarkan ID
-    //     $logbook = LogbookBimbingan::findOrFail($id);
-
-    //     // Buat nama file berdasarkan waktu dan ID
-    //     $timestamp = now()->format('Ymd_His'); // Contoh: 20250518_142030
-    //     $fileName = "file_bimbingan_{$timestamp}.pdf";
-
-    //     // Decode Base64 menjadi binary
-    //     $pdfContent = base64_decode($logbook->file_bimbingan);
-
-    //     // Tampilkan PDF dengan nama file yang baru dibuat
-    //     return response($pdfContent, 200)
-    //         ->header('Content-Type', 'application/pdf')
-    //         ->header('Content-Disposition', 'inline; filename="' . $fileName . '"');
-    // }
 
     public function showFile($id)
     {
@@ -271,22 +234,4 @@ class LogbookBimbinganController extends Controller
 
         return back()->with('error', 'Anda tidak memiliki izin untuk memberikan rekomendasi.');
     }
-
-
-
-
-
-    // public function show($filename)
-    // {
-    //     $path = storage_path('app/public/logbooks/' . $filename);
-
-    //     if (!file_exists($path)) {
-    //         abort(404);
-    //     }
-
-    //     return response()->file($path, [
-    //         'Content-Type' => 'application/pdf',
-    //         'Content-Disposition' => 'inline; filename="' . $filename . '"'
-    //     ]);
-    // }
 }

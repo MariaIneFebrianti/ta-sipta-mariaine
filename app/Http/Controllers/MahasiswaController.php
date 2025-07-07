@@ -33,19 +33,24 @@ class MahasiswaController extends Controller
         if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi') {
             $programStudiId = $user->dosen->program_studi_id;
 
-            // Ambil mahasiswa yang program studinya sama dengan kaprodi
-            $mahasiswa = Mahasiswa::with('user', 'proposal')
+            $mahasiswa = Mahasiswa::with('user', 'proposal', 'tahunAjaran')
+                ->join('tahun_ajaran', 'mahasiswa.tahun_ajaran_id', '=', 'tahun_ajaran.id')
                 ->where('program_studi_id', $programStudiId)
+                ->orderBy('tahun_ajaran.tahun_ajaran', 'desc')
                 ->orderBy('nama_mahasiswa', 'asc')
+                ->select('mahasiswa.*') // agar kolom tidak bentrok
                 ->paginate(10);
         } elseif ($user->role === 'Dosen' && $user->dosen->jabatan === 'Super Admin') {
-            // Kalau bukan kaprodi, ambil semua mahasiswa
-            $mahasiswa = Mahasiswa::with('user', 'proposal')
+            $mahasiswa = Mahasiswa::with('user', 'proposal', 'tahunAjaran')
+                ->join('tahun_ajaran', 'mahasiswa.tahun_ajaran_id', '=', 'tahun_ajaran.id')
+                ->orderBy('tahun_ajaran.tahun_ajaran', 'desc')
                 ->orderBy('nama_mahasiswa', 'asc')
+                ->select('mahasiswa.*')
                 ->paginate(10);
         } else {
             abort(403);
         }
+
 
         $programStudi = ProgramStudi::all();
         $tahunAjaran = TahunAjaran::all();
@@ -154,13 +159,6 @@ class MahasiswaController extends Controller
             ]);
         }
 
-        // Redirect sesuai role
-        // if ($user->role === 'Mahasiswa') {
-        //     return redirect()->route('dashboard')->with('success', 'Data mahasiswa berhasil diupdate.');
-        // } else {
-        //     return redirect()->route('mahasiswa.index')->with('success', 'Data mahasiswa berhasil diupdate.');
-        // }
-
         if (request()->routeIs('mahasiswa.profile.update')) {
             // Sedang edit dirinya sendiri
             return redirect()->route('dashboard')->with('success', 'Profil berhasil diperbarui.');
@@ -211,31 +209,28 @@ class MahasiswaController extends Controller
         return view('mahasiswa.index', compact('mahasiswa', 'programStudi', 'tahunAjaran', 'user'));
     }
 
-
     public function dropdownSearch(Request $request)
     {
         $user = Auth::user();
-
         $programStudi = ProgramStudi::all();
         $tahunAjaran = TahunAjaran::all();
 
-        // Ambil nilai dari dropdown
-        $programStudiId = $request->input('program_studi');
-        $tahunAjaranId = $request->input('tahun_ajaran');
-        $jenisKelamin = $request->input('jenis_kelamin');
-
-        // Query untuk mencari mahasiswa dengan kondisi yang dipilih
-        $mahasiswa = Mahasiswa::when($programStudiId, function ($query) use ($programStudiId) {
-            return $query->where('program_studi_id', $programStudiId);
-        })
-            ->when($tahunAjaranId, function ($query) use ($tahunAjaranId) {
-                return $query->where('tahun_ajaran_id', $tahunAjaranId);
-            })
-            ->when($jenisKelamin, function ($query) use ($jenisKelamin) {
-                return $query->where('jenis_kelamin', $jenisKelamin);
-            })
+        $mahasiswa = Mahasiswa::with('user', 'proposal', 'tahunAjaran') // pastikan eager load
+            ->join('tahun_ajaran', 'mahasiswa.tahun_ajaran_id', '=', 'tahun_ajaran.id')
+            ->when(
+                $user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi',
+                fn($q) => $q->where('program_studi_id', $user->dosen->program_studi_id),
+                fn($q) => $request->filled('program_studi')
+                    ? $q->where('program_studi_id', $request->program_studi)
+                    : $q
+            )
+            ->when($request->filled('tahun_ajaran'), fn($q) => $q->where('tahun_ajaran_id', $request->tahun_ajaran))
+            ->when($request->filled('jenis_kelamin'), fn($q) => $q->where('jenis_kelamin', $request->jenis_kelamin))
+            ->orderBy('tahun_ajaran.tahun_ajaran', 'desc') // urut berdasarkan isi tahun ajaran
             ->orderBy('nama_mahasiswa', 'asc')
+            ->select('mahasiswa.*') // agar kolom tidak bentrok
             ->paginate(10);
+
 
         return view('mahasiswa.index', compact('mahasiswa', 'programStudi', 'tahunAjaran', 'user'));
     }

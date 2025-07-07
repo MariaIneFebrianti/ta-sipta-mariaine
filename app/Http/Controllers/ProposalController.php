@@ -13,48 +13,6 @@ use App\Models\JadwalSeminarProposal;
 
 class ProposalController extends Controller
 {
-    // public function index()
-    // {
-    //     if (!Auth::check()) {
-    //         return redirect('/login')->with('message', 'Please log in to continue.');
-    //     }
-    //     $user = Auth::user();
-    //     $dosen = $user->dosen;
-    //     $penilaianSempro = null;
-
-
-    //     if ($user->role === 'Mahasiswa') {
-    //         $mahasiswa = Auth::user()->mahasiswa;
-    //         if ($mahasiswa) {
-    //             $proposal = Proposal::where('mahasiswa_id', $mahasiswa->id)->get();
-    //             $penilaianSempro = PenilaianSempro::where('mahasiswa_id', $mahasiswa->id)->get();
-    //         } else {
-    //             $proposal = null;
-    //         }
-    //     } elseif ($dosen->jabatan === 'Koordinator Program Studi') {
-    //         $proposal = Proposal::with('mahasiswa')
-    //             ->whereHas('mahasiswa', function ($query) use ($dosen) {
-    //                 $query->where('program_studi_id', $dosen->program_studi_id);
-    //             })
-    //             ->paginate(10);
-    //         $penilaianSempro = PenilaianSempro::whereHas('mahasiswa', function ($query) use ($dosen) {
-    //             $query->where('program_studi_id', $dosen->program_studi_id);
-    //         })->get();
-    //     } elseif ($dosen->jabatan === 'Super Admin') {
-    //         $proposal = Proposal::with('mahasiswa')->paginate(10);
-    //         $penilaianSempro = PenilaianSempro::with('mahasiswa')->get();
-    //     } else {
-    //         abort(403);
-    //     }
-
-    //     return view('proposal.index', [
-    //         'proposal' => $proposal,
-    //         'user' => $user,
-    //         'penilaianSempro' => $penilaianSempro ?? collect()
-    //     ]);
-    //     // return view('proposal.index', compact('proposal', 'user', 'penilaianSempro'));
-    // }
-
     public function index()
     {
         if (!Auth::check()) {
@@ -83,9 +41,9 @@ class ProposalController extends Controller
                 ->whereHas('mahasiswa', function ($query) use ($dosen) {
                     $query->where('program_studi_id', $dosen->program_studi_id);
                 })
-                ->paginate(10);
+                ->orderBy('created_at', 'desc')->paginate(10);
         } elseif ($dosen && $dosen->jabatan === 'Super Admin') {
-            $proposal = Proposal::with('mahasiswa')->paginate(10);
+            $proposal = Proposal::with('mahasiswa')->orderBy('created_at', 'desc')->paginate(10);
         } else {
             abort(403);
         }

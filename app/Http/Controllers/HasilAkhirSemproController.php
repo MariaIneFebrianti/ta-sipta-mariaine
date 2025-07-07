@@ -10,59 +10,6 @@ use Illuminate\Support\Facades\Auth;
 
 class HasilAkhirSemproController extends Controller
 {
-    // public function index()
-    // {
-    //     if (!Auth::check()) {
-    //         return redirect('/login')->with('message', 'Please log in to continue.');
-    //     }
-    //     $user = Auth::user();
-    //     $penilaianSempro = null;
-    //     $hasilAkhirSempro = null;
-    //     $dosen = $user->dosen;
-
-    //     if ($user->role === 'Dosen' && $user->dosen) {
-    //         $dosen = $user->dosen;
-
-    //         if ($dosen->jabatan === 'Koordinator Program Studi') {
-    //             $hasilAkhirSempro = HasilAkhirSempro::whereHas('mahasiswa', function ($query) use ($dosen) {
-    //                 $query->where('program_studi_id', $dosen->program_studi_id);
-    //             })->with('mahasiswa')->paginate(10);
-
-    //             $penilaianTA = PenilaianSempro::whereHas('mahasiswa', function ($query) use ($dosen) {
-    //                 $query->where('program_studi_id', $dosen->program_studi_id);
-    //             })->with('mahasiswa')->get();
-    //         } elseif ($dosen->jabatan === 'Super Admin') {
-    //             $hasilAkhirSempro = HasilAkhirSempro::with('mahasiswa')->paginate(10);
-    //             $penilaianTA = PenilaianSempro::with('mahasiswa')->get();
-    //         }
-    //     } elseif ($user->role === 'Mahasiswa' && $user->mahasiswa) {
-    //         $mahasiswa = $user->mahasiswa;
-
-    //         $hasilAkhirSempro = HasilAkhirSempro::where('mahasiswa_id', $mahasiswa->id)
-    //             ->with('mahasiswa')
-    //             ->paginate(10);
-
-    //         $penilaianTA = PenilaianSempro::where('mahasiswa_id', $mahasiswa->id)
-    //             ->with('mahasiswa')
-    //             ->first(); // satu data saja untuk mahasiswa
-    //     } else {
-    //         abort(403, 'Unauthorized');
-    //     }
-
-
-    //     // Ambil list status & tahun untuk dropdown
-    //     $statusList = HasilAkhirSempro::select('status_sidang')->distinct()->pluck('status_sidang')->filter()->unique()->values();
-
-    //     // Tambahkan data penilaianTA ke setiap hasilAkhir
-    //     foreach ($hasilAkhirSempro as $hasil) {
-    //         $penilaian = PenilaianSempro::where('mahasiswa_id', $hasil->mahasiswa_id)->first();
-    //         $hasil->penilaianTA = $penilaian; // tambahkan properti baru di objek
-    //     }
-
-    //     return view('hasil_akhir_sempro.index', compact('hasilAkhirSempro', 'statusList', 'user', 'penilaianTA'));
-    // }
-
-
     public function index()
     {
         if (!Auth::check()) {
@@ -81,6 +28,7 @@ class HasilAkhirSemproController extends Controller
                     $query->where('program_studi_id', $dosen->program_studi_id);
                 })
                     ->with('mahasiswa')
+                    ->orderBy('created_at', 'desc') // Tambahkan ini
                     ->paginate(10);
 
                 $penilaianSempro = PenilaianSempro::whereHas('mahasiswa', function ($query) use ($dosen) {
@@ -95,6 +43,7 @@ class HasilAkhirSemproController extends Controller
 
             $hasilAkhirSempro = HasilAkhirSempro::where('mahasiswa_id', $mahasiswa->id)
                 ->with('mahasiswa')
+                ->orderBy('created_at', 'desc') // Tambahkan ini
                 ->paginate(10);
 
             $penilaianSempro = PenilaianSempro::where('mahasiswa_id', $mahasiswa->id)
@@ -133,6 +82,7 @@ class HasilAkhirSemproController extends Controller
                     $q->where('tahun_ajaran_id', $tahunAjaran);
                 });
             })
+            ->orderBy('created_at', 'desc') // Tambahkan ini
             ->paginate(10);
 
         // Ambil daftar status sidang unik dari database
