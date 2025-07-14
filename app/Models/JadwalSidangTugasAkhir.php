@@ -59,11 +59,6 @@ class JadwalSidangTugasAkhir extends Model
         return RubrikNilai::where('peran', $this->peran)->get();
     }
 
-    // public function riwayatSidang()
-    // {
-    //     return $this->hasOne(RiwayatSidang::class, 'hasil_akhir_ta_id');
-    // }
-
     public function hasilSidang()
     {
         return $this->hasOne(HasilSidang::class, 'jadwal_sidang_tugas_akhir_id');

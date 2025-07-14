@@ -17,13 +17,11 @@ class HasilAkhirSempro extends Model
         'status_sidang',
     ];
 
-    // Relasi ke Mahasiswa
     public function mahasiswa()
     {
         return $this->belongsTo(Mahasiswa::class);
     }
 
-    // Relasi ke Jadwal Seminar Proposal
     public function jadwal()
     {
         return $this->belongsTo(JadwalSeminarProposal::class, 'jadwal_seminar_prooposal_id');

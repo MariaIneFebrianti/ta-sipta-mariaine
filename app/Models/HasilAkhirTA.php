@@ -28,11 +28,6 @@ class HasilAkhirTA extends Model
         return $this->belongsTo(JadwalSidangTugasAkhir::class, 'jadwal_sidang_tugas_akhir_id');
     }
 
-    // public function riwayatSidang()
-    // {
-    //     return $this->hasOne(RiwayatSidang::class, 'hasil_akhir_ta_id');
-    // }
-
     public function kaprodi()
     {
         return $this->belongsTo(Dosen::class, 'kaprodi_id');

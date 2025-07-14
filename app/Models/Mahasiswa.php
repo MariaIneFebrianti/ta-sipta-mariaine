@@ -50,11 +50,6 @@ class Mahasiswa extends Model
         return $this->hasMany(LogbookBimbingan::class);
     }
 
-    // public function nilai()
-    // {
-    //     return $this->hasOne(Nilai::class, 'mahasiswa_id');
-    // }
-
     public function jadwalSeminarProposal()
     {
         return $this->hasOne(JadwalSeminarProposal::class, 'mahasiswa_id');
@@ -75,18 +70,15 @@ class Mahasiswa extends Model
         return $this->hasMany(PenilaianSempro::class);
     }
 
-
     public function penilaianTA()
     {
         return $this->hasMany(PenilaianTA::class);
     }
 
-
     public function hasilAkhirSempro()
     {
-        return $this->hasOne(HasilAkhirSempro::class); // atau sesuai nama modelnya
+        return $this->hasOne(HasilAkhirSempro::class);
     }
-
 
     public function hasilAkhirTA()
     {

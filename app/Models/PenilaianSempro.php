@@ -16,19 +16,16 @@ class PenilaianSempro extends Model
         'catatan_revisi'
     ];
 
-    // Relasi ke Mahasiswa
     public function mahasiswa()
     {
         return $this->belongsTo(Mahasiswa::class);
     }
 
-    // Relasi ke Dosen
     public function dosen()
     {
         return $this->belongsTo(Dosen::class);
     }
 
-    // Relasi ke Jadwal Seminar Proposal
     public function jadwalSeminar()
     {
         return $this->belongsTo(JadwalSeminarProposal::class, 'jadwal_seminar_proposal_id');
