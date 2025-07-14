@@ -113,7 +113,6 @@ class PengajuanPembimbingController extends Controller
         $pengajuanPembimbing = PengajuanPembimbing::findOrFail($id);
         $pengajuanPembimbing->update($request->all());
 
-        // Update field validasi
         $pengajuanPembimbing->validasi = 'Acc';
         $pengajuanPembimbing->save();
         return redirect()->route('pengajuan_pembimbing.index_kaprodi')->with('success', 'Pengajuan Pembimbing berhasil diperbarui');
@@ -124,7 +123,6 @@ class PengajuanPembimbingController extends Controller
         $search = $request->input('search');
         $user = Auth::user();
 
-        // Pastikan user adalah dosen
         if (!$user || !$user->dosen) {
             return redirect('/login')->with('message', 'Unauthorized');
         }
@@ -132,7 +130,6 @@ class PengajuanPembimbingController extends Controller
         $jabatan = $user->dosen->jabatan;
         $programStudiId = $user->dosen->program_studi_id;
 
-        // Query awal
         $pengajuanPembimbing = PengajuanPembimbing::with(['mahasiswa', 'tahunAjaran', 'pembimbingUtama', 'pembimbingPendamping'])
             ->when($search, function ($query) use ($search) {
                 $query->whereHas('mahasiswa', function ($q) use ($search) {
@@ -177,7 +174,6 @@ class PengajuanPembimbingController extends Controller
         $validasi = $request->input('validasi');
         $searchType = $request->input('search_type');
 
-        // Query dasar
         $pengajuanPembimbing = PengajuanPembimbing::with(['pembimbingUtama', 'pembimbingPendamping', 'mahasiswa']);
 
         if ($jabatan === 'Koordinator Program Studi') {
@@ -240,7 +236,7 @@ class PengajuanPembimbingController extends Controller
         $jabatan = $dosenLogin->jabatan;
         $programStudiId = $dosenLogin->program_studi_id;
 
-        $dosen = Dosen::all(); // untuk dropdown dosen
+        $dosen = Dosen::all();
         $tahunAjaranList = TahunAjaran::orderBy('tahun_ajaran', 'desc')->get();
 
         // Ambil nilai dari form
@@ -265,7 +261,12 @@ class PengajuanPembimbingController extends Controller
                         ->orWhere('pembimbing_pendamping_id', $dosenId);
                 })->where('validasi', 'Acc');
             }
-        } elseif ($user->role === 'Super Admin' || ($user->role === 'Dosen' && $jabatan === 'Koordinator Program Studi')) {
+            if ($tahunAjaranId) {
+                $pengajuanPembimbing->whereHas('mahasiswa', function ($query) use ($tahunAjaranId) {
+                    $query->where('tahun_ajaran_id', $tahunAjaranId);
+                });
+            }
+        } elseif ($user->role === 'Dosen' &&  ($user->dosen->jabatan === 'Super Admin' || $user->dosen->jabatan === 'Koordinator Program Studi')) {
             // Filter berdasarkan dosen jika dipilih
             if ($pembimbingUtamaId) {
                 $pengajuanPembimbing->where('pembimbing_utama_id', $pembimbingUtamaId);
@@ -298,7 +299,10 @@ class PengajuanPembimbingController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user || $user->dosen->jabatan !== 'Koordinator Program Studi') {
+        if (
+            !$user ||
+            !in_array(optional($user->dosen)->jabatan, ['Koordinator Program Studi', 'Super Admin'])
+        ) {
             return redirect('/login')->with('message', 'Unauthorized');
         }
 
@@ -335,6 +339,7 @@ class PengajuanPembimbingController extends Controller
                     'peran' => 'Pembimbing Utama',
                     'nim' => $mhs->nim,
                     'nama_mahasiswa' => $mhs->nama_mahasiswa,
+                    'tahun_ajaran' => $mhs->tahunAjaran->tahun_ajaran ?? '',
                 ];
             }
 
@@ -353,22 +358,45 @@ class PengajuanPembimbingController extends Controller
                     'peran' => 'Pembimbing Pendamping',
                     'nim' => $mhs->nim,
                     'nama_mahasiswa' => $mhs->nama_mahasiswa,
+                    'tahun_ajaran' => $mhs->tahunAjaran->tahun_ajaran ?? '',
                 ];
             }
         }
 
-        // Urutkan berdasarkan nama dosen
-        $grouped = collect($grouped)
-            ->sortBy('nama_dosen')
-            ->map(function ($item) {
-                // Urutkan juga detail mahasiswa berdasarkan nama mahasiswa
-                $item['detail'] = collect($item['detail'])->sortBy('nama_mahasiswa')->values()->all();
-                return $item;
+        $rekap = collect($grouped)
+            ->flatMap(function ($item) {
+                return collect($item['detail'])->map(function ($detail) use ($item) {
+                    return [
+                        'nama_dosen' => $item['nama_dosen'],
+                        'peran' => $detail->peran,
+                        'nim' => $detail->nim,
+                        'nama_mahasiswa' => $detail->nama_mahasiswa,
+                        'tahun_ajaran' => $detail->tahun_ajaran,
+                    ];
+                });
             })
-            ->values()
-            ->all();
-
-        $rekap = $grouped;
+            ->groupBy('tahun_ajaran')
+            ->map(function ($dataPerTahun) {
+                return collect($dataPerTahun)
+                    ->groupBy('nama_dosen')
+                    ->map(function ($items, $dosen) {
+                        return [
+                            'nama_dosen' => $dosen,
+                            'detail' => collect($items)
+                                ->sortBy([
+                                    fn($a, $b) => strcmp($b['peran'], $a['peran']),
+                                    fn($a, $b) => strcmp($a['nama_mahasiswa'], $b['nama_mahasiswa']),
+                                ])
+                                ->map(fn($x) => (object) $x)
+                                ->values()
+                                ->all()
+                        ];
+                    })
+                    ->sortKeys()
+                    ->values()
+                    ->all();
+            })
+            ->sortKeysDesc();
 
         $pdf = Pdf::loadView('pengajuan_pembimbing.rekap_dosen_pembimbing', compact('rekap'))
             ->setPaper('a4', 'landscape');

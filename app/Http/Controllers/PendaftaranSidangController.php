@@ -70,11 +70,11 @@ class PendaftaranSidangController extends Controller
     {
         $request->validate([
             'tanggal_pendaftaran' => 'required|date',
-            'file_tugas_akhir' => 'required|file',
-            'file_bebas_pinjaman_administrasi' => 'required|file',
-            'file_slip_pembayaran_semester_akhir' => 'required|file',
-            'file_transkip_sementara' => 'required|file',
-            'file_bukti_pembayaran_sidang_ta' => 'required|file',
+            'file_tugas_akhir' => 'required|file|max:10240',
+            'file_bebas_pinjaman_administrasi' => 'required|file|max:2048',
+            'file_slip_pembayaran_semester_akhir' => 'required|file|max:2048',
+            'file_transkip_sementara' => 'required|file|max:2048',
+            'file_bukti_pembayaran_sidang_ta' => 'required|file|max:2048',
         ]);
 
         $mahasiswaId = Auth::user()->mahasiswa->id;
@@ -106,7 +106,6 @@ class PendaftaranSidangController extends Controller
             'file_bukti_pembayaran_sidang_ta' => $file_bukti_sidang,
         ]);
 
-
         return redirect()->back()->with('success', 'Pendaftaran sidang berhasil disimpan.');
     }
 
@@ -114,7 +113,6 @@ class PendaftaranSidangController extends Controller
     {
         $pendaftaran = PendaftaranSidang::findOrFail($id);
 
-        // Daftar kolom file yang valid, supaya user tidak bisa akses file sembarangan
         $allowedFields = [
             'file_tugas_akhir',
             'file_bebas_pinjaman_administrasi',

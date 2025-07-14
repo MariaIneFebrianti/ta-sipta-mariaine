@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Storage;
 use App\Models\Proposal;
 use Illuminate\Http\Request;
 use App\Models\PenilaianSempro;
@@ -55,18 +56,15 @@ class ProposalController extends Controller
         ]);
     }
 
-
     public function store(Request $request)
     {
         $request->validate([
             'judul_proposal' => 'required|string|max:100|unique:proposal,judul_proposal',
-            'file_proposal' => 'required|mimes:pdf|max:2048',
+            'file_proposal' => 'required|mimes:pdf|max:5120',
         ]);
 
         $mahasiswaId = Auth::user()->mahasiswa->id;
 
-
-        // $path = $request->file('file_proposal')->store('proposals', 'public');
         $path = null;
         if ($request->hasFile('file_proposal')) {
             $file_proposal = $request->file('file_proposal');
@@ -82,6 +80,33 @@ class ProposalController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Proposal berhasil diunggah.');
+    }
+
+    public function updateFileProposal(Request $request, $id)
+    {
+        $request->validate([
+            'file_proposal' => 'required|mimes:pdf|max:5120',
+        ]);
+
+        $proposal = Proposal::findOrFail($id);
+
+        // Hapus file lama jika ada
+        if ($proposal->file_proposal && Storage::disk('public')->exists($proposal->file_proposal)) {
+            Storage::disk('public')->delete($proposal->file_proposal);
+        }
+
+        // Upload file baru
+        $file = $request->file('file_proposal');
+        $filename = time() . '.' . $file->getClientOriginalExtension();
+        $file->storeAs('proposals', $filename, 'public');
+        $path = 'proposals/' . $filename;
+
+        // Update path file di database
+        $proposal->update([
+            'file_proposal' => $path,
+        ]);
+
+        return redirect()->back()->with('success', 'File proposal berhasil diperbarui.');
     }
 
     public function showFileProposal($id)
@@ -158,43 +183,4 @@ class ProposalController extends Controller
 
         return redirect()->back()->with('success', 'Revisi proposal berhasil disimpan.');
     }
-
-
-
-
-
-    // public function simpanCatatanRevisi(Request $request, $id)
-    // {
-    //     if (!Auth::check()) {
-    //         return redirect('/login')->with('message', 'Please log in to continue.');
-    //     }
-    //     $user = Auth::user();
-
-    //     // Cari data proposal berdasarkan $id
-    //     $proposal = Proposal::findOrFail($id);
-
-    //     $catatanBaru = trim($request->input('catatan'));
-    //     $existing = $proposal->catatan_revisi ?? '';
-
-    //     $isUtama = $user->pembimbingUtama ?? false;
-    //     $isPendamping = $user->pembimbingPendamping ?? false;
-
-    //     $parts = explode("Pembimbing Pendamping:", $existing);
-
-    //     $pembimbingUtama = isset($parts[0]) ? trim(str_replace("Pembimbing Utama:", "", $parts[0])) : '';
-    //     $pembimbingPendamping = isset($parts[1]) ? trim($parts[1]) : '';
-
-    //     if ($isUtama) {
-    //         $pembimbingUtama = $catatanBaru;
-    //     } elseif ($isPendamping) {
-    //         $pembimbingPendamping = $catatanBaru;
-    //     } else {
-    //         return back()->with('error', 'Anda tidak memiliki izin mengupdate catatan revisi.');
-    //     }
-
-    //     $proposal->catatan_revisi = "Pembimbing Utama:\n" . $pembimbingUtama . "\n\nPembimbing Pendamping:\n" . $pembimbingPendamping;
-    //     $proposal->save();
-
-    //     return back()->with('success', 'Catatan revisi berhasil disimpan.');
-    // }
 }

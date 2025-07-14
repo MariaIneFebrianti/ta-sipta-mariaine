@@ -35,6 +35,7 @@ class JadwalSeminarProposalController extends Controller
         ])
             ->orderBy('created_at', 'desc')
             ->orderBy('tanggal', 'asc')
+            ->orderBy('waktu_mulai', 'asc')
             ->get();
 
         // Group berdasarkan program studi
@@ -63,14 +64,14 @@ class JadwalSeminarProposalController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:csv,xlsx,xls|max:2048',
+            'file' => 'required|mimes:csv,xlsx,xls|max:10240',
         ]);
 
         try {
             Excel::import(new JadwalSeminarProposalImport, $request->file('file'));
-            return redirect()->route('jadwal_seminar_proposal.index')->with('success', 'Data berhasil diimpor.');
+            return redirect()->route('jadwal_seminar_proposal.index');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal mengimpor data: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal mengimpor data dosen: ' . $e->getMessage());
         }
     }
 
@@ -87,18 +88,12 @@ class JadwalSeminarProposalController extends Controller
 
         $jadwal = JadwalSeminarProposal::findOrFail($id);
 
-        // Poin 1: Cek penguji utama vs pendamping dan pembimbing (jika ada)
-        if (
-            $request->penguji_utama_id == $request->penguji_pendamping_id ||
-            $request->penguji_utama_id == $jadwal->mahasiswa->pembimbing_utama_id ||
-            $request->penguji_utama_id == $jadwal->mahasiswa->pembimbing_pendamping_id ||
-            $request->penguji_pendamping_id == $jadwal->mahasiswa->pembimbing_utama_id ||
-            $request->penguji_pendamping_id == $jadwal->mahasiswa->pembimbing_pendamping_id
-        ) {
-            return back()->withErrors(['error' => 'Penguji tidak boleh sama dengan pembimbing maupun sesama penguji.'])->withInput();
+        // Poin 1: Cek penguji utama vs pendamping (tidak boleh sama)
+        if ($request->penguji_utama_id == $request->penguji_pendamping_id) {
+            return back()->withErrors(['error' => 'Penguji utama dan pendamping tidak boleh sama.'])->withInput();
         }
 
-        // Poin 2: Cek bentrok jadwal total (tanggal, waktu, ruangan)
+        // Poin 2: Cek bentrok total (tanggal, waktu, ruangan sama)
         $bentrokLangsung = JadwalSeminarProposal::where('id', '!=', $id)
             ->where('tanggal', $request->tanggal)
             ->where('waktu_mulai', $request->waktu_mulai)
@@ -110,27 +105,24 @@ class JadwalSeminarProposalController extends Controller
             return back()->withErrors(['error' => 'Jadwal dengan waktu dan ruangan yang sama sudah terpakai.'])->withInput();
         }
 
-        // Poin 3: Cek konflik penguji atau pembimbing di waktu yang sama beda ruangan
+        // Poin 3: Cek konflik penguji (penguji sama di waktu sama meskipun beda ruangan)
         $konflikPenguji = JadwalSeminarProposal::where('id', '!=', $id)
             ->where('tanggal', $request->tanggal)
             ->where('waktu_mulai', $request->waktu_mulai)
             ->where('waktu_selesai', $request->waktu_selesai)
-            ->where(function ($query) use ($request, $jadwal) {
+            ->where(function ($query) use ($request) {
                 $query->where('penguji_utama_id', $request->penguji_utama_id)
-                    ->orWhere('penguji_utama_id', $request->penguji_pendamping_id)
                     ->orWhere('penguji_pendamping_id', $request->penguji_utama_id)
-                    ->orWhere('penguji_pendamping_id', $request->penguji_pendamping_id)
-                    ->orWhereHas('mahasiswa', function ($subquery) use ($jadwal) {
-                        $subquery->where('pembimbing_utama_id', $jadwal->mahasiswa->pembimbing_utama_id)
-                            ->orWhere('pembimbing_pendamping_id', $jadwal->mahasiswa->pembimbing_pendamping_id);
-                    });
+                    ->orWhere('penguji_utama_id', $request->penguji_pendamping_id)
+                    ->orWhere('penguji_pendamping_id', $request->penguji_pendamping_id);
             })
             ->exists();
 
         if ($konflikPenguji) {
-            return back()->withErrors(['error' => 'Penguji atau pembimbing sudah terlibat di jadwal lain pada waktu yang sama.'])->withInput();
+            return back()->withErrors(['error' => 'Penguji ini sudah terlibat di jadwal lain pada waktu yang sama.'])->withInput();
         }
 
+        // Update
         $jadwal->update($request->all());
 
         return redirect()->route('jadwal_seminar_proposal.index')->with('success', 'Data jadwal seminar berhasil diperbarui');
@@ -181,11 +173,12 @@ class JadwalSeminarProposalController extends Controller
             })
             ->orderBy('created_at', 'desc')
             ->orderBy('tanggal', 'asc')
+            ->orderBy('waktu_mulai', 'asc')
             ->get();
 
         // Grouping berdasarkan nama prodi
         $jadwalsGrouped = $jadwals->groupBy(function ($item) {
-            return $item->mahasiswa->programStudi->nama ?? 'Tidak Diketahui';
+            return $item->mahasiswa->programStudi->nama_prodi ?? 'Tidak Diketahui';
         });
 
         return view('jadwal_sidang.jadwal_seminar_proposal', compact(

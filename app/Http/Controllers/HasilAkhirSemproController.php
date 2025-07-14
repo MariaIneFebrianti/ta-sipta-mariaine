@@ -28,7 +28,7 @@ class HasilAkhirSemproController extends Controller
                     $query->where('program_studi_id', $dosen->program_studi_id);
                 })
                     ->with('mahasiswa')
-                    ->orderBy('created_at', 'desc') // Tambahkan ini
+                    ->orderBy('created_at', 'desc')
                     ->paginate(10);
 
                 $penilaianSempro = PenilaianSempro::whereHas('mahasiswa', function ($query) use ($dosen) {
@@ -43,12 +43,12 @@ class HasilAkhirSemproController extends Controller
 
             $hasilAkhirSempro = HasilAkhirSempro::where('mahasiswa_id', $mahasiswa->id)
                 ->with('mahasiswa')
-                ->orderBy('created_at', 'desc') // Tambahkan ini
+                ->orderBy('created_at', 'desc')
                 ->paginate(10);
 
             $penilaianSempro = PenilaianSempro::where('mahasiswa_id', $mahasiswa->id)
                 ->with('mahasiswa')
-                ->first(); // satu data saja untuk mahasiswa
+                ->first();
         } else {
             abort(403, 'Unauthorized');
         }
@@ -73,7 +73,7 @@ class HasilAkhirSemproController extends Controller
 
         $user = Auth::user();
         $status = $request->input('status_sidang');
-        $tahunAjaran = $request->input('tahun_ajaran'); // ✅ Ambil dari request
+        $tahunAjaran = $request->input('tahun_ajaran');
 
         $hasilAkhirSempro = HasilAkhirSempro::with('mahasiswa')
             ->when($status, fn($q) => $q->where('status_sidang', $status))
@@ -82,7 +82,7 @@ class HasilAkhirSemproController extends Controller
                     $q->where('tahun_ajaran_id', $tahunAjaran);
                 });
             })
-            ->orderBy('created_at', 'desc') // Tambahkan ini
+            ->orderBy('created_at', 'desc')
             ->paginate(10);
 
         // Ambil daftar status sidang unik dari database
@@ -93,7 +93,6 @@ class HasilAkhirSemproController extends Controller
             ->unique()
             ->values();
 
-        // ✅ Ambil semua data tahun ajaran dari model TahunAjaran
         $tahunAjaranList = TahunAjaran::all();
 
         return view('hasil_akhir_sempro.index', compact(

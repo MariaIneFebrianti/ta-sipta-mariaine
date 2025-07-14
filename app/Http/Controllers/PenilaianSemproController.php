@@ -14,6 +14,9 @@ use App\Models\HasilAkhirSempro;
 use Illuminate\Support\Facades\Auth;
 use App\Models\JadwalSeminarProposal;
 
+\Carbon\Carbon::setLocale('id');
+
+
 class PenilaianSemproController extends Controller
 {
     public function indexProposalDosen()
@@ -103,7 +106,7 @@ class PenilaianSemproController extends Controller
             ]
         );
 
-        // Simpan ke hasil_akhir_sempro
+        // Simpan/Update ke hasil_akhir_sempro
         $hasil = HasilAkhirSempro::firstOrNew([
             'mahasiswa_id' => $mahasiswaId,
             'jadwal_seminar_proposal_id' => $jadwalId,
@@ -115,16 +118,27 @@ class PenilaianSemproController extends Controller
             $hasil->nilai_penguji_pendamping = $nilai;
         }
 
+        // Jika kedua nilai sudah terisi, hitung total akhir dan status
         if (!is_null($hasil->nilai_penguji_utama) && !is_null($hasil->nilai_penguji_pendamping)) {
             $hasil->total_akhir = round(($hasil->nilai_penguji_utama + $hasil->nilai_penguji_pendamping) / 2, 2);
-            if ($hasil->total_akhir < 50) {
-                $hasil->status_sidang = 'Ditolak';
-            } elseif ($hasil->total_akhir < 80) {
-                $hasil->status_sidang = 'Revisi';
-            } elseif ($hasil->total_akhir <= 100) {
+
+            // Cek apakah sudah ada catatan revisi dari salah satu dosen
+            $punyaCatatanRevisi = PenilaianSempro::where('mahasiswa_id', $mahasiswaId)
+                ->where('jadwal_seminar_proposal_id', $jadwalId)
+                ->whereNotNull('catatan_revisi')
+                ->exists();
+
+            // Tentukan status berdasarkan ada/tidaknya catatan dan nilai
+            if (!$punyaCatatanRevisi) {
                 $hasil->status_sidang = 'Lulus';
             } else {
-                $hasil->status_sidang = 'Tidak Valid';
+                if ($hasil->total_akhir < 50) {
+                    $hasil->status_sidang = 'Ditolak';
+                } elseif ($hasil->total_akhir <= 100) {
+                    $hasil->status_sidang = 'Revisi';
+                } else {
+                    $hasil->status_sidang = 'Tidak Valid';
+                }
             }
         }
 
@@ -186,21 +200,45 @@ class PenilaianSemproController extends Controller
         }
 
         $dosenId = $user->dosen->id;
+        $mahasiswaId = $request->mahasiswa_id;
+        $jadwalId = $request->jadwal_seminar_proposal_id;
 
+        // Simpan/update catatan revisi di penilaian_sempro
         PenilaianSempro::updateOrCreate(
             [
-                'mahasiswa_id' => $request->mahasiswa_id,
+                'mahasiswa_id' => $mahasiswaId,
                 'dosen_id' => $dosenId,
-                'jadwal_seminar_proposal_id' => $request->jadwal_seminar_proposal_id,
+                'jadwal_seminar_proposal_id' => $jadwalId,
             ],
             [
                 'catatan_revisi' => $request->catatan_revisi,
             ]
         );
 
+        // Cek apakah kedua nilai sudah ada
+        $hasil = HasilAkhirSempro::where('mahasiswa_id', $mahasiswaId)
+            ->where('jadwal_seminar_proposal_id', $jadwalId)
+            ->first();
+
+        if ($hasil && !is_null($hasil->nilai_penguji_utama) && !is_null($hasil->nilai_penguji_pendamping)) {
+            // Hitung ulang total_akhir
+            $hasil->total_akhir = round(($hasil->nilai_penguji_utama + $hasil->nilai_penguji_pendamping) / 2, 2);
+
+            // Karena sudah ada catatan revisi, sesuaikan status_sidang
+            if ($hasil->total_akhir < 50) {
+                $hasil->status_sidang = 'Ditolak';
+            } elseif ($hasil->total_akhir <= 100) {
+                $hasil->status_sidang = 'Revisi';
+            } else {
+                $hasil->status_sidang = 'Tidak Valid';
+            }
+
+            $hasil->save();
+        }
+
         return redirect()->route('penilaian_sempro.catatan.form', [
-            'mahasiswa_id' => $request->mahasiswa_id,
-            'jadwal_seminar_proposal_id' => $request->jadwal_seminar_proposal_id,
+            'mahasiswa_id' => $mahasiswaId,
+            'jadwal_seminar_proposal_id' => $jadwalId,
         ])->with('success', 'Catatan revisi berhasil disimpan.');
     }
 

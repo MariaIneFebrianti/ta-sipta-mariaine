@@ -53,7 +53,9 @@ class JadwalBimbinganController extends Controller
                     $query->where('dosen_id', $pengajuanPembimbing->pembimbing_utama_id)
                         ->orWhere('dosen_id', $pengajuanPembimbing->pembimbing_pendamping_id);
                 })
-                    ->with('dosen')->orderBy('created_at', 'desc')->paginate(10);
+                    ->with('dosen')->orderBy('created_at', 'desc')
+                    ->orderBy('tanggal', 'desc')
+                    ->paginate(10);
 
                 // Tambahkan properti sudahMendaftar untuk masing-masing jadwal
                 $mahasiswaId = Auth::user()->mahasiswa->id;
@@ -75,6 +77,7 @@ class JadwalBimbinganController extends Controller
             // Ambil semua jadwal bimbingan milik dosen tersebut
             $jadwalBimbingan = JadwalBimbingan::where('dosen_id', $dosenId)
                 ->with('dosen')
+                ->orderBy('tanggal', 'desc')
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
 
@@ -90,10 +93,9 @@ class JadwalBimbinganController extends Controller
         }
         $mahasiswa = Auth::user();
         $pengajuan = PengajuanPembimbing::where('mahasiswa_id', $mahasiswa->id)->first();
-
-
         return view('jadwal_bimbingan.index', compact('jadwalBimbingan', 'dosen', 'user', 'pengajuan'));
     }
+
     public function indexKaprodi()
     {
         if (!Auth::check()) {
@@ -234,6 +236,7 @@ class JadwalBimbinganController extends Controller
 
         return view('jadwal_bimbingan.index_kaprodi', compact('jadwalBimbingan', 'dosen', 'statusList', 'user'));
     }
+
     public function destroy(string $id)
     {
         // Temukan user dan mahasiswa yang akan dihapus

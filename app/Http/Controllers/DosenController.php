@@ -26,11 +26,9 @@ class DosenController extends Controller
         $user = Auth::user();
 
         if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi' || $user->role === 'Dosen' && $user->dosen->jabatan === 'Super Admin') {
-            // Mengambil semua data dosen dengan relasi user
             $dosen = Dosen::with('user')
                 ->orderBy('nama_dosen', 'asc')
                 ->paginate(10);
-            // Mengambil semua data program studi
             $programStudi = ProgramStudi::all();
         } else {
             abort(403);
@@ -38,9 +36,10 @@ class DosenController extends Controller
 
         return view('dosen.index', compact('dosen', 'programStudi', 'user'));
     }
+
     public function store(Request $request)
     {
-        // Validasi input
+        // Validasi awal
         $request->validate([
             'name' => 'required|string|max:100|unique:users,name',
             'email' => 'required|string|email|max:100|unique:users,email',
@@ -48,27 +47,33 @@ class DosenController extends Controller
             'tempat_lahir' => 'required|string|max:100',
             'tanggal_lahir' => 'required|date|before:today',
             'jenis_kelamin' => 'required|string|max:9',
-            'jabatan' => 'nullable|string|max:25',
+            'jabatan' => 'required|in:Dosen Biasa,Koordinator Program Studi,Super Admin',
             'program_studi_id' => 'nullable|exists:program_studi,id',
         ]);
 
-        // Tentukan nilai default untuk password dan role
-        $password = Hash::make('11111111');
-        $email_verified_at = now();
-        $role = 'Dosen';
+        // Jika jabatan Koordinator Program Studi, pastikan program_studi_id tidak null
+        if ($request->jabatan === 'Koordinator Program Studi') {
+            if (!$request->program_studi_id) {
+                return back()->with('error', 'Program studi wajib diisi untuk Koordinator Program Studi.');
+            }
 
-        // Buat user baru
+            $kaprodiSudahAda = Dosen::where('jabatan', 'Koordinator Program Studi')
+                ->where('program_studi_id', $request->program_studi_id)
+                ->exists();
+
+            if ($kaprodiSudahAda) {
+                return back()->with('error', 'Sudah ada Kaprodi untuk program studi yang dipilih.');
+            }
+        }
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'email_verified_at' => $email_verified_at,
-            'password' => $password,
-            'role' => $role,
-            'created_at' => now(),
-            'updated_at' => now(),
+            'email_verified_at' => now(),
+            'password' => Hash::make('11111111'),
+            'role' => 'Dosen',
         ]);
 
-        // Simpan data mahasiswa baru dengan user_id dari user yang baru dibuat
         $dosen = Dosen::create([
             'user_id' => $user->id,
             'nip' => $request->nip,
@@ -76,8 +81,10 @@ class DosenController extends Controller
             'tempat_lahir' => $request->tempat_lahir,
             'tanggal_lahir' => $request->tanggal_lahir,
             'jenis_kelamin' => $request->jenis_kelamin,
-            'jabatan' => $request->jabatan ?? null,
-            'program_studi_id' => $request->program_studi_id ?? null,
+            'jabatan' => $request->jabatan,
+            'program_studi_id' => $request->jabatan === 'Koordinator Program Studi'
+                ? $request->program_studi_id
+                : null,
         ]);
 
         if (!$dosen) {
@@ -87,51 +94,57 @@ class DosenController extends Controller
 
         return redirect()->route('dosen.index')->with('success', 'Data dosen berhasil ditambahkan.');
     }
+
     public function update(Request $request, $id)
     {
         $dosen = Dosen::findOrFail($id);
         $user = User::findOrFail($dosen->user_id);
 
-        // Validasi input
         $request->validate([
             'name' => 'required|string|max:100|unique:users,name,' . $user->id,
             'nip' => 'required|integer|digits_between:1,50|unique:dosen,nip,' . $id,
             'tempat_lahir' => 'required|string|max:100',
             'tanggal_lahir' => 'required|date|before:today',
             'jenis_kelamin' => 'required|string|max:9',
-            'jabatan' => 'nullable|string|max:25',
+            'jabatan' => 'required|in:Dosen Biasa,Koordinator Program Studi,Super Admin',
             'program_studi_id' => 'nullable|exists:program_studi,id',
         ]);
 
-        // Temukan dosen dan user yang akan diupdate
-        $dosen = Dosen::findOrFail($id);
-        $user = User::findOrFail($dosen->user_id); // Dapatkan user_id dari mahasiswa
+        // Cek jika mau dijadikan Kaprodi
+        if ($request->jabatan === 'Koordinator Program Studi') {
+            if (!$request->program_studi_id) {
+                return back()->with('error', 'Program studi wajib diisi untuk Koordinator Program Studi.');
+            }
 
-        // Update data user
+            $kaprodiSudahAda = Dosen::where('jabatan', 'Koordinator Program Studi')
+                ->where('program_studi_id', $request->program_studi_id)
+                ->where('id', '!=', $dosen->id)
+                ->exists();
+
+            if ($kaprodiSudahAda) {
+                return back()->with('error', 'Sudah ada Kaprodi untuk program studi yang dipilih.');
+            }
+        }
+
         $user->update([
             'name' => $request->name,
         ]);
 
-        // Update data dosen
         $dosen->update([
             'nip' => $request->nip,
             'nama_dosen' => $request->name,
             'tempat_lahir' => $request->tempat_lahir,
             'tanggal_lahir' => $request->tanggal_lahir,
             'jenis_kelamin' => $request->jenis_kelamin,
-            'jabatan' => $request->jabatan ?? null,
-            'program_studi_id' => $request->program_studi_id ?? null,
+            'jabatan' => $request->jabatan,
+            'program_studi_id' => $request->jabatan === 'Koordinator Program Studi' ? $request->program_studi_id : null,
         ]);
 
-        // dd($request->all());
-
-
         if (request()->routeIs('dosen.profile.update')) {
-            // Sedang edit dirinya sendiri
             return redirect()->route('dashboard')->with('success', 'Profil berhasil diperbarui.');
-        } else {
-            return redirect()->route('dosen.index')->with('success', 'Data dosen berhasil diupdate.');
         }
+
+        return redirect()->route('dosen.index')->with('success', 'Data dosen berhasil diupdate.');
     }
 
     public function search(Request $request)
@@ -158,7 +171,6 @@ class DosenController extends Controller
         // Mengirimkan data ke view
         return view('dosen.index', compact('dosen', 'programStudi', 'user'));
     }
-
 
     public function destroy(string $id)
     {
@@ -209,12 +221,12 @@ class DosenController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:csv,xlsx,xls|max:2048',
+            'file' => 'required|mimes:csv,xlsx,xls|max:10240',
         ]);
 
         try {
             Excel::import(new DosenImport, $request->file('file'));
-            return redirect()->route('dosen.index')->with('success', 'Data dosen berhasil diimpor.');
+            return redirect()->route('dosen.index');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal mengimpor data dosen: ' . $e->getMessage());
         }

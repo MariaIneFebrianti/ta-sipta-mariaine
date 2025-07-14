@@ -51,13 +51,11 @@ class MahasiswaController extends Controller
             abort(403);
         }
 
-
         $programStudi = ProgramStudi::all();
         $tahunAjaran = TahunAjaran::all();
 
         return view('mahasiswa.index', compact('programStudi', 'tahunAjaran', 'mahasiswa', 'user'));
     }
-
 
     public function store(Request $request)
     {
@@ -167,7 +165,6 @@ class MahasiswaController extends Controller
         }
     }
 
-
     public function search(Request $request)
     {
         if (!Auth::check()) {
@@ -231,7 +228,6 @@ class MahasiswaController extends Controller
             ->select('mahasiswa.*') // agar kolom tidak bentrok
             ->paginate(10);
 
-
         return view('mahasiswa.index', compact('mahasiswa', 'programStudi', 'tahunAjaran', 'user'));
     }
 
@@ -273,12 +269,12 @@ class MahasiswaController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:csv,xlsx,xls|max:2048',
+            'file' => 'required|mimes:csv,xlsx,xls|max:10240',
         ]);
 
         try {
             Excel::import(new MahasiswaImport, $request->file('file'));
-            return redirect()->route('mahasiswa.index')->with('success', 'Data mahasiswa berhasil diimpor.');
+            return redirect()->route('mahasiswa.index');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal mengimpor data mahasiswa: ' . $e->getMessage());
         }

@@ -41,12 +41,11 @@ class HasilSidangController extends Controller
             abort(403);
         }
 
-        // Ambil list status & tahun untuk dropdown
         $statusList = HasilSidang::select('status_kelulusan')->distinct()->pluck('status_kelulusan')->filter()->unique()->values();
         $tahunList = HasilSidang::select('tahun_lulus')->distinct()->pluck('tahun_lulus')->filter()->unique()->values();
         $tahunAjaranList = TahunAjaran::orderBy('tahun_ajaran', 'desc')->get(); // untuk dropdown
 
-        return view('hasil_sidang.sidang_tugas_akhir', compact('hasilSidang', 'statusList', 'tahunList', 'tahunAjaranList', 'jumlahMahasiswaSidang'));
+        return view('hasil_sidang.sidang_tugas_akhir', compact('user', 'hasilSidang', 'statusList', 'tahunList', 'tahunAjaranList', 'jumlahMahasiswaSidang'));
     }
 
     public function show($id)
@@ -94,15 +93,13 @@ class HasilSidangController extends Controller
                 });
             });
 
-        $hasilSidang = $query->orderBy('created_at', 'desc')->paginate(10); // untuk tampilan
-        $jumlahMahasiswaSidang = $query->get()->pluck('mahasiswa_id')->unique()->count(); // untuk hitung jumlah
-
-
+        $hasilSidang = $query->orderBy('created_at', 'desc')->paginate(10);
+        $jumlahMahasiswaSidang = $query->get()->pluck('mahasiswa_id')->unique()->count();
         $statusList = HasilSidang::select('status_kelulusan')->distinct()->pluck('status_kelulusan')->filter()->unique()->values();
         $tahunList = HasilSidang::select('tahun_lulus')->distinct()->pluck('tahun_lulus')->filter()->unique()->values();
         $tahunAjaranList = TahunAjaran::orderBy('tahun_ajaran', 'desc')->get(); // untuk dropdown
 
-        return view('hasil_sidang.sidang_tugas_akhir', compact('hasilSidang', 'statusList', 'tahunList', 'tahunAjaranList', 'jumlahMahasiswaSidang'));
+        return view('hasil_sidang.sidang_tugas_akhir', compact('user', 'hasilSidang', 'statusList', 'tahunList', 'tahunAjaranList', 'jumlahMahasiswaSidang'));
     }
 
     public function indexMahasiswa()
@@ -133,8 +130,6 @@ class HasilSidangController extends Controller
                 ->where('jadwal_sidang_tugas_akhir_id', $riwayat->jadwal_sidang_tugas_akhir_id)
                 ->exists();
         }
-
-
         $hasilSidang = HasilSidang::where('mahasiswa_id', $mahasiswa->id)->first();
         return view('hasil_sidang.index_mahasiswa', compact('riwayatSidang', 'hasilSidang'));
     }
@@ -159,7 +154,7 @@ class HasilSidangController extends Controller
     public function uploadRevisi(Request $request, $id)
     {
         $request->validate([
-            'file_revisi' => 'required|mimes:pdf|max:20480', // max 20MB
+            'file_revisi' => 'required|mimes:pdf|max:20480',
         ]);
 
         $hasilSidang = HasilSidang::findOrFail($id);

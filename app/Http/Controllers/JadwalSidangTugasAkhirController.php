@@ -34,6 +34,7 @@ class JadwalSidangTugasAkhirController extends Controller
         ])
             ->orderBy('created_at', 'desc')
             ->orderBy('tanggal', 'asc')
+            ->orderBy('waktu_mulai', 'asc')
             ->get();
 
         // Group berdasarkan nama program studi mahasiswa
@@ -68,14 +69,14 @@ class JadwalSidangTugasAkhirController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:csv,xlsx,xls|max:2048',
+            'file' => 'required|mimes:csv,xlsx,xls|max:10240',
         ]);
 
         try {
             Excel::import(new JadwalSidangTugasAkhirImport, $request->file('file'));
-            return redirect()->route('jadwal_sidang_tugas_akhir.index')->with('success', 'Data jadwal sidang tugas akhir berhasil diimpor.');
+            return redirect()->route('jadwal_sidang_tugas_akhir.index');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal mengimpor data jadwal sidang tugas akhir: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal mengimpor data dosen: ' . $e->getMessage());
         }
     }
 
@@ -211,13 +212,15 @@ class JadwalSidangTugasAkhirController extends Controller
                         ->orWhere('penguji_pendamping_id', $dosenId);
                 });
             })
-            ->orderBy('created_at', 'desc') // urutkan berdasarkan waktu pembuatan terbaru
-            ->orderBy('tanggal', 'asc')     // lalu urutkan berdasarkan tanggal sidang
+            ->orderBy('created_at', 'desc')
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('waktu_mulai', 'asc')
+
             ->get();
 
         // 🔁 Grouping berdasarkan nama prodi
         $jadwalsGrouped = $jadwals->groupBy(function ($item) {
-            return $item->mahasiswa->programStudi->nama ?? 'Tidak Diketahui';
+            return $item->mahasiswa->programStudi->nama_prodi ?? 'Tidak Diketahui';
         });
 
         // Ambil daftar tahun ajaran dari model TahunAjaran
@@ -277,6 +280,7 @@ class JadwalSidangTugasAkhirController extends Controller
 
                 $grouped[$nama]['detail'][] = (object)[
                     'peran' => 'Penguji Utama',
+                    'tahun_ajaran' => $mhs->tahunAjaran->tahun_ajaran,
                     'nim' => $mhs->nim,
                     'nama_mahasiswa' => $mhs->nama_mahasiswa,
                 ];
@@ -297,22 +301,48 @@ class JadwalSidangTugasAkhirController extends Controller
                     'peran' => 'Penguji Pendamping',
                     'nim' => $mhs->nim,
                     'nama_mahasiswa' => $mhs->nama_mahasiswa,
+                    'tahun_ajaran' => $mhs->tahunAjaran->tahun_ajaran ?? '',
                 ];
             }
         }
 
-        // Sorting: Dosen by nama_dosen, Mahasiswa by nama_mahasiswa
         $rekap = collect($grouped)
-            ->sortBy('nama_dosen')
-            ->map(function ($item) {
-                $item['detail'] = collect($item['detail'])
-                    ->sortBy('nama_mahasiswa')
+            ->flatMap(function ($item) {
+                return collect($item['detail'])->map(function ($detail) use ($item) {
+                    return [
+                        'nama_dosen' => $item['nama_dosen'],
+                        'peran' => $detail->peran,
+                        'nim' => $detail->nim,
+                        'nama_mahasiswa' => $detail->nama_mahasiswa,
+                        'tahun_ajaran' => $detail->tahun_ajaran,
+                    ];
+                });
+            })
+            ->groupBy('tahun_ajaran')
+            ->map(function ($dataPerTahun) {
+                return collect($dataPerTahun)
+                    ->groupBy('nama_dosen')
+                    ->map(function ($items, $dosen) {
+                        return [
+                            'nama_dosen' => $dosen,
+                            'detail' => collect($items)
+                                ->sortBy([
+                                    fn($a, $b) => strcmp($b['peran'], $a['peran']),
+                                    fn($a, $b) => strcmp($a['nama_mahasiswa'], $b['nama_mahasiswa']),
+                                ])
+                                ->map(function ($x) {
+                                    return (object) $x;
+                                })
+                                ->values()
+                                ->all()
+                        ];
+                    })
+                    ->sortKeys()
                     ->values()
                     ->all();
-                return $item;
             })
-            ->values()
-            ->all();
+            ->sortKeysDesc();
+
 
         $pdf = Pdf::loadView('jadwal_sidang.rekap_dosen_penguji', compact('rekap'))
             ->setPaper('a4', 'landscape');

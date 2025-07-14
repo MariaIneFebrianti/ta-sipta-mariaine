@@ -42,11 +42,6 @@ class BeritaAcaraController extends Controller
             $status = 'Belum Ada';
         }
 
-        // $nilai = $jadwal->mahasiswa->hasilAkhirSempro;
-
-        // $status = $jadwal->mahasiswa->hasilAkhirSempro->status_sidang ?? 'Belum Ada';
-
-
         return view('berita_acara.seminar_proposal', compact('jadwal', 'nilai', 'status'));
     }
 
@@ -84,10 +79,6 @@ class BeritaAcaraController extends Controller
             $status = 'Belum Ada';
         }
 
-        // $nilai = $jadwal->mahasiswa->hasilAkhirSempro;
-
-        // $status = $jadwal->mahasiswa->hasilAkhirSempro->status_sidang ?? 'Belum Ada';
-
         $pdf = Pdf::loadView('berita_acara.cetak_seminar_proposal', compact('jadwal', 'nilai', 'status'))
             ->setPaper('A4', 'portrait');
 
@@ -120,10 +111,6 @@ class BeritaAcaraController extends Controller
             'ruanganSidang',
         ])->where('mahasiswa_id', $mahasiswa->id)->first();
 
-        // $nilai = $jadwal->mahasiswa->hasilAkhirSempro;
-
-        // $status = $jadwal->mahasiswa->hasilAkhirSempro->status_sidang ?? 'Belum Ada';
-
         if ($jadwal) {
             $nilai = $jadwal->mahasiswa->hasilAkhirSempro;
             $status = $nilai->status_sidang ?? 'Belum Ada';
@@ -151,10 +138,10 @@ class BeritaAcaraController extends Controller
             return back()->with('error', 'Data mahasiswa tidak ditemukan.');
         }
 
-        // 🔍 Cek apakah mahasiswa sudah punya entri hasil_sidang
+        // Cek apakah mahasiswa sudah punya entri hasil_sidang
         $punyaHasilSidang = HasilSidang::where('mahasiswa_id', $mahasiswa->id)->exists();
 
-        // ❌ Kalau belum ada hasil_sidang, tampilkan alert kosong
+        // Kalau belum ada hasil_sidang, tampilkan alert kosong
         if (! $punyaHasilSidang) {
             return view('berita_acara.sidang_tugas_akhir', [
                 'dataBeritaAcara' => collect(),
@@ -162,7 +149,7 @@ class BeritaAcaraController extends Controller
             ]);
         }
 
-        // ✅ Ambil semua jadwal sidang milik mahasiswa
+        // Ambil semua jadwal sidang milik mahasiswa
         $riwayatSidang = JadwalSidangTugasAkhir::with([
             'mahasiswa.proposal',
             'pembimbingUtama',
@@ -206,7 +193,6 @@ class BeritaAcaraController extends Controller
         }
 
         $user = Auth::user();
-        // $jenisSidang = $request->input('jenis_sidang');
         $mahasiswaId = $request->input('mahasiswa_id');
         $jadwalId = $request->input('jadwal_id');
 
@@ -249,8 +235,6 @@ class BeritaAcaraController extends Controller
         return $pdf->download(
             'Berita Acara ' . $jenisSidang . ' ' . $mahasiswa->nama_mahasiswa . '.pdf'
         );
-        // // return $pdf->download('Berita Acara' . $mahasiswa->nim . '' . str_replace(' ', '', strtolower($jenisSidang)) . '.pdf');
-        // return $pdf->download('Berita Acara ' . $judulSidang . ' ' . $mahasiswa->nama_mahasiswa . '.pdf');
     }
 
     public function lihatSidangTugasAkhir(Request $request)
@@ -304,11 +288,6 @@ class BeritaAcaraController extends Controller
             'Berita Acara ' . $jenisSidang . ' ' . $mahasiswa->nama_mahasiswa . '.pdf'
         );
     }
-
-
-
-
-
 
     public function sidangTugasAkhirKaprodi($id)
     {

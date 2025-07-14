@@ -20,7 +20,6 @@ class RubrikNilaiController extends Controller
         $dosen = $user->dosen;
 
         if ($user->role === 'Dosen' && ($user->dosen->jabatan === 'Koordinator Program Studi')) {
-            // $rubrikNilai = RubrikNilai::paginate(10);
             $rubrikNilai = RubrikNilai::where('program_studi_id', $dosen->program_studi_id)
                 ->orderByRaw("FIELD(jenis_dosen, 'Penguji Utama', 'Penguji Pendamping', 'Pembimbing Utama', 'Pembimbing Pendamping')")
                 ->paginate(10);
@@ -40,7 +39,6 @@ class RubrikNilaiController extends Controller
 
         $programStudiList = ProgramStudi::all();
 
-
         return view('rubrik_nilai.index', compact('rubrikNilai', 'user', 'totalPerKategori', 'programStudiList'));
     }
 
@@ -56,67 +54,75 @@ class RubrikNilaiController extends Controller
             'persentase' => 'required|integer|min:1|max:100',
         ]);
 
+        // Map untuk split 1 input ke 2 jenis dosen
+        $jenisDosenMap = [
+            'Penguji' => ['Penguji Utama', 'Penguji Pendamping'],
+            'Pembimbing' => ['Pembimbing Utama', 'Pembimbing Pendamping'],
+        ];
 
-        $existingTotal = RubrikNilai::where('jenis_dosen', $request->jenis_dosen)
-            ->where('program_studi_id', $programStudiId)
-            ->sum('persentase');
+        $targetJenisList = $jenisDosenMap[$request->jenis_dosen] ?? [$request->jenis_dosen];
 
-        // Jika total + persentase baru > 100, tolak
-        if ($existingTotal + $request->persentase > 100) {
-            return back()->withInput()->withErrors([
-                'persentase' => 'Total persentase untuk jenis dosen ini sudah mencapai batas 100%.'
+        foreach ($targetJenisList as $jenis) {
+            $existingTotal = RubrikNilai::where('jenis_dosen', $jenis)
+                ->where('program_studi_id', $programStudiId)
+                ->sum('persentase');
+
+            if ($existingTotal + $request->persentase > 100) {
+                return back()->withInput()->withErrors([
+                    'persentase' => "Total persentase untuk '$jenis' sudah mencapai batas 100%."
+                ]);
+            }
+
+            RubrikNilai::create([
+                'program_studi_id' => $programStudiId,
+                'jenis_dosen' => $jenis,
+                'kelompok' => $request->kelompok,
+                'kategori' => $request->kategori,
+                'persentase' => $request->persentase,
             ]);
         }
 
-        // Simpan rubrik
-        RubrikNilai::create([
-            'program_studi_id' => $programStudiId,
-            'jenis_dosen' => $request->jenis_dosen,
-            'kelompok' => $request->kelompok,
-            'kategori' => $request->kategori,
-            'persentase' => $request->persentase,
-        ]);
-
-        return redirect()->route('rubrik_nilai.index')->with('success', 'Rubrik Nilai berhasil ditambahkan');
+        return redirect()->route('rubrik_nilai.index')->with('success', 'Rubrik Nilai berhasil ditambahkan.');
     }
-
 
     public function update(Request $request, string $id)
     {
         $request->validate([
             'jenis_dosen' => 'required|string|max:255',
             'kelompok' => 'nullable|string|max:50',
-            'kategori' => 'required|string|max:100' . $id,
+            'kategori' => 'required|string|max:100',
             'persentase' => 'required|integer|min:1|max:100',
         ]);
 
         $user = Auth::user();
-
-        $rubrikNilai = RubrikNilai::findOrFail($id);
-
         $programStudiId = $user->dosen->program_studi_id;
 
-        $existingTotal = RubrikNilai::where('jenis_dosen', $request->jenis_dosen)
-            ->where('program_studi_id', $programStudiId)
-            ->where('id', '!=', $id)
-            ->sum('persentase');
+        $groupedJenisDosen = [
+            'Penguji Utama' => ['Penguji Utama', 'Penguji Pendamping'],
+            'Penguji Pendamping' => ['Penguji Utama', 'Penguji Pendamping'],
+            'Pembimbing Utama' => ['Pembimbing Utama', 'Pembimbing Pendamping'],
+            'Pembimbing Pendamping' => ['Pembimbing Utama', 'Pembimbing Pendamping'],
+        ];
 
-        $newTotal = $existingTotal + $request->persentase;
+        $editSemua = $groupedJenisDosen[$request->jenis_dosen] ?? [$request->jenis_dosen];
 
-        if ($newTotal > 100) {
+        $totalUpdate = $request->persentase * count($editSemua);
+
+        if ($totalUpdate > 100) {
             return back()->withInput()->withErrors([
-                'persentase' => 'Total persentase untuk jenis dosen ini melebihi 100%.'
+                'persentase' => 'Total persentase untuk grup ini tidak boleh lebih dari 100%.'
             ]);
         }
 
-        // Lanjut update
-        $rubrikNilai->update([
-            'jenis_dosen' => $request->jenis_dosen,
-            'kelompok' => $request->kelompok,
-            'kategori' => $request->kategori,
-            'persentase' => $request->persentase,
-        ]);
-        return redirect()->route('rubrik_nilai.index')->with('success', 'Rubrik Nilai berhasil diperbarui');
+        RubrikNilai::where('program_studi_id', $programStudiId)
+            ->whereIn('jenis_dosen', $editSemua)
+            ->where('kategori', $request->kategori)
+            ->update([
+                'kelompok' => $request->kelompok,
+                'persentase' => $request->persentase,
+            ]);
+
+        return redirect()->route('rubrik_nilai.index')->with('success', 'Rubrik Nilai berhasil diperbarui.');
     }
 
     public function dropdownSearch(Request $request)
@@ -128,9 +134,6 @@ class RubrikNilaiController extends Controller
         $user = Auth::user();
         $dosen = $user->dosen;
         $programStudiList = ProgramStudi::all();
-
-
-        // $programStudiId = $user->dosen->program_studi_id;
 
         if ($user->role !== 'Dosen' || !in_array($user->dosen->jabatan, ['Koordinator Program Studi', 'Super Admin'])) {
             abort(403);
@@ -165,35 +168,6 @@ class RubrikNilaiController extends Controller
 
         return view('rubrik_nilai.index', compact('rubrikNilai', 'jenisDosen', 'user', 'totalPerKategori', 'programStudiList'));
     }
-
-
-
-    // public function search(Request $request)
-    // {
-    //     if (!Auth::check()) {
-    //         return redirect('/login')->with('message', 'Please log in to continue.');
-    //     }
-
-    //     $user = Auth::user();
-
-    //     $search = $request->input('search');;
-
-    //     if ($user->role === 'Dosen' && ($user->dosen->jabatan === 'Koordinator Rubrik Nilai' || $user->dosen->jabatan === 'Super Admin')) {
-
-    //         // Mengambil data pengguna berdasarkan pencarian kode prodi atau nama prodi
-    //         $rubrikNilai = RubrikNilai::when($search, function ($query) use ($search) {
-    //             return $query->where(function ($query) use ($search) {
-    //                 $query->where('kode_prodi', 'like', "%$search%")
-    //                     ->orWhere('nama_prodi', 'like', "%$search%");
-    //             });
-    //         })
-    //             ->paginate(5);
-    //     } else {
-    //         abort(403);
-    //     }
-
-    //     return view('rubrik_nilai.index', compact('rubrikNilai', 'user'));
-    // }
 
     public function destroy(string $id)
     {

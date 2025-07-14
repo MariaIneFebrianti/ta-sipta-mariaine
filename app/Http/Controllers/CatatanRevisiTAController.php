@@ -8,61 +8,15 @@ use Illuminate\Support\Facades\File;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\CatatanRevisiTA;
 use App\Models\Dosen;
+use App\Models\HasilAkhirTA;
+use App\Models\HasilSidang;
 use App\Models\JadwalSidangTugasAkhir;
+use App\Models\RiwayatSidang;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class CatatanRevisiTAController extends Controller
 {
-    // public function index()
-    // {
-    //     $user = Auth::user();
-
-    //     if (!$user || !$user->dosen) {
-    //         return redirect('/login')->with('message', 'Unauthorized.');
-    //     }
-
-    //     $dosenId = $user->dosen->id;
-
-    //     // Ambil catatan revisi yang ditulis oleh dosen ini
-    //     $catatan = CatatanRevisiTA::with(['mahasiswa', 'jadwalSidang'])
-    //         ->where('dosen_id', $dosenId)
-    //         ->latest()
-    //         ->get();
-
-    //     return view('catatan_revisi_ta.index', compact('catatan'));
-    // }
-
-    // Tampilkan form untuk menulis atau mengedit catatan revisi
-    // public function form(Request $request)
-    // {
-    //     $user = Auth::user();
-
-    //     if (!$user || !$user->dosen) {
-    //         return redirect('/login')->with('message', 'Unauthorized.');
-    //     }
-
-    //     $dosenId = $user->dosen->id;
-    //     $dosen = $user->dosen;
-
-    //     $jadwalId = $request->query('jadwal_sidang_tugas_akhir_id');
-    //     $mahasiswaId = $request->query('mahasiswa_id');
-
-    //     // $jadwal = JadwalSidangTugasAkhir::findOrFail($jadwalId);
-
-    //     $jadwalSidang = JadwalSidangTugasAkhir::with(['ruanganSidang', 'mahasiswa', 'dosen'])->findOrFail($jadwalId);
-
-
-    //     $catatan = CatatanRevisiTA::firstOrNew([
-    //         'mahasiswa_id' => $mahasiswaId,
-    //         'dosen_id' => $dosenId,
-    //         'jadwal_sidang_tugas_akhir_id' => $jadwalId,
-    //     ]);
-
-    //     return view('catatan_revisi_ta.form', compact('catatan', 'jadwalSidang', 'dosen'));
-    // }
-
-
     public function form(Request $request)
     {
         $user = Auth::user();
@@ -111,8 +65,6 @@ class CatatanRevisiTAController extends Controller
         return view('catatan_revisi.form_tugas_akhir', compact('catatan', 'jadwalSidang', 'dosen', 'peran'));
     }
 
-
-    // Simpan atau update catatan revisi
     public function store(Request $request)
     {
         $request->validate([
@@ -139,9 +91,38 @@ class CatatanRevisiTAController extends Controller
             ]
         );
 
-        // return redirect()->route('catatan_revisi_ta.form')
-        //     ->with('success', 'Catatan revisi berhasil disimpan.');
-        // Redirect ke halaman form yang sama setelah simpan
+        // Update status sidang setelah revisi ditambahkan
+        $mahasiswaId = $request->mahasiswa_id;
+        $jadwalId = $request->jadwal_sidang_tugas_akhir_id;
+
+        $hasilAkhir = HasilAkhirTA::where('mahasiswa_id', $mahasiswaId)
+            ->where('jadwal_sidang_tugas_akhir_id', $jadwalId)
+            ->first();
+
+        if ($hasilAkhir && $hasilAkhir->total_akhir !== null) {
+            $rataRataNilai = ($hasilAkhir->nilai_penguji_utama + $hasilAkhir->nilai_penguji_pendamping) / 2;
+            $statusSidang = $rataRataNilai < 50 ? 'Sidang Ulang' : 'Revisi';
+
+            $hasilSidang = HasilSidang::updateOrCreate(
+                ['mahasiswa_id' => $mahasiswaId],
+                [
+                    'status_kelulusan' => $statusSidang,
+                    'tahun_lulus' => in_array($statusSidang, ['Lulus', 'Revisi']) ? now()->format('Y') : null,
+                ]
+            );
+
+            RiwayatSidang::updateOrCreate(
+                [
+                    'hasil_sidang_id' => $hasilSidang->id,
+                    'jadwal_sidang_tugas_akhir_id' => $jadwalId,
+                ],
+                [
+                    'hasil_akhir_ta_id' => $hasilAkhir->id,
+                    'status_sidang' => $statusSidang,
+                ]
+            );
+        }
+
         return redirect()->route('penilaian_ta.catatan.form', [
             'mahasiswa_id' => $request->mahasiswa_id,
             'jadwal_sidang_tugas_akhir_id' => $request->jadwal_sidang_tugas_akhir_id,
@@ -196,7 +177,7 @@ class CatatanRevisiTAController extends Controller
             return back()->with('error', 'Catatan revisi belum tersedia untuk dicetak.');
         }
 
-        $jadwal = $jadwalSidang; // supaya sama dengan template view
+        $jadwal = $jadwalSidang;
         $pdf = Pdf::loadView('catatan_revisi.cetak_tugas_akhir', compact('catatan', 'jadwal', 'dosen', 'peran'))
             ->setPaper('A4');
 
@@ -224,7 +205,6 @@ class CatatanRevisiTAController extends Controller
         if ($user->role === 'Mahasiswa') {
             $mahasiswa = $user->mahasiswa;
         } elseif ($user->role === 'Dosen' && $user->dosen && $user->dosen->jabatan === 'Koordinator Program Studi' || $user->role === 'Dosen' && $user->dosen && $user->dosen->jabatan === 'Super Admin') {
-            // $mahasiswa = Mahasiswa::findOrFail($mahasiswaId);
             $mahasiswa = $sidang->mahasiswa;
         } else {
             return abort(403, 'Unauthorized');

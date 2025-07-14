@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\Auth;
 
 class LogbookBimbinganController extends Controller
 {
-
     public function indexMahasiswa()
     {
         if (!Auth::check()) {
@@ -125,7 +124,7 @@ class LogbookBimbinganController extends Controller
     {
         $request->validate([
             'pendaftaran_bimbingan_id' => 'required|exists:pendaftaran_bimbingan,id', // Validasi yang benar
-            'file_bimbingan' => 'required|mimes:pdf',
+            'file_bimbingan' => 'required|mimes:pdf|max:10240',
         ]);
 
         // Ambil pendaftaran_bimbingan
@@ -142,11 +141,8 @@ class LogbookBimbinganController extends Controller
         $path = null;
         if ($request->hasFile('file_bimbingan')) {
             $file_bimbingan = $request->file('file_bimbingan');
-
             $filename = time() . '.' . $file_bimbingan->getClientOriginalExtension();
-
             $file_bimbingan->storeAs('logbooks', $filename, 'public');
-
             $path = 'logbooks/' . $filename;
         }
 

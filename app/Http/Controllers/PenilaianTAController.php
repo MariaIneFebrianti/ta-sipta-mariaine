@@ -10,6 +10,7 @@ use App\Models\TahunAjaran;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\RiwayatSidang;
+use App\Models\CatatanRevisiTA;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -39,7 +40,6 @@ class PenilaianTAController extends Controller
 
         $jenisDosen = null;
 
-        // Simpan nilai per rubrik
         foreach ($request->nilai as $rubrikId => $nilai) {
             $rubrik = RubrikNilai::where('id', $rubrikId)
                 ->where('program_studi_id', $programStudiId)
@@ -66,7 +66,6 @@ class PenilaianTAController extends Controller
             return back()->with('error', 'Rubrik tidak ditemukan atau tidak valid.');
         }
 
-        // Ambil penilaian lengkap & hitung berdasarkan jenis dosen
         $penilaian = PenilaianTA::where('mahasiswa_id', $mahasiswaId)
             ->where('jadwal_sidang_tugas_akhir_id', $jadwalId)
             ->with('rubrik')
@@ -82,12 +81,10 @@ class PenilaianTAController extends Controller
 
         $semuaAda = collect($nilai)->every(fn($n) => $n !== null);
 
-        // Cari Kaprodi dari program studi yang sama
         $kaprodi = Dosen::where('jabatan', 'Koordinator Program Studi')
             ->where('program_studi_id', $programStudiId)
             ->first();
 
-        // Simpan hasil akhir sidang
         $hasilAkhir = HasilAkhirTA::updateOrCreate(
             [
                 'mahasiswa_id' => $mahasiswaId,
@@ -108,21 +105,20 @@ class PenilaianTAController extends Controller
             ]
         );
 
-        // Jika total_akhir sudah ada, lanjut proses HasilSidang dan RiwayatSidang
         if ($hasilAkhir->total_akhir !== null) {
             $rataRataNilai = ($hasilAkhir->nilai_penguji_utama + $hasilAkhir->nilai_penguji_pendamping) / 2;
 
-            if ($rataRataNilai < 50) {
-                $statusSidang = 'Sidang Ulang';
-            } elseif ($rataRataNilai < 80) {
-                $statusSidang = 'Revisi';
-            } elseif ($rataRataNilai <= 100) {
+            // Periksa apakah ada catatan revisi
+            $punyaCatatanRevisi = CatatanRevisiTA::where('mahasiswa_id', $mahasiswaId)
+                ->where('jadwal_sidang_tugas_akhir_id', $jadwalId)
+                ->exists();
+
+            if (!$punyaCatatanRevisi) {
                 $statusSidang = 'Lulus';
             } else {
-                $statusSidang = 'Tidak Valid';
+                $statusSidang = $rataRataNilai < 50 ? 'Sidang Ulang' : 'Revisi';
             }
 
-            // Simpan/update hasil sidang (per mahasiswa)
             $hasilSidang = HasilSidang::updateOrCreate(
                 ['mahasiswa_id' => $mahasiswaId],
                 [
@@ -131,7 +127,6 @@ class PenilaianTAController extends Controller
                 ]
             );
 
-            // Cek apakah RiwayatSidang sudah ada untuk mahasiswa + jadwal ini
             $sudahAdaRiwayat = RiwayatSidang::where('hasil_sidang_id', $hasilSidang->id)
                 ->where('jadwal_sidang_tugas_akhir_id', $jadwalId)
                 ->exists();
@@ -145,7 +140,6 @@ class PenilaianTAController extends Controller
                 ]);
             }
 
-            // Update status_kelulusan terakhir berdasarkan riwayat terakhir
             $riwayatTerakhir = RiwayatSidang::where('hasil_sidang_id', $hasilSidang->id)
                 ->latest()
                 ->first();
@@ -484,6 +478,7 @@ class PenilaianTAController extends Controller
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', "inline; filename=\"{$filename}\"");
     }
+
     public function lihatNilaiTA($jadwal)
     {
         $hasilAkhir = HasilAkhirTA::with(['mahasiswa', 'jadwalSidangTugasAkhir', 'kaprodi'])
@@ -544,20 +539,24 @@ class PenilaianTAController extends Controller
         $tahunAjaran = $request->input('tahun_ajaran');
         $status = $request->input('status_kelulusan');
 
-        $hasilAkhirAll = HasilAkhirTA::with(['mahasiswa.programStudi', 'mahasiswa.tahunAjaran'])
-            ->whereHas('mahasiswa', function ($query) use ($programStudiId, $tahunAjaran) {
-                if ($programStudiId !== null) {
-                    $query->where('program_studi_id', $programStudiId);
-                }
-                if ($tahunAjaran) {
-                    $query->where('tahun_ajaran_id', $tahunAjaran);
-                }
+        $hasilAkhirAll = HasilAkhirTA::select('hasil_akhir_ta.*')
+            ->join('mahasiswa', 'mahasiswa.id', '=', 'hasil_akhir_ta.mahasiswa_id')
+            ->join('tahun_ajaran', 'tahun_ajaran.id', '=', 'mahasiswa.tahun_ajaran_id')
+            ->with(['mahasiswa.programStudi', 'mahasiswa.tahunAjaran'])
+            ->when($programStudiId !== null, function ($query) use ($programStudiId) {
+                $query->where('mahasiswa.program_studi_id', $programStudiId);
+            })
+            ->when($tahunAjaran, function ($query) use ($tahunAjaran) {
+                $query->where('mahasiswa.tahun_ajaran_id', $tahunAjaran);
             })
             ->when($status, function ($query) use ($status) {
                 $query->whereHas('mahasiswa.hasilSidang', function ($q) use ($status) {
                     $q->where('status_kelulusan', $status);
                 });
             })
+            ->whereNotNull('hasil_akhir_ta.total_akhir')
+            ->orderBy('tahun_ajaran.tahun_ajaran', 'desc')
+            ->orderBy('mahasiswa.nama_mahasiswa', 'asc')
             ->paginate(10)
             ->withQueryString();
 
@@ -585,6 +584,7 @@ class PenilaianTAController extends Controller
 
         return view('penilaian.rekap_nilai', compact('tahunAjaranList', 'statusList', 'rekap', 'hasilAkhirAll', 'user'));
     }
+
     public function cetakRekapNilai(Request $request)
     {
         // dd('Masuk ke cetak!');
@@ -605,7 +605,14 @@ class PenilaianTAController extends Controller
                 $query->whereHas('mahasiswa.hasilSidang', function ($q) use ($status) {
                     $q->where('status_kelulusan', $status);
                 });
-            })->get();
+            })->get()
+            ->sortBy([
+                // descending
+                fn($a, $b) => strcmp($b->mahasiswa->tahunAjaran->tahun_ajaran ?? '', $a->mahasiswa->tahunAjaran->tahun_ajaran ?? ''),
+                // ascending
+                fn($a, $b) => strcmp($a->mahasiswa->nama_mahasiswa ?? '', $b->mahasiswa->nama_mahasiswa ?? ''),
+            ])->values(); // reindex ulang biar rapih
+
 
         $kaprodi = $hasilAkhirAll->first()?->kaprodi;
 
@@ -625,6 +632,7 @@ class PenilaianTAController extends Controller
                 'nim' => $item->mahasiswa->nim,
                 'nama' => $item->mahasiswa->nama_mahasiswa,
                 'prodi' => $item->mahasiswa->programStudi->nama_prodi ?? '-',
+                'tahun_ajaran' => $item->mahasiswa->tahunAjaran->tahun_ajaran ?? '-',
                 'total_angka' => $nilai,
                 'total_huruf' => $huruf,
             ];
