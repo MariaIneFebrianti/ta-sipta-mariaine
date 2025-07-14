@@ -160,19 +160,35 @@
                         </div>
                         <div class="mb-4">
                             <label class="block text-gray-700">File Proposal</label>
-                            @if($item->file_proposal)
-                                <a href="{{ route('proposal.showFileProposal', $item->id) }}" target="_blank">
-                                    <button class="mt-2 text-sm bg-blue-500 font-medium px-4 py-2 flex items-center justify-center gap-1 rounded-lg text-white whitespace-nowrap">
+                            <div class="flex items-center gap-2 flex-wrap mt-2">
+                                @if($item->file_proposal)
+                                    <a href="{{ route('proposal.showFileProposal', $item->id) }}" target="_blank">
+                                        <button type="button" class="text-sm bg-blue-500 font-medium px-4 py-2 flex items-center justify-center gap-1 rounded-lg text-white whitespace-nowrap">
+                                            <svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M5 17v-5h1.5a1.5 1.5 0 1 1 0 3H5m12 2v-5h2m-2 3h2M5 10V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1v6M5 19v1a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1M10 3v4a1 1 0 0 1-1 1H5m6 4v5h1.375A1.627 1.627 0 0 0 14 15.375v-1.75A1.627 1.627 0 0 0 12.375 12H11Z"/>
+                                            </svg>
+                                            Lihat Proposal
+                                        </button>
+                                    </a>
+                                @else
+                                    <span class="text-red-500 ml-2">Tidak ada file</span>
+                                @endif
+
+                                <form id="upload-form-{{ $item->id }}" action="{{ route('proposal.updateFile', $item->id) }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    <input type="file" name="file_proposal" id="file-proposal-{{ $item->id }}" accept="application/pdf" style="display: none;" onchange="document.getElementById('upload-form-{{ $item->id }}').submit();">
+                                    <button type="button" onclick="document.getElementById('file-proposal-{{ $item->id }}').click();"
+                                        class="text-sm bg-yellow-500 hover:bg-yellow-600 font-medium px-4 py-2 flex items-center justify-center gap-1 rounded-lg text-white whitespace-nowrap">
                                         <svg class="w-5 h-5 text-white dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 17v-5h1.5a1.5 1.5 0 1 1 0 3H5m12 2v-5h2m-2 3h2M5 10V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1v6M5 19v1a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1M10 3v4a1 1 0 0 1-1 1H5m6 4v5h1.375A1.627 1.627 0 0 0 14 15.375v-1.75A1.627 1.627 0 0 0 12.375 12H11Z"/>
+                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m16 10 3-3m0 0-3-3m3 3H5v3m3 4-3 3m0 0 3 3m-3-3h14v-3"/>
                                         </svg>
-                                        Lihat Proposal
+                                        Unggah Ulang
                                     </button>
-                                </a>
-                            @else
-                                <span class="text-red-500 ml-2">Tidak ada file</span>
-                            @endif
+                                </form>
+                            </div>
                         </div>
+
                         @if ($item->revisi_judul_proposal || $item->revisi_file_proposal)
                             <div class="mb-4">
                                 <label class="block text-gray-700">Revisi Judul Proposal</label>

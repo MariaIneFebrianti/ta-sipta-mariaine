@@ -73,18 +73,19 @@
                 </form>
 
                 <!-- Tombol Cetak -->
-                {{-- <div class="ml-auto"> --}}
-                <div class="ml-auto flex justify-end mb-1 mt-1">
-                    <a href="{{ route('pengajuan_pembimbing.rekap_dosen', ['tahun_ajaran' => request('tahun_ajaran_id')]) }}"
-                        target="_blank"
-                        class="text-sm flex items-center justify-center w-full px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-700 transition duration-200">
-                        <svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                            <path fill-rule="evenodd" d="M13 11.15V4a1 1 0 1 0-2 0v7.15L8.78 8.374a1 1 0 1 0-1.56 1.25l4 5a1 1 0 0 0 1.56 0l4-5a1 1 0 1 0-1.56-1.25L13 11.15Z" clip-rule="evenodd" />
-                            <path fill-rule="evenodd" d="M9.657 15.874 7.358 13H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2.358l-2.3 2.874a3 3 0 0 1-4.685 0ZM17 16a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2H17Z" clip-rule="evenodd" />
-                        </svg>
-                        Cetak Rekap Dosen Pembimbing
-                    </a>
-                </div>
+                @if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi')
+                    <div class="ml-auto flex justify-end mb-1 mt-1">
+                        <a href="{{ route('pengajuan_pembimbing.rekap_dosen', ['tahun_ajaran' => request('tahun_ajaran_id')]) }}"
+                            target="_blank"
+                            class="text-sm flex items-center justify-center w-full px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-700 transition duration-200">
+                            <svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M13 11.15V4a1 1 0 1 0-2 0v7.15L8.78 8.374a1 1 0 1 0-1.56 1.25l4 5a1 1 0 0 0 1.56 0l4-5a1 1 0 1 0-1.56-1.25L13 11.15Z" clip-rule="evenodd" />
+                                <path fill-rule="evenodd" d="M9.657 15.874 7.358 13H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2.358l-2.3 2.874a3 3 0 0 1-4.685 0ZM17 16a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2H17Z" clip-rule="evenodd" />
+                            </svg>
+                            Cetak Rekap Dosen Pembimbing
+                        </a>
+                    </div>
+                @endif
             </div>
 
 

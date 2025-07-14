@@ -76,13 +76,19 @@
                         <div class="grid gap-4 mb-4 grid-cols-2">
                             <div class="col-span-2">
                                 <label for="jenis_dosen" class="block mb-2 text-sm font-medium text-gray-900">Jenis Dosen</label>
-                                <select name="jenis_dosen" id="jenis_dosen" required
+                                {{-- <select name="jenis_dosen" id="jenis_dosen" required
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                                     <option value="" disabled selected>-- Pilih Jenis Dosen --</option>
                                     <option value="Pembimbing Utama">Pembimbing Utama</option>
                                     <option value="Pembimbing Pendamping">Pembimbing Pendamping</option>
                                     <option value="Penguji Utama">Penguji Utama</option>
                                     <option value="Penguji Pendamping">Penguji Pendamping</option>
+                                </select> --}}
+                                <select name="jenis_dosen" id="jenis_dosen" required
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                    <option value="" disabled selected>-- Pilih Jenis Dosen --</option>
+                                    <option value="Penguji">Penguji (Utama dan Pendamping)</option>
+                                    <option value="Pembimbing">Pembimbing (Utama dan Pendamping)</option>
                                 </select>
                             </div>
                             <div class="col-span-2">
@@ -203,7 +209,10 @@
                                                     <form action="{{ route('rubrik_nilai.update', $rubrik->id) }}" method="POST" class="p-4 md:p-5">
                                                         @csrf
                                                         @method('PUT')
-                                                        <div class="grid gap-4 mb-4 grid-cols-2">
+                                                        <small class="text-sm text-gray-500">
+                                                            Perubahan ini akan disimpan untuk semua jenis yang sama (Jenis Penguji atau Jenis Pendamping). Total tidak boleh lebih dari 100%.
+                                                        </small>
+                                                        <div class="mt-4 grid gap-4 mb-4 grid-cols-2">
                                                             <div class="col-span-2">
                                                                 <label for="jenis_dosen" class="block mb-2 text-sm font-medium text-gray-900">Jenis Dosen</label>
                                                                 <input type="text" name="jenis_dosen" id="jenis_dosen" value="{{ $rubrik->jenis_dosen }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="22001" required />

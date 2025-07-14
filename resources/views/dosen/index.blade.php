@@ -10,26 +10,48 @@
         @include('components.alert-global')
 
         <!-- Modal toggle -->
-        <div class="flex justify-between items-center mb-0 flex-wrap">
-            <button data-modal-target="crud-modal" data-modal-toggle="crud-modal" class="focus:outline-none text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-4">
-                <svg class="w-7 h-7 inline-block" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
+        <div class="flex justify-between items-start mb-4 flex-wrap">
+            <!-- Tombol Tambah Dosen -->
+            <button data-modal-target="crud-modal" data-modal-toggle="crud-modal"
+                class="focus:outline-none text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-4">
+                <svg class="w-7 h-7 inline-block" fill="currentColor" viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd"
+                        d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                        clip-rule="evenodd"></path>
                 </svg>
                 Tambah Dosen
             </button>
 
-            <form action="{{ route('dosen.import') }}" method="POST" enctype="multipart/form-data" id="importForm">
-                @csrf
-                <input type="file" name="file" id="fileInput" accept=".csv, .xlsx, .xls" style="display: none;" onchange="document.getElementById('importForm').submit();">
-                <button type="button" onclick="document.getElementById('fileInput').click();" class="flex items-center gap-2 focus:outline-none text-white bg-blue-500 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-6 py-3 me-2 mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="white" viewBox="0 0 48 48" id="import">
-                        <path d="m18 6-8 7.98h6V28h4V13.98h6L18 6zm14 28.02V20h-4v14.02h-6L30 42l8-7.98h-6z"></path>
-                        <path fill="none" d="M0 0h48v48H0z"></path>
+            <!-- Import & Download Template Dosen -->
+            <div class="flex flex-col w-52">
+                <!-- Form Import -->
+                <form action="{{ route('dosen.import') }}" method="POST" enctype="multipart/form-data" id="importForm">
+                    @csrf
+                    <input type="file" name="file" id="fileInput" accept=".csv, .xlsx, .xls" style="display: none;"
+                        onchange="document.getElementById('importForm').submit();">
+                    <button type="button" onclick="document.getElementById('fileInput').click();"
+                        class="w-full flex items-center justify-center gap-2 focus:outline-none text-white bg-blue-500 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-6 py-3 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="white" viewBox="0 0 48 48" id="import">
+                            <path d="m18 6-8 7.98h6V28h4V13.98h6L18 6zm14 28.02V20h-4v14.02h-6L30 42l8-7.98h-6z"></path>
+                            <path fill="none" d="M0 0h48v48H0z"></path>
+                        </svg>
+                        Import Dosen
+                    </button>
+                </form>
+
+                <!-- Tombol Download Template -->
+                <a href="{{ route('template.download.dosen') }}"
+                    class="w-full flex items-center justify-center focus:outline-none text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-6 py-3">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
                     </svg>
-                    Import Dosen
-                </button>
-            </form>
+                    Download Template
+                </a>
+            </div>
         </div>
+
 
         <div class="flex justify-between items-center mb-4 flex-wrap">
             <form action="{{ route('dosen.search') }}" method="GET" class="w-full sm:max-w-xs mt-3" id="search-form">
@@ -110,15 +132,16 @@
                             <div class="grid-cols-2">
                                 <label for="jabatan" class="block mb-2 text-sm font-medium text-gray-900">Jabatan</label>
                                 <select name="jabatan" id="jabatan"
-                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                                    <option selected disabled>Pilih Jabatan</option>
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                                    <option value="" selected disabled>Pilih Jabatan</option>
+                                    <option value="Dosen Biasa">Dosen Biasa</option>
                                     <option value="Koordinator Program Studi">Koordinator Program Studi</option>
                                     <option value="Super Admin">Super Admin</option>
                                 </select>
                             </div>
                             <div class="grid-cols-2">
-                                <label for="prodi_id" class="block mb-2 text-sm font-medium text-gray-900">Pilih Program Studi</label>
-                                <select id="prodi_id" name="prodi_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                <label for="program_studi_id" class="block mb-2 text-sm font-medium text-gray-900">Pilih Program Studi</label>
+                                <select id="program_studi_id" name="program_studi_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                                     <option selected disabled>Pilih Program Studi</option>
                                     @foreach ($programStudi as $prodi)
                                         <option value="{{ $prodi->id }}">{{ $prodi->nama_prodi }}</option>
@@ -176,7 +199,7 @@
                                 <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $dsn->tempat_lahir }}</td>
                                 <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ \Carbon\Carbon::parse($dsn->tanggal_lahir)->translatedFormat('d F Y') }}</td>
                                 <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $dsn->jenis_kelamin }}</td>
-                                <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $dsn->jabatan ?? 'Tidak ada jabatan' }}</td>
+                                <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $dsn->jabatan ?? 'Dosen Biasa' }}</td>
                                 <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $dsn->programStudi->nama_prodi ?? 'Tidak ada program studi' }}</td>
                                 <td class="border border-gray-300 px-4 py-2">
                                     <div class="flex justify-center space-x-2">
@@ -247,22 +270,26 @@
                                                             </div>
                                                         </div>
                                                         <div class="grid-cols-2">
-                                                            <label for="jabatan" class="block mb-2 text-sm font-medium text-gray-900">Jabatan</label>
-                                                            <select name="jabatan" id="jabatan"
-                                                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                                            <label for="jabatan-{{ $dsn->id }}" class="block mb-2 text-sm font-medium text-gray-900">Jabatan</label>
+                                                            <select
+                                                                name="jabatan"
+                                                                id="jabatan-{{ $dsn->id }}"
+                                                                class="jabatan-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                                                onchange="toggleProdi(this, '{{ $dsn->id }}')"
+                                                            >
                                                                 <option disabled {{ $dsn->jabatan == null ? 'selected' : '' }}>Pilih Jabatan</option>
-                                                                <option value="Koordinator Program Studi" {{ $dsn->jabatan == 'Koordinator Program Studi' ? 'selected' : '' }}>
-                                                                    Koordinator Program Studi
-                                                                </option>
-                                                                <option value="Super Admin" {{ $dsn->jabatan == 'Super Admin' ? 'selected' : '' }}>
-                                                                    Super Admin
-                                                                </option>
+                                                                <option value="Dosen Biasa" {{ $dsn->jabatan == 'Dosen Biasa' ? 'selected' : '' }}>Dosen Biasa</option>
+                                                                <option value="Koordinator Program Studi" {{ $dsn->jabatan == 'Koordinator Program Studi' ? 'selected' : '' }}>Koordinator Program Studi</option>
+                                                                <option value="Super Admin" {{ $dsn->jabatan == 'Super Admin' ? 'selected' : '' }}>Super Admin</option>
                                                             </select>
                                                         </div>
-                                                        <div class="grid-cols-2">
-                                                            <label for="program_studi_id" class="block mb-2 text-sm font-medium text-gray-900">Program Studi</label>
-                                                            <select name="program_studi_id" id="program_studi_id"
-                                                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                                        <div class="grid-cols-2" id="prodi-container-{{ $dsn->id }}">
+                                                            <label for="program_studi_id-{{ $dsn->id }}" class="block mb-2 text-sm font-medium text-gray-900">Program Studi</label>
+                                                            <select
+                                                                name="program_studi_id"
+                                                                id="program_studi_id-{{ $dsn->id }}"
+                                                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                                            >
                                                                 <option disabled {{ $dsn->program_studi_id == null ? 'selected' : '' }}>Pilih Program Studi</option>
                                                                 @foreach ($programStudi as $prodi)
                                                                     <option value="{{ $prodi->id }}" {{ $dsn->program_studi_id == $prodi->id ? 'selected' : '' }}>
@@ -362,6 +389,26 @@
         });
     });
 </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.jabatan-select').forEach(select => {
+            const id = select.dataset.id;
+            const prodiContainer = document.getElementById(`prodi-container-${id}`);
+            const prodiSelect = document.getElementById(`program_studi_id-${id}`);
+
+            const toggle = () => {
+                const isKaprodi = select.value === 'Koordinator Program Studi';
+                prodiContainer.style.display = isKaprodi ? 'block' : 'none';
+                if (!isKaprodi) prodiSelect.value = '';
+            };
+
+            toggle(); // initial
+            select.addEventListener('change', toggle); // on change
+        });
+    });
+</script>
+
 
 @endsection
 

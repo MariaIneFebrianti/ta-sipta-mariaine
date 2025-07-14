@@ -8,7 +8,7 @@
         <x-breadcrumb parent="Bimbingan" item="Logbook Bimbingan {{ $mahasiswa->nama_mahasiswa }}" />
     </div>
     <div class="mt-3 p-6 rounded-lg bg-white shadow-md border border-gray-200">
-        <a href="{{ route('mahasiswa.index') }}">
+        <a href="{{ route('pengajuan_pembimbing.index') }}">
             <button class="flex items-center mb-2 text-white bg-gray-600 hover:bg-gray-800 font-medium rounded-lg text-sm px-5 py-2.5">
                 <svg class="mr-1 w-4 h-4 text-white dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m15 19-7-7 7-7"/>

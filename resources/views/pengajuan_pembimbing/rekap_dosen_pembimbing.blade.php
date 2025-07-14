@@ -37,62 +37,71 @@
 </head>
 <body>
     <div class="container">
-        <h3 class="text-center" style="margin-top: 20px;">REKAP DOSEN PEMBIMBING MAHASISWA</h3>
 
-        <table class="data" style="margin-top: 20px;">
-            <thead style="background-color: #f3f4f6;">
-                <tr>
-                    <th>No</th>
-                    <th>Nama Dosen</th>
-                    <th>Peran</th>
-                    <th>NIM</th>
-                    <th>Nama Mahasiswa</th>
-                    <th>Total Per Peran</th>
-                    <th>Jumlah</th>
-                </tr>
-            </thead>
-            <tbody>
-                @php $no = 1; @endphp
-                @foreach ($rekap as $item)
-                    @php
-                        $totalDetail = count($item['detail']);
-                        $groupedByPeran = collect($item['detail'])->groupBy('peran');
-                        $firstRow = true;
-                    @endphp
+        @foreach ($rekap as $tahun => $dataPerTahun)
+            <h3 class="text-center" style="margin-top: 20px;">
+                REKAP DOSEN PEMBIMBING MAHASISWA <br> TAHUN AJARAN {{ $tahun }}
+            </h3>
 
-                    @foreach ($groupedByPeran as $peran => $details)
-                        @foreach ($details as $i => $mhs)
-                            <tr>
-                                {{-- No dan Nama Dosen hanya di baris pertama --}}
-                                @if ($firstRow)
-                                    <td rowspan="{{ $totalDetail }}">{{ $no++ }}</td>
-                                    <td rowspan="{{ $totalDetail }}" class="text-left">{{ $item['nama_dosen'] }}</td>
-                                    @php $firstRow = false; @endphp
-                                @endif
+            <table class="data" style="margin-top: 20px;">
+                <thead style="background-color: #f3f4f6;">
+                    <tr>
+                        <th>No</th>
+                        <th>Nama Dosen</th>
+                        <th>Peran</th>
+                        <th>Tahun Ajaran</th>
+                        <th>NIM</th>
+                        <th>Nama Mahasiswa</th>
+                        <th>Total Per Peran</th>
+                        <th>Jumlah</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php $no = 1; @endphp
+                    @foreach ($dataPerTahun as $item)
+                        @php
+                            $totalDetail = count($item['detail']);
+                            $groupedByPeran = collect($item['detail'])->groupBy('peran');
+                            $firstRow = true;
+                        @endphp
 
-                                {{-- Peran hanya di baris pertama per grup --}}
-                                @if ($i === 0)
-                                    <td rowspan="{{ count($details) }}">{{ $peran }}</td>
-                                @endif
+                        @foreach ($groupedByPeran as $peran => $details)
+                            @foreach ($details as $i => $mhs)
+                                <tr>
+                                    @if ($firstRow)
+                                        <td rowspan="{{ $totalDetail }}">{{ $no++ }}</td>
+                                        <td rowspan="{{ $totalDetail }}" class="text-left">{{ $item['nama_dosen'] }}</td>
+                                        @php $firstRow = false; @endphp
+                                    @endif
 
-                                <td>{{ $mhs->nim }}</td>
-                                <td class="text-left">{{ $mhs->nama_mahasiswa }}</td>
+                                    @if ($i === 0)
+                                        <td rowspan="{{ count($details) }}">{{ $peran }}</td>
+                                    @endif
+                                    
+                                    <td>{{ $mhs->tahun_ajaran }}</td>
+                                    <td>{{ $mhs->nim }}</td>
+                                    <td class="text-left">{{ $mhs->nama_mahasiswa }}</td>
 
-                                {{-- Total Per Peran hanya di baris pertama per grup --}}
-                                @if ($i === 0)
-                                    <td rowspan="{{ count($details) }}">{{ count($details) }}</td>
-                                @endif
+                                    @if ($i === 0)
+                                        <td rowspan="{{ count($details) }}">{{ count($details) }}</td>
+                                    @endif
 
-                                {{-- Total keseluruhan hanya di baris pertama --}}
-                                @if ($loop->parent->first && $i === 0)
-                                    <td rowspan="{{ $totalDetail }}">{{ $totalDetail }}</td>
-                                @endif
-                            </tr>
+                                    @if ($loop->parent->first && $i === 0)
+                                        <td rowspan="{{ $totalDetail }}">{{ $totalDetail }}</td>
+                                    @endif
+                                </tr>
+                            @endforeach
                         @endforeach
                     @endforeach
-                @endforeach
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+
+            {{-- Page break jika bukan halaman terakhir --}}
+            @if (! $loop->last)
+                <div style="page-break-after: always;"></div>
+            @endif
+        @endforeach
+
     </div>
 </body>
 </html>

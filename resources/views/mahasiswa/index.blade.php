@@ -10,29 +10,50 @@
     <div class="px-10 py-8 mt-3 p-5 rounded-md bg-white border border-gray-200">
         @include('components.alert-global')
 
-        @if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi')
+        @if ($user->role === 'Dosen' && ($user->dosen->jabatan === 'Koordinator Program Studi' || $user->dosen->jabatan === 'Super Admin'))
             <!-- Modal toggle -->
-            <div class="flex justify-between items-center mb-4 flex-wrap">
-                <!-- Tombol Tambah Mahasiswa -->
-                <button data-modal-target="crud-modal" data-modal-toggle="crud-modal" class="focus:outline-none text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-4">
-                    <svg class="w-7 h-7 inline-block" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
-                    </svg>
-                    Tambah Mahasiswa
-                </button>
-
-                <form action="{{ route('mahasiswa.import') }}" method="POST" enctype="multipart/form-data" id="importForm">
-                    @csrf
-                    <input type="file" name="file" id="fileInput" accept=".csv, .xlsx, .xls" style="display: none;" onchange="document.getElementById('importForm').submit();">
-                    <button type="button" onclick="document.getElementById('fileInput').click();" class="flex items-center gap-2 focus:outline-none text-white bg-blue-500 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-6 py-3 me-2 mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="white" viewBox="0 0 48 48" id="import">
-                            <path d="m18 6-8 7.98h6V28h4V13.98h6L18 6zm14 28.02V20h-4v14.02h-6L30 42l8-7.98h-6z"></path>
-                            <path fill="none" d="M0 0h48v48H0z"></path>
+               <div class="flex justify-between items-start mb-4 flex-wrap">
+                    <!-- Tombol Tambah Mahasiswa -->
+                    <button data-modal-target="crud-modal" data-modal-toggle="crud-modal"
+                        class="focus:outline-none text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-4">
+                        <svg class="w-7 h-7 inline-block" fill="currentColor" viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd"
+                                d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                                clip-rule="evenodd"></path>
                         </svg>
-                        Import Mahasiswa
+                        Tambah Mahasiswa
                     </button>
-                </form>
-            </div>
+
+                    <!-- Import & Download dibungkus dalam satu kolom -->
+                    <div class="flex flex-col w-52">
+                        <!-- Form Import -->
+                        <form action="{{ route('mahasiswa.import') }}" method="POST" enctype="multipart/form-data" id="importForm">
+                            @csrf
+                            <input type="file" name="file" id="fileInput" accept=".csv, .xlsx, .xls" style="display: none;"
+                                onchange="document.getElementById('importForm').submit();">
+                            <button type="button" onclick="document.getElementById('fileInput').click();"
+                                class="w-full flex items-center justify-center gap-2 focus:outline-none text-white bg-blue-500 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-6 py-3 mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="white" viewBox="0 0 48 48" id="import">
+                                    <path d="m18 6-8 7.98h6V28h4V13.98h6L18 6zm14 28.02V20h-4v14.02h-6L30 42l8-7.98h-6z"></path>
+                                    <path fill="none" d="M0 0h48v48H0z"></path>
+                                </svg>
+                                Import Mahasiswa
+                            </button>
+                        </form>
+
+                        <!-- Tombol Download Template -->
+                        <a href="{{ route('template.download.mahasiswa') }}"
+                            class="w-full flex items-center justify-center focus:outline-none text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-6 py-3">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+                            </svg>
+                            Download Template
+                        </a>
+                    </div>
+                </div>
+
         @endif
 
         <div class="flex justify-between items-center mb-4 flex-wrap">
@@ -236,7 +257,7 @@
                                 <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $mhs->jenis_kelamin }}</td>
                                 <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $mhs->programStudi->nama_prodi }}</td>
                                 <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $mhs->tahunAjaran->tahun_ajaran }}</td>
-                                @if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi')
+                                @if ($user->role === 'Dosen' && ($user->dosen->jabatan === 'Koordinator Program Studi' || $user->dosen->jabatan === 'Super Admin'))
                                     <td class="border border-gray-300 px-4">
                                         <div class="flex justify-center space-x-2">
                                             <button data-modal-target="editModal-{{ $mhs->id }}" data-modal-toggle="editModal-{{ $mhs->id }}" class="text-sm flex items-center justify-center w-full px-3 py-2 bg-yellow-400 text-white rounded-lg hover:bg-yellow-600 transition duration-200">

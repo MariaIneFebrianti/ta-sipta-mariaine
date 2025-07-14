@@ -62,17 +62,33 @@
             </div>
 
             @if (auth()->user()->role === 'Dosen' && auth()->user()->dosen && auth()->user()->dosen->jabatan === 'Koordinator Program Studi')
-            <form action="{{ route('jadwal_seminar_proposal.import') }}" method="POST" enctype="multipart/form-data" id="importForm">
-                @csrf
-                <input type="file" name="file" id="fileInput" accept=".csv, .xlsx, .xls" style="display: none;" onchange="document.getElementById('importForm').submit();">
-                <button type="button" onclick="document.getElementById('fileInput').click();" class="whitespace-nowrap flex items-center gap-2 focus:outline-none text-white bg-blue-500 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-6 py-3 me-2 mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="white" viewBox="0 0 48 48" id="import">
-                        <path d="m18 6-8 7.98h6V28h4V13.98h6L18 6zm14 28.02V20h-4v14.02h-6L30 42l8-7.98h-6z"></path>
-                        <path fill="none" d="M0 0h48v48H0z"></path>
-                    </svg>
-                    Import Jadwal Seminar Proposal
-                </button>
-            </form>
+                <div class="flex flex-wrap gap-2 mb-4">
+    <!-- Form Import -->
+    <form action="{{ route('jadwal_seminar_proposal.import') }}" method="POST" enctype="multipart/form-data" id="importForm">
+        @csrf
+        <input type="file" name="file" id="fileInput" accept=".csv, .xlsx, .xls" style="display: none;"
+            onchange="document.getElementById('importForm').submit();">
+        <button type="button" onclick="document.getElementById('fileInput').click();"
+            class="whitespace-nowrap flex items-center gap-2 focus:outline-none text-white bg-blue-500 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-6 py-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="white" viewBox="0 0 48 48" id="import">
+                <path d="m18 6-8 7.98h6V28h4V13.98h6L18 6zm14 28.02V20h-4v14.02h-6L30 42l8-7.98h-6z"></path>
+                <path fill="none" d="M0 0h48v48H0z"></path>
+            </svg>
+            Import Jadwal Seminar Proposal
+        </button>
+    </form>
+
+    <!-- Tombol Download Template -->
+    <a href="{{ route('template.download.jadwalsempro') }}"
+        class="whitespace-nowrap flex items-center gap-2 focus:outline-none text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-6 py-3">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+        </svg>
+        Download Template
+    </a>
+</div>
+
             @endif
 
         <div class="overflow-x-auto">

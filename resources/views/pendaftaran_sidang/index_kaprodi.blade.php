@@ -49,7 +49,7 @@
                                 <td class="border border-gray-300 px-4 py-2 text-center whitespace-nowrap">{{ $loop->iteration }}</td>
                                 <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $item->mahasiswa->nama_mahasiswa }}</td>
                                 <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">
-                                    {{ \Carbon\Carbon::parse($item->tanggal_pendaftaran)->translatedFormat('d M Y') }}
+                                    {{ \Carbon\Carbon::parse($item->tanggal_pendaftaran)->translatedFormat('d F Y') }}
                                 </td>
 
                                 {{-- File Tugas Akhir --}}

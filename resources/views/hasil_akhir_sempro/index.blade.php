@@ -24,13 +24,13 @@
                 <form action="{{ route('hasil_akhir_sempro.dropdown-search') }}" method="GET" id="searchForm" class="max-w-full w-full">
                     <div class="flex flex-col md:flex-row gap-4 w-full mb-4">
                         <div class="w-1/6 min-w-[200px]">
-                            <label for="status_kelulusan" class="block text-sm font-medium text-gray-900 mb-1">Status Kelulusan</label>
-                            <select name="status_kelulusan" id="status_kelulusan"
+                            <label for="status_sidang" class="block text-sm font-medium text-gray-900 mb-1">Status Kelulusan</label>
+                            <select name="status_sidang" id="status_sidang"
                             class="block w-full p-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
                                 onchange="document.getElementById('searchForm').submit();">
                                 <option value="">Semua Status</option>
                                 @foreach ($statusList as $status)
-                                    <option value="{{ $status }}" {{ request('status_kelulusan') == $status ? 'selected' : '' }}>
+                                    <option value="{{ $status }}" {{ request('status_sidang') == $status ? 'selected' : '' }}>
                                         {{ $status }}
                                     </option>
                                 @endforeach

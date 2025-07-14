@@ -42,7 +42,7 @@
      role="alert" x-transition>
     <div class="flex items-center">
         {!! $style['icon'] !!}
-        <span><span class="font-medium">{{ ucfirst($type) }}!</span> {{ $message }}</span>
+<span><span class="font-medium">{{ ucfirst($type) }}!</span> {!! $message !!}</span>
     </div>
     <button type="button" @click="show = false" class="ms-2 text-xl font-bold {{ $style['text'] }} hover:opacity-70">
         &times;

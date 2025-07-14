@@ -1,11 +1,11 @@
 
 <aside id="logo-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen pt-16 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0" aria-label="Sidebar">
-    <div class="h-full px-3 overflow-y-auto bg-white dark:bg-gray-800">
+    <div class="h-full px-3 overflow-y-auto bg-white">
         <ul class="space-y-2 font-medium">
             {{-- DASHBOARD --}}
             <li class="mb-2">
                 <a href="{{ route('dashboard') }}"
-                class="menu-button flex items-center p-2 rounded-lg dark:text-white
+                class="menu-button flex items-center p-2 rounded-lg
                         {{ request()->routeIs('dashboard') ? 'bg-blue-600 text-white' : 'bg-white text-black' }}">
                     <svg class="w-7 h-6 {{ request()->routeIs('dashboard') ? 'text-white' : 'text-gray-500' }}"
                         xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
@@ -18,7 +18,7 @@
             {{-- PROFILE --}}
             <li class="mb-2">
                 <a href="{{ route('profile.edit') }}"
-                class="menu-button flex items-center p-2 rounded-lg dark:text-white {{ request()->routeIs('profile.edit') ? 'bg-blue-600 text-white' : 'bg-white text-black' }}">
+                class="menu-button flex items-center p-2 rounded-lg {{ request()->routeIs('profile.edit') ? 'bg-blue-600 text-white' : 'bg-white text-black' }}">
                     <svg class="w-7 h-6 {{ request()->routeIs('profile.edit') ? 'text-white' : 'text-gray-500' }}"
                         xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M11.293 3.293a1 1 0 0 1 1.414 0l6 6 2 2a1 1 0 0 1-1.414 1.414L19 12.414V19a2 2 0 0 1-2 2h-3a1 1 0 0 1-1-1v-3h-2v3a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2v-6.586l-.293.293a1 1 0 0 1-1.414-1.414l2-2 6-6Z" clip-rule="evenodd"/>
@@ -227,11 +227,11 @@
             @if (auth()->user()->role === 'Mahasiswa' || auth()->user()->role === 'Dosen' && auth()->user()->dosen && auth()->user()->dosen->jabatan === 'Koordinator Program Studi' || auth()->user()->role === 'Dosen' && auth()->user()->dosen && auth()->user()->dosen->jabatan === 'Super Admin')
                 <li class="mb-2">
                     @if (auth()->user()->role === 'Mahasiswa' && auth()->user()->mahasiswa)
-                        <a href="{{ route('pendaftaran_sidang.index') }}" class="menu-button flex items-center p-2 rounded-lg {{ request()->routeIs('pendaftaran_sidang.index') ? 'bg-blue-600 text-white' : 'bg-white text-black'  }}">
+                        <a href="{{ route('pendaftaran_sidang.index') }}" class="menu-button flex items-center p-2 rounded-lg {{ request()->routeIs('pendaftaran_sidang.*') ? 'bg-blue-600 text-white' : 'bg-white text-black'  }}">
                     @elseif (auth()->user()->role === 'Dosen' && auth()->user()->dosen && auth()->user()->dosen->jabatan === 'Koordinator Program Studi' || auth()->user()->role === 'Dosen' && auth()->user()->dosen && auth()->user()->dosen->jabatan === 'Super Admin')
-                        <a href="{{ route('pendaftaran_sidang.index_kaprodi') }}" class="menu-button flex items-center p-2 rounded-lg {{ request()->routeIs('pendaftaran_sidang.index_kaprodi') ? 'bg-blue-600 text-white' : 'bg-white text-black'  }}">
+                        <a href="{{ route('pendaftaran_sidang.index_kaprodi') }}" class="menu-button flex items-center p-2 rounded-lg {{ request()->routeIs('pendaftaran_sidang.*') ? 'bg-blue-600 text-white' : 'bg-white text-black'  }}">
                     @endif
-                        <svg class="w-7 h-6 text-gray-500 transition duration-75 group-hover:text-gray-900 {{ request()->routeIs('pendaftaran_sidang.index', 'pendaftaran_sidang.index_kaprodi') ? 'text-white' : 'text-gray-500' }}" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                        <svg class="w-7 h-6 text-gray-500 transition duration-75 group-hover:text-gray-900 {{ request()->routeIs('pendaftaran_sidang.*') ? 'text-white' : 'text-gray-500' }}" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M9 2.221V7H4.221a2 2 0 0 1 .365-.5L8.5 2.586A2 2 0 0 1 9 2.22ZM11 2v5a2 2 0 0 1-2 2H4v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-7Z" clip-rule="evenodd"/>
                         </svg>
                         <span class="flex-1 ms-3 text-left rtl:text-right whitespace-nowrap">Pendaftaran Sidang</span>
@@ -318,8 +318,8 @@
                         <li>
                             <a href="{{ route('penilaian_ta.index') }}"
                                 class="submenu-link flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg group
-                                {{ request()->routeIs('penilaian_ta.index') ? 'bg-blue-600 text-white' : 'bg-white text-black' }}">
-                                <svg class="w-7 h-6 me-4  {{ request()->routeIs('penilaian_ta.index') ? 'text-white' : 'text-gray-500' }}" xmlns="http://www.w3.org/2000/svg"
+                                {{ request()->routeIs('penilaian_ta.index', 'penilaian_ta.form') ? 'bg-blue-600 text-white' : 'bg-white text-black' }}">
+                                <svg class="w-7 h-6 me-4  {{ request()->routeIs('penilaian_ta.index', 'penilaian_ta.form') ? 'text-white' : 'text-gray-500' }}" xmlns="http://www.w3.org/2000/svg"
                                     fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd"
                                         d="M5 5a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1h1a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1h1a1 1 0 0 0 1-1 1 1 0 1 1 2 0 1 1 0 0 0 1 1 2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a2 2 0 0 1 2-2ZM3 19v-7a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"
@@ -378,7 +378,7 @@
             @if ( auth()->user()->role === 'Dosen' && auth()->user()->dosen && auth()->user()->dosen->jabatan === 'Koordinator Program Studi' || auth()->user()->role === 'Dosen' && auth()->user()->dosen && auth()->user()->dosen->jabatan === 'Super Admin')
                 <li class="mb-2">
                     <a href="{{ route('hasil_sidang.tugas_akhir.index') }}"
-                        class="menu-button flex items-center p-2 rounded-lg dark:text-white {{ request()->routeIs('hasil_sidang.tugas_akhir.*') ? 'bg-blue-600 text-white' : 'bg-white text-black' }}">
+                        class="menu-button flex items-center p-2 rounded-lg {{ request()->routeIs('hasil_sidang.tugas_akhir.*') ? 'bg-blue-600 text-white' : 'bg-white text-black' }}">
                         <svg class="w-7 h-6 {{ request()->routeIs('hasil_sidang.tugas_akhir.*') ? 'text-white' : 'text-gray-500' }}"
                             xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M11.293 3.293a1 1 0 0 1 1.414 0l6 6 2 2a1 1 0 0 1-1.414 1.414L19 12.414V19a2 2 0 0 1-2 2h-3a1 1 0 0 1-1-1v-3h-2v3a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2v-6.586l-.293.293a1 1 0 0 1-1.414-1.414l2-2 6-6Z" clip-rule="evenodd"/>
@@ -389,7 +389,7 @@
             @elseif ( auth()->user()->role === 'Mahasiswa' )
             <li class="mb-2">
                     <a href="{{ route('hasil_sidang.tugas_akhir.index_mahasiswa') }}"
-                        class="menu-button flex items-center p-2 rounded-lg dark:text-white {{ request()->routeIs('hasil_sidang.tugas_akhir.*') ? 'bg-blue-600 text-white' : 'bg-white text-black' }}">
+                        class="menu-button flex items-center p-2 rounded-lg{{ request()->routeIs('hasil_sidang.tugas_akhir.*') ? 'bg-blue-600 text-white' : 'bg-white text-black' }}">
                         <svg class="w-7 h-6 {{ request()->routeIs('hasil_sidang.tugas_akhir.*') ? 'text-white' : 'text-gray-500' }}"
                             xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M11.293 3.293a1 1 0 0 1 1.414 0l6 6 2 2a1 1 0 0 1-1.414 1.414L19 12.414V19a2 2 0 0 1-2 2h-3a1 1 0 0 1-1-1v-3h-2v3a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2v-6.586l-.293.293a1 1 0 0 1-1.414-1.414l2-2 6-6Z" clip-rule="evenodd"/>

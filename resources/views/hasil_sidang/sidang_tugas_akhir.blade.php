@@ -64,26 +64,28 @@
                 </div>
             </form>
 
-            {{-- Tombol Cetak --}}
-            <div class="ml-auto">
-                <form action="{{ route('penilaian_ta.cetak_rekap_yudisium') }}" method="GET" target="_blank">
-                    <input type="hidden" name="tahun_ajaran" value="{{ request('tahun_ajaran') }}">
-                    <input type="hidden" name="status_kelulusan" value="{{ request('status_kelulusan') }}">
-                    <button type="submit"
-                        class="inline-flex gap-1 items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition">
-                        <svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg"
-                            fill="currentColor" viewBox="0 0 24 24">
-                            <path fill-rule="evenodd"
-                                d="M13 11.15V4a1 1 0 1 0-2 0v7.15L8.78 8.374a1 1 0 1 0-1.56 1.25l4 5a1 1 0 0 0 1.56 0l4-5a1 1 0 1 0-1.56-1.25L13 11.15Z"
-                                clip-rule="evenodd" />
-                            <path fill-rule="evenodd"
-                                d="M9.657 15.874 7.358 13H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2.358l-2.3 2.874a3 3 0 0 1-4.685 0ZM17 16a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2H17Z"
-                                clip-rule="evenodd" />
-                        </svg>
-                        Cetak Mahasiswa Yudisium
-                    </button>
-                </form>
-            </div>
+            @if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi')
+                {{-- Tombol Cetak --}}
+                <div class="ml-auto">
+                    <form action="{{ route('penilaian_ta.cetak_rekap_yudisium') }}" method="GET" target="_blank">
+                        <input type="hidden" name="tahun_ajaran" value="{{ request('tahun_ajaran') }}">
+                        <input type="hidden" name="status_kelulusan" value="{{ request('status_kelulusan') }}">
+                        <button type="submit"
+                            class="inline-flex gap-1 items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition">
+                            <svg class="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                                fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd"
+                                    d="M13 11.15V4a1 1 0 1 0-2 0v7.15L8.78 8.374a1 1 0 1 0-1.56 1.25l4 5a1 1 0 0 0 1.56 0l4-5a1 1 0 1 0-1.56-1.25L13 11.15Z"
+                                    clip-rule="evenodd" />
+                                <path fill-rule="evenodd"
+                                    d="M9.657 15.874 7.358 13H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2.358l-2.3 2.874a3 3 0 0 1-4.685 0ZM17 16a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2H17Z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            Cetak Mahasiswa Yudisium
+                        </button>
+                    </form>
+                </div>
+            @endif
 
             <p class="text-sm text-gray-700 mt-4">
                 Jumlah Mahasiswa yang Sudah Sidang: <strong>{{ $jumlahMahasiswaSidang }}</strong>
@@ -106,7 +108,9 @@
                             <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Tahun Lulus</th>
                             <th class="w-3 border border-gray-300 px-4 py-2 whitespace-nowrap">Riwayat</th>
                             <th class="w-3 border border-gray-300 px-4 py-2 whitespace-nowrap">File Revisi</th>
-                            <th class="w-3 border border-gray-300 px-4 py-2 whitespace-nowrap" colspan="2">Kelengkapan Yudisium</th>
+                            @if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi')
+                                <th class="w-3 border border-gray-300 px-4 py-2 whitespace-nowrap" colspan="2">Kelengkapan Yudisium</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
@@ -148,63 +152,65 @@
                                         <span class="text-red-500 italic">Belum upload revisi</span>
                                     @endif
                                 </td>
-                                 <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">
-                                    {{ $hasil->kelengkapan_yudisium }}
-                                </td>
-                                <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">
-                                    <!-- Tombol Cek Kelengkapan -->
-                                    <button data-modal-target="kelengkapanModal-{{ $hasil->id }}"
-                                        data-modal-toggle="kelengkapanModal-{{ $hasil->id }}"
-                                        class="inline-flex text-sm items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">
-                                        <svg class="mr-1 w-4 h-4 text-white dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                            <path fill-rule="evenodd" d="M12 2c-.791 0-1.55.314-2.11.874l-.893.893a.985.985 0 0 1-.696.288H7.04A2.984 2.984 0 0 0 4.055 7.04v1.262a.986.986 0 0 1-.288.696l-.893.893a2.984 2.984 0 0 0 0 4.22l.893.893a.985.985 0 0 1 .288.696v1.262a2.984 2.984 0 0 0 2.984 2.984h1.262c.261 0 .512.104.696.288l.893.893a2.984 2.984 0 0 0 4.22 0l.893-.893a.985.985 0 0 1 .696-.288h1.262a2.984 2.984 0 0 0 2.984-2.984V15.7c0-.261.104-.512.288-.696l.893-.893a2.984 2.984 0 0 0 0-4.22l-.893-.893a.985.985 0 0 1-.288-.696V7.04a2.984 2.984 0 0 0-2.984-2.984h-1.262a.985.985 0 0 1-.696-.288l-.893-.893A2.984 2.984 0 0 0 12 2Zm3.683 7.73a1 1 0 1 0-1.414-1.413l-4.253 4.253-1.277-1.277a1 1 0 0 0-1.415 1.414l1.985 1.984a1 1 0 0 0 1.414 0l4.96-4.96Z" clip-rule="evenodd"/>
-                                        </svg>
-                                        Cek Kelengkapan
-                                    </button>
+                                @if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi')
+                                    <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">
+                                        {{ $hasil->kelengkapan_yudisium }}
+                                    </td>
+                                    <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">
+                                        <!-- Tombol Cek Kelengkapan -->
+                                        <button data-modal-target="kelengkapanModal-{{ $hasil->id }}"
+                                            data-modal-toggle="kelengkapanModal-{{ $hasil->id }}"
+                                            class="inline-flex text-sm items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">
+                                            <svg class="mr-1 w-4 h-4 text-white dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                                <path fill-rule="evenodd" d="M12 2c-.791 0-1.55.314-2.11.874l-.893.893a.985.985 0 0 1-.696.288H7.04A2.984 2.984 0 0 0 4.055 7.04v1.262a.986.986 0 0 1-.288.696l-.893.893a2.984 2.984 0 0 0 0 4.22l.893.893a.985.985 0 0 1 .288.696v1.262a2.984 2.984 0 0 0 2.984 2.984h1.262c.261 0 .512.104.696.288l.893.893a2.984 2.984 0 0 0 4.22 0l.893-.893a.985.985 0 0 1 .696-.288h1.262a2.984 2.984 0 0 0 2.984-2.984V15.7c0-.261.104-.512.288-.696l.893-.893a2.984 2.984 0 0 0 0-4.22l-.893-.893a.985.985 0 0 1-.288-.696V7.04a2.984 2.984 0 0 0-2.984-2.984h-1.262a.985.985 0 0 1-.696-.288l-.893-.893A2.984 2.984 0 0 0 12 2Zm3.683 7.73a1 1 0 1 0-1.414-1.413l-4.253 4.253-1.277-1.277a1 1 0 0 0-1.415 1.414l1.985 1.984a1 1 0 0 0 1.414 0l4.96-4.96Z" clip-rule="evenodd"/>
+                                            </svg>
+                                            Cek Kelengkapan
+                                        </button>
 
-                                    <!-- Modal Kelengkapan -->
-                                    <div id="kelengkapanModal-{{ $hasil->id }}" tabindex="-1" aria-hidden="true"
-                                        class="fixed hidden z-50 w-full inset-0 flex justify-center items-center bg-black bg-opacity-50">
-                                        <div class="bg-white rounded-lg p-6 w-full max-w-md relative">
-                                            <h2 class="text-lg font-semibold mb-4 text-center">Cek Kelengkapan Yudisium</h2>
-                                            <p class="mb-4 text-center">Pilih status kelengkapan yudisium untuk mahasiswa ini:</p>
+                                        <!-- Modal Kelengkapan -->
+                                        <div id="kelengkapanModal-{{ $hasil->id }}" tabindex="-1" aria-hidden="true"
+                                            class="fixed hidden z-50 w-full inset-0 flex justify-center items-center bg-black bg-opacity-50">
+                                            <div class="bg-white rounded-lg p-6 w-full max-w-md relative">
+                                                <h2 class="text-lg font-semibold mb-4 text-center">Cek Kelengkapan Yudisium</h2>
+                                                <p class="mb-4 text-center">Pilih status kelengkapan yudisium untuk mahasiswa ini:</p>
 
-                                            <!-- Tombol Belum Lengkap -->
-                                            <form action="{{ route('hasil_sidang.cek_kelengkapan', $hasil->id) }}" method="POST"
-                                                class="flex justify-between gap-4 mb-2">
-                                                @csrf
-                                                @method('PATCH')
-                                                <input type="hidden" name="kelengkapan_yudisium" value="Belum Lengkap">
-                                                <button type="submit"
-                                                    class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded">Belum Lengkap</button>
-                                            </form>
+                                                <!-- Tombol Belum Lengkap -->
+                                                <form action="{{ route('hasil_sidang.cek_kelengkapan', $hasil->id) }}" method="POST"
+                                                    class="flex justify-between gap-4 mb-2">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="kelengkapan_yudisium" value="Belum Lengkap">
+                                                    <button type="submit"
+                                                        class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded">Belum Lengkap</button>
+                                                </form>
 
-                                            <!-- Tombol Lengkap -->
-                                            <form action="{{ route('hasil_sidang.cek_kelengkapan', $hasil->id) }}" method="POST"
-                                                class="flex justify-between gap-4">
-                                                @csrf
-                                                @method('PATCH')
-                                                <input type="hidden" name="kelengkapan_yudisium" value="Lengkap">
-                                                <button type="submit"
-                                                    class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded">Lengkap</button>
-                                            </form>
+                                                <!-- Tombol Lengkap -->
+                                                <form action="{{ route('hasil_sidang.cek_kelengkapan', $hasil->id) }}" method="POST"
+                                                    class="flex justify-between gap-4">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="kelengkapan_yudisium" value="Lengkap">
+                                                    <button type="submit"
+                                                        class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded">Lengkap</button>
+                                                </form>
 
-                                            <!-- Tombol Close di kanan bawah -->
-                                            <div class="mt-6 flex justify-end">
-                                                <button type="button"
-                                                    class="text-white inline-flex items-center bg-gray-600 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-                                                    data-modal-hide="kelengkapanModal-{{ $hasil->id }}">
-                                                    <svg class="me-2 w-2 h-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                                        fill="none" viewBox="0 0 14 14">
-                                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-                                                    </svg>
-                                                    Batal
-                                                </button>
+                                                <!-- Tombol Close di kanan bawah -->
+                                                <div class="mt-6 flex justify-end">
+                                                    <button type="button"
+                                                        class="text-white inline-flex items-center bg-gray-600 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+                                                        data-modal-hide="kelengkapanModal-{{ $hasil->id }}">
+                                                        <svg class="me-2 w-2 h-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                            fill="none" viewBox="0 0 14 14">
+                                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                                                        </svg>
+                                                        Batal
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </td>
+                                    </td>
+                                @endif
                             </tr>
                         @endforeach
                     </tbody>
