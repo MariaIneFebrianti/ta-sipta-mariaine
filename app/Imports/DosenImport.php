@@ -14,15 +14,36 @@ class DosenImport implements ToCollection
     /**
      * @param Collection $collection
      */
+
     public function collection(Collection $collection)
     {
+        $skippedRows = [];
+
         try {
-            DB::transaction(function () use ($collection) {
+            DB::transaction(function () use ($collection, &$skippedRows) {
                 foreach ($collection as $key => $row) {
-                    // Skip header row
+                    if (collect($row)->filter()->isEmpty()) continue;
+
+                    // Skip header
                     if ($key === 0) continue;
 
-                    // Buat user baru
+                    // Validasi unik
+                    $existingUser = User::where('name', $row[0])->orWhere('email', $row[1])->first();
+                    $existingDosen = Dosen::where('nip', $row[2])->first();
+                    if ($existingUser || $existingDosen) {
+                        $skippedRows[] = $key + 1;
+                        continue;
+                    }
+
+                    // Format tanggal lahir
+                    try {
+                        $tanggalLahir = \Carbon\Carbon::parse($row[4])->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        $skippedRows[] = $key + 1;
+                        continue;
+                    }
+
+                    // Buat user
                     $user = User::create([
                         'name' => $row[0],
                         'email' => $row[1],
@@ -33,21 +54,62 @@ class DosenImport implements ToCollection
                         'updated_at' => now(),
                     ]);
 
-                    // Simpan data dosen dengan user_id dari user yang baru dibuat
+                    // Buat dosen
                     Dosen::create([
                         'user_id' => $user->id,
                         'nama_dosen' => $row[0],
                         'nip' => $row[2],
                         'tempat_lahir' => $row[3],
-                        'tanggal_lahir' => $row[4],
+                        'tanggal_lahir' => $tanggalLahir,
                         'jenis_kelamin' => $row[5],
                     ]);
                 }
             });
 
-            session()->flash('success', 'Data dosen berhasil diimpor.');
+            if (!empty($skippedRows)) {
+                session()->flash('error', 'Beberapa baris gagal diimpor: Baris ' . implode(', ', $skippedRows));
+            } else {
+                session()->flash('success', 'Semua data dosen berhasil diimpor.');
+            }
         } catch (\Exception $e) {
             session()->flash('error', 'Gagal mengimpor data dosen: ' . $e->getMessage());
         }
     }
+
+    // public function collection(Collection $collection)
+    // {
+    //     try {
+    //         DB::transaction(function () use ($collection) {
+    //             foreach ($collection as $key => $row) {
+    //                 // Skip header row
+    //                 if ($key === 0) continue;
+
+    //                 // Buat user baru
+    //                 $user = User::create([
+    //                     'name' => $row[0],
+    //                     'email' => $row[1],
+    //                     'email_verified_at' => now(),
+    //                     'password' => Hash::make('11111111'),
+    //                     'role' => 'Dosen',
+    //                     'created_at' => now(),
+    //                     'updated_at' => now(),
+    //                 ]);
+
+    //                 // Simpan data dosen dengan user_id dari user yang baru dibuat
+    //                 Dosen::create([
+    //                     'user_id' => $user->id,
+    //                     'nama_dosen' => $row[0],
+    //                     'nip' => $row[2],
+    //                     'tempat_lahir' => $row[3],
+    //                     'tanggal_lahir' => $row[4],
+    //                     'jenis_kelamin' => $row[5],
+    //                 ]);
+    //             }
+    //         });
+
+    //         session()->flash('success', 'Data dosen berhasil diimpor.');
+    //     } catch (\Exception $e) {
+    //         session()->flash('error', 'Gagal mengimpor data dosen: ' . $e->getMessage());
+    //     }
+    // }
 }

@@ -8,138 +8,565 @@ use App\Models\RuanganSidang;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Models\JadwalSeminarProposal;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 use Maatwebsite\Excel\Concerns\ToCollection;
 
 class JadwalSeminarProposalImport implements ToCollection
 {
-    /**
-     * @param Collection $collection
-     */
-    // public function collection(Collection $collection)
-    // {
-    //     //
-    // }
 
     public function collection(Collection $collection)
     {
+        $skippedRows = [];
+        $jadwalList = [];
+
         try {
-            DB::transaction(function () use ($collection) {
-                $jadwalList = [];
-
+            DB::transaction(function () use ($collection, &$skippedRows, &$jadwalList) {
                 foreach ($collection as $key => $row) {
-                    // Skip header row
-                    if ($key === 0) continue;
+                    $now = now();
 
-                    // Cek ID mahasiswa, pembimbing, penguji, ruangan
-                    // Cek ID mahasiswa
-                    $mahasiswaId = null;
-                    if (is_numeric($row[0])) {
-                        $mahasiswaId = Mahasiswa::find($row[0]) ? $row[0] : null;
-                    } else {
-                        $mahasiswa = Mahasiswa::where('nama_mahasiswa', $row[0])->first();
-                        $mahasiswaId = $mahasiswa ? $mahasiswa->id : null;
-                    }
+                    if ($key === 0 || collect($row)->filter()->isEmpty()) continue;
 
-                    // Cek ID penguji utama
-                    $pengujiUtamaId = null;
-                    if (is_numeric($row[3])) {
-                        $pengujiUtamaId = Dosen::find($row[1]) ? $row[1] : null;
-                    } else {
-                        $pengujiUtama = Dosen::where('nama_dosen', $row[1])->first();
-                        $pengujiUtamaId = $pengujiUtama ? $pengujiUtama->id : null;
-                    }
+                    try {
+                        if (count($row) < 7) {
+                            $skippedRows[] = "Baris " . ($key + 1) . ": Data tidak lengkap.";
+                            continue;
+                        }
 
-                    // Cek ID penguji pendamping
-                    $pengujiPendampingId = null;
-                    if (is_numeric($row[4])) {
-                        $pengujiPendampingId = Dosen::find($row[2]) ? $row[2] : null;
-                    } else {
-                        $pengujiPendamping = Dosen::where('nama_dosen', $row[2])->first();
-                        $pengujiPendampingId = $pengujiPendamping ? $pengujiPendamping->id : null;
-                    }
+                        $baris = $key + 1;
 
-                    // Cek ID ruangan sidang
-                    $ruanganSidangId = null;
-                    if (is_numeric($row[6])) {
-                        $ruanganSidangId = RuanganSidang::find($row[6]) ? $row[6] : null;
-                    } else {
-                        $ruanganSidang = RuanganSidang::where('nama_ruangan', $row[6])->first();
-                        $ruanganSidangId = $ruanganSidang ? $ruanganSidang->id : null;
-                    }
+                        $mahasiswaId = is_numeric($row[0])
+                            ? Mahasiswa::find($row[0])?->id
+                            : Mahasiswa::where('nama_mahasiswa', $row[0])->value('id');
 
-                    // Cek dan simpan jadwal untuk validasi
-                    $jadwalList[] = [
-                        'mahasiswa_id' => $mahasiswaId,
-                        'penguji_utama_id' => $pengujiUtamaId,
-                        'penguji_pendamping_id' => $pengujiPendampingId,
-                        'tanggal' => $row[3],
-                        'waktu_mulai' => $row[4],
-                        'waktu_selesai' => $row[5],
-                        'ruangan_sidang_id' => $ruanganSidangId,
-                    ];
-                }
+                        if (!$mahasiswaId) {
+                            $skippedRows[] = "Baris {$baris}: Mahasiswa '{$row[0]}' tidak ditemukan.";
+                            continue;
+                        }
 
-                $validasiPoin1 = true;
-                $validasiPoin2 = true;
-                $validasiPoin3 = true;
+                        if (JadwalSeminarProposal::where('mahasiswa_id', $mahasiswaId)->exists()) {
+                            $skippedRows[] = "Baris {$baris}: Mahasiswa '{$row[0]}' sudah memiliki jadwal seminar.";
+                            continue;
+                        }
 
-                // Poin 1: Cek setiap mahasiswa tidak boleh memiliki dosen yang sama dalam kategori yang sama
-                foreach ($jadwalList as $jadwal) {
-                    $dosenIds = [
-                        $jadwal['penguji_utama_id'],
-                        $jadwal['penguji_pendamping_id'],
-                    ];
+                        $pengujiUtamaId = is_numeric($row[1])
+                            ? Dosen::find($row[1])?->id
+                            : Dosen::where('nama_dosen', $row[1])->value('id');
 
-                    if (count($dosenIds) !== count(array_unique($dosenIds))) {
-                        $validasiPoin1 = false; // Ada dosen yang sama
-                        break;
-                    }
-                }
+                        if (!$pengujiUtamaId) {
+                            $skippedRows[] = "Baris {$baris}: Dosen penguji utama '{$row[1]}' tidak ditemukan.";
+                            continue;
+                        }
 
-                // Poin 2 dan 3: Cek tanggal, waktu, dan ruangan
-                foreach ($jadwalList as $index1 => $jadwal1) {
-                    foreach ($jadwalList as $index2 => $jadwal2) {
-                        if ($index1 !== $index2) {
-                            if ($jadwal1['tanggal'] === $jadwal2['tanggal'] && $jadwal1['waktu_mulai'] === $jadwal2['waktu_mulai']) {
-                                if ($jadwal1['ruangan_sidang_id'] === $jadwal2['ruangan_sidang_id']) {
-                                    $validasiPoin2 = false; // Ruangan sama
+                        $pengujiPendampingId = is_numeric($row[2])
+                            ? Dosen::find($row[2])?->id
+                            : Dosen::where('nama_dosen', $row[2])->value('id');
+
+                        if (!$pengujiPendampingId) {
+                            $skippedRows[] = "Baris {$baris}: Dosen penguji pendamping '{$row[2]}' tidak ditemukan.";
+                            continue;
+                        }
+
+                        if ($pengujiUtamaId === $pengujiPendampingId) {
+                            $skippedRows[] = "Baris {$baris}: Dosen penguji utama dan pendamping tidak boleh sama.";
+                            continue;
+                        }
+
+                        try {
+                            $tanggal = is_numeric($row[3])
+                                ? Date::excelToDateTimeObject($row[3])->format('Y-m-d')
+                                : \Carbon\Carbon::parse($row[3])->format('Y-m-d');
+                        } catch (\Exception $e) {
+                            $skippedRows[] = "Baris {$baris}: Format tanggal tidak valid ({$row[3]}).";
+                            continue;
+                        }
+
+                        try {
+                            $waktuMulai = is_numeric($row[4])
+                                ? Date::excelToDateTimeObject($row[4])->format('H:i:s')
+                                : \Carbon\Carbon::parse($row[4])->format('H:i:s');
+
+                            $waktuSelesai = is_numeric($row[5])
+                                ? Date::excelToDateTimeObject($row[5])->format('H:i:s')
+                                : \Carbon\Carbon::parse($row[5])->format('H:i:s');
+                        } catch (\Exception $e) {
+                            $skippedRows[] = "Baris {$baris}: Format waktu tidak valid ({$row[4]} - {$row[5]}).";
+                            continue;
+                        }
+
+                        $ruanganSidangId = is_numeric($row[6])
+                            ? RuanganSidang::find($row[6])?->id
+                            : RuanganSidang::where('nama_ruangan', $row[6])->value('id');
+
+                        if (!$ruanganSidangId) {
+                            $skippedRows[] = "Baris {$baris}: Ruangan '{$row[6]}' tidak ditemukan.";
+                            continue;
+                        }
+
+                        // 🔍 Cek bentrok di database
+                        $bentrokMessages = [];
+
+                        $bentrokRuangan = JadwalSeminarProposal::where('tanggal', $tanggal)
+                            ->where('waktu_mulai', $waktuMulai)
+                            ->where('ruangan_sidang_id', $ruanganSidangId)
+                            ->first();
+
+                        if ($bentrokRuangan) {
+                            $nama = optional($bentrokRuangan->mahasiswa)->nama_mahasiswa ?? 'tidak diketahui';
+                            $bentrokMessages[] = "ruangan bentrok dengan '{$nama}' pada {$tanggal} {$waktuMulai}";
+                        }
+
+                        $bentrokPengujiUtama = JadwalSeminarProposal::where('tanggal', $tanggal)
+                            ->where('waktu_mulai', $waktuMulai)
+                            ->where('penguji_utama_id', $pengujiUtamaId)
+                            ->first();
+
+                        if ($bentrokPengujiUtama) {
+                            $nama = optional($bentrokPengujiUtama->mahasiswa)->nama_mahasiswa ?? 'tidak diketahui';
+                            $bentrokMessages[] = "penguji utama bentrok dengan '{$nama}' pada {$tanggal} {$waktuMulai}";
+                        }
+
+                        $bentrokPengujiPendamping = JadwalSeminarProposal::where('tanggal', $tanggal)
+                            ->where('waktu_mulai', $waktuMulai)
+                            ->where('penguji_pendamping_id', $pengujiPendampingId)
+                            ->first();
+
+                        if ($bentrokPengujiPendamping) {
+                            $nama = optional($bentrokPengujiPendamping->mahasiswa)->nama_mahasiswa ?? 'tidak diketahui';
+                            $bentrokMessages[] = "penguji pendamping bentrok dengan '{$nama}' pada {$tanggal} {$waktuMulai}";
+                        }
+
+                        if (!empty($bentrokMessages)) {
+                            $skippedRows[] = "Baris {$baris}: " . implode(', ', $bentrokMessages);
+                            continue;
+                        }
+
+                        // 🔍 Cek bentrok antar baris dalam file
+                        foreach ($jadwalList as $item) {
+                            if ($item['tanggal'] === $tanggal && $item['waktu_mulai'] === $waktuMulai) {
+                                $bentrokDalamFile = [];
+
+                                if ($item['ruangan_sidang_id'] === $ruanganSidangId) {
+                                    $bentrokDalamFile[] = "ruangan bentrok";
+                                }
+                                if ($item['penguji_utama_id'] === $pengujiUtamaId) {
+                                    $bentrokDalamFile[] = "penguji utama bentrok";
+                                }
+                                if ($item['penguji_pendamping_id'] === $pengujiPendampingId) {
+                                    $bentrokDalamFile[] = "penguji pendamping bentrok";
                                 }
 
-                                // Cek apakah ada dosen yang sama
-                                if (
-                                    $jadwal1['penguji_utama_id'] === $jadwal2['penguji_utama_id'] ||
-                                    $jadwal1['penguji_pendamping_id'] === $jadwal2['penguji_pendamping_id']
-                                ) {
-                                    $validasiPoin3 = false; // Dosen sama pada jadwal yang sama
+                                if (!empty($bentrokDalamFile)) {
+                                    $skippedRows[] = "Baris {$baris}: Bentrok dengan baris {$item['baris_ke']} dalam file (" . implode(', ', $bentrokDalamFile) . " pada {$tanggal} {$waktuMulai})";
+                                    continue 2;
                                 }
                             }
                         }
-                    }
-                }
 
-                // Menyimpan data jika semua poin valid
-                if ($validasiPoin1 && $validasiPoin2 && $validasiPoin3) {
-                    foreach ($jadwalList as $jadwal) {
-                        JadwalSeminarProposal::create($jadwal);
+                        // Simpan ke DB
+                        JadwalSeminarProposal::create([
+                            'mahasiswa_id' => $mahasiswaId,
+                            'penguji_utama_id' => $pengujiUtamaId,
+                            'penguji_pendamping_id' => $pengujiPendampingId,
+                            'tanggal' => $tanggal,
+                            'waktu_mulai' => $waktuMulai,
+                            'waktu_selesai' => $waktuSelesai,
+                            'ruangan_sidang_id' => $ruanganSidangId,
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ]);
+
+                        $jadwalList[] = [
+                            'baris_ke' => $baris,
+                            'tanggal' => $tanggal,
+                            'waktu_mulai' => $waktuMulai,
+                            'ruangan_sidang_id' => $ruanganSidangId,
+                            'penguji_utama_id' => $pengujiUtamaId,
+                            'penguji_pendamping_id' => $pengujiPendampingId,
+                        ];
+                    } catch (\Exception $e) {
+                        $skippedRows[] = "Baris {$baris}: Kesalahan sistem - " . $e->getMessage();
                     }
-                    session()->flash('success', 'Data jadwal seminar proposal berhasil diimpor.');
-                } else {
-                    // Menentukan pesan kesalahan
-                    $errorMessages = [];
-                    if (!$validasiPoin1) {
-                        $errorMessages[] = 'Mahasiswa tidak boleh memiliki dosen yang sama dalam kategori yang sama.';
-                    }
-                    if (!$validasiPoin2) {
-                        $errorMessages[] = 'Tanggal, waktu, dan ruangan tidak boleh sama.';
-                    }
-                    if (!$validasiPoin3) {
-                        $errorMessages[] = 'Dosen penguji tidak boleh sama pada jadwal yang sama.';
-                    }
-                    throw new \Exception(implode(' ', $errorMessages));
                 }
             });
+
+            if (!empty($skippedRows)) {
+                session()->flash('error', 'Beberapa baris gagal diimpor:<br>' . implode('<br>', $skippedRows));
+            } else {
+                session()->flash('success', 'Semua data jadwal seminar proposal berhasil diimpor.');
+            }
         } catch (\Exception $e) {
-            session()->flash('error', 'Gagal mengimpor data jadwal seminar proposal: ' . $e->getMessage());
+            session()->flash('error', 'Gagal mengimpor data: ' . $e->getMessage());
         }
     }
+
+
+    // public function collection(Collection $collection)
+    // {
+    //     $skippedRows = [];
+    //     $jadwalList = [];
+
+    //     try {
+    //         DB::transaction(function () use ($collection, &$skippedRows, &$jadwalList) {
+    //             foreach ($collection as $key => $row) {
+    //                 if ($key === 0 || collect($row)->filter()->isEmpty()) continue;
+
+    //                 try {
+    //                     // Validasi data minimal 7 kolom
+    //                     if (count($row) < 7) {
+    //                         $skippedRows[] = "Baris " . ($key + 1) . ": Data tidak lengkap.";
+    //                         continue;
+    //                     }
+
+    //                     // Mahasiswa
+    //                     $mahasiswaId = is_numeric($row[0])
+    //                         ? Mahasiswa::find($row[0])?->id
+    //                         : Mahasiswa::where('nama_mahasiswa', $row[0])->value('id');
+
+    //                     if (!$mahasiswaId) {
+    //                         $skippedRows[] = "Baris " . ($key + 1) . ": Mahasiswa '{$row[0]}' tidak ditemukan.";
+    //                         continue;
+    //                     }
+
+    //                     if (JadwalSeminarProposal::where('mahasiswa_id', $mahasiswaId)->exists()) {
+    //                         $skippedRows[] = "Baris " . ($key + 1) . ": Mahasiswa '{$row[0]}' sudah memiliki jadwal seminar.";
+    //                         continue;
+    //                     }
+
+    //                     // Penguji Utama & Pendamping
+    //                     $pengujiUtamaId = is_numeric($row[1])
+    //                         ? Dosen::find($row[1])?->id
+    //                         : Dosen::where('nama_dosen', $row[1])->value('id');
+
+    //                     if (!$pengujiUtamaId) {
+    //                         $skippedRows[] = "Baris " . ($key + 1) . ": Dosen penguji utama '{$row[1]}' tidak ditemukan.";
+    //                         continue;
+    //                     }
+
+    //                     $pengujiPendampingId = is_numeric($row[2])
+    //                         ? Dosen::find($row[2])?->id
+    //                         : Dosen::where('nama_dosen', $row[2])->value('id');
+
+    //                     if (!$pengujiPendampingId) {
+    //                         $skippedRows[] = "Baris " . ($key + 1) . ": Dosen penguji pendamping '{$row[2]}' tidak ditemukan.";
+    //                         continue;
+    //                     }
+
+    //                     if ($pengujiUtamaId === $pengujiPendampingId) {
+    //                         $skippedRows[] = "Baris " . ($key + 1) . ": Dosen penguji utama dan pendamping tidak boleh sama.";
+    //                         continue;
+    //                     }
+
+    //                     // Konversi tanggal
+    //                     try {
+    //                         $tanggal = is_numeric($row[3])
+    //                             ? Date::excelToDateTimeObject($row[3])->format('Y-m-d')
+    //                             : \Carbon\Carbon::parse($row[3])->format('Y-m-d');
+    //                     } catch (\Exception $e) {
+    //                         $skippedRows[] = "Baris " . ($key + 1) . ": Format tanggal tidak valid ({$row[3]}).";
+    //                         continue;
+    //                     }
+
+    //                     // Konversi waktu
+    //                     try {
+    //                         $waktuMulai = is_numeric($row[4])
+    //                             ? Date::excelToDateTimeObject($row[4])->format('H:i:s')
+    //                             : \Carbon\Carbon::parse($row[4])->format('H:i:s');
+
+    //                         $waktuSelesai = is_numeric($row[5])
+    //                             ? Date::excelToDateTimeObject($row[5])->format('H:i:s')
+    //                             : \Carbon\Carbon::parse($row[5])->format('H:i:s');
+    //                     } catch (\Exception $e) {
+    //                         $skippedRows[] = "Baris " . ($key + 1) . ": Format waktu tidak valid ({$row[4]} - {$row[5]}).";
+    //                         continue;
+    //                     }
+
+    //                     // Ruangan
+    //                     $ruanganSidangId = is_numeric($row[6])
+    //                         ? RuanganSidang::find($row[6])?->id
+    //                         : RuanganSidang::where('nama_ruangan', $row[6])->value('id');
+
+    //                     if (!$ruanganSidangId) {
+    //                         $skippedRows[] = "Baris " . ($key + 1) . ": Ruangan '{$row[6]}' tidak ditemukan.";
+    //                         continue;
+    //                     }
+
+    //                     // Cek bentrok di database
+    //                     $isBentrok = JadwalSeminarProposal::where('tanggal', $tanggal)
+    //                         ->where('waktu_mulai', $waktuMulai)
+    //                         ->where(function ($query) use ($ruanganSidangId, $pengujiUtamaId, $pengujiPendampingId) {
+    //                             $query->where('ruangan_sidang_id', $ruanganSidangId)
+    //                                 ->orWhere('penguji_utama_id', $pengujiUtamaId)
+    //                                 ->orWhere('penguji_pendamping_id', $pengujiPendampingId);
+    //                         })->exists();
+
+    //                     if ($isBentrok) {
+    //                         $skippedRows[] = "Baris " . ($key + 1) . ": Jadwal bentrok dengan data yang sudah ada di database.";
+    //                         continue;
+    //                     }
+
+    //                     // Cek bentrok antar baris dalam file
+    //                     foreach ($jadwalList as $item) {
+    //                         if ($item['tanggal'] === $tanggal && $item['waktu_mulai'] === $waktuMulai) {
+    //                             if (
+    //                                 $item['ruangan_sidang_id'] === $ruanganSidangId ||
+    //                                 $item['penguji_utama_id'] === $pengujiUtamaId ||
+    //                                 $item['penguji_pendamping_id'] === $pengujiPendampingId
+    //                             ) {
+    //                                 $skippedRows[] = "Baris " . ($key + 1) . ": Jadwal bentrok dengan baris sebelumnya dalam file.";
+    //                                 continue 2;
+    //                             }
+    //                         }
+    //                     }
+
+    //                     // Simpan data
+    //                     JadwalSeminarProposal::create([
+    //                         'mahasiswa_id' => $mahasiswaId,
+    //                         'penguji_utama_id' => $pengujiUtamaId,
+    //                         'penguji_pendamping_id' => $pengujiPendampingId,
+    //                         'tanggal' => $tanggal,
+    //                         'waktu_mulai' => $waktuMulai,
+    //                         'waktu_selesai' => $waktuSelesai,
+    //                         'ruangan_sidang_id' => $ruanganSidangId,
+    //                     ]);
+
+    //                     // Tambahkan ke list untuk deteksi bentrok internal
+    //                     $jadwalList[] = [
+    //                         'mahasiswa_id' => $mahasiswaId,
+    //                         'penguji_utama_id' => $pengujiUtamaId,
+    //                         'penguji_pendamping_id' => $pengujiPendampingId,
+    //                         'tanggal' => $tanggal,
+    //                         'waktu_mulai' => $waktuMulai,
+    //                         'waktu_selesai' => $waktuSelesai,
+    //                         'ruangan_sidang_id' => $ruanganSidangId,
+    //                     ];
+    //                 } catch (\Exception $e) {
+    //                     $skippedRows[] = "Baris " . ($key + 1) . ": Kesalahan sistem - " . $e->getMessage();
+    //                     continue;
+    //                 }
+    //             }
+    //         });
+
+    //         if (!empty($skippedRows)) {
+    //             session()->flash('error', 'Beberapa baris gagal diimpor:<br>' . implode('<br>', $skippedRows));
+    //         } else {
+    //             session()->flash('success', 'Semua data jadwal seminar proposal berhasil diimpor.');
+    //         }
+    //     } catch (\Exception $e) {
+    //         session()->flash('error', 'Gagal mengimpor data: ' . $e->getMessage());
+    //     }
+    // }
+
+    // public function collection(Collection $collection)
+    // {
+    //     $skippedRows = [];
+    //     $jadwalList = [];
+
+    //     try {
+    //         DB::transaction(function () use ($collection, &$skippedRows, &$jadwalList) {
+    //             foreach ($collection as $key => $row) {
+    //                 if ($key === 0 || collect($row)->filter()->isEmpty()) continue;
+
+    //                 try {
+    //                     // Mahasiswa
+    //                     $mahasiswaId = is_numeric($row[0])
+    //                         ? Mahasiswa::find($row[0])?->id
+    //                         : Mahasiswa::where('nama_mahasiswa', $row[0])->value('id');
+
+    //                     if (!$mahasiswaId) {
+    //                         $skippedRows[] = "Baris " . ($key + 1) . ": Mahasiswa '{$row[0]}' tidak ditemukan.";
+    //                         continue;
+    //                     }
+
+    //                     if (JadwalSeminarProposal::where('mahasiswa_id', $mahasiswaId)->exists()) {
+    //                         $skippedRows[] = "Baris " . ($key + 1) . ": Mahasiswa '{$row[0]}' sudah memiliki jadwal.";
+    //                         continue;
+    //                     }
+
+    //                     $pengujiUtamaId = is_numeric($row[1])
+    //                         ? Dosen::find($row[1])?->id
+    //                         : Dosen::where('nama_dosen', $row[1])->value('id');
+
+    //                     $pengujiPendampingId = is_numeric($row[2])
+    //                         ? Dosen::find($row[2])?->id
+    //                         : Dosen::where('nama_dosen', $row[2])->value('id');
+
+    //                     $tanggal = $row[3];
+    //                     $waktuMulai = $row[4];
+    //                     $waktuSelesai = $row[5];
+
+    //                     $ruanganSidangId = is_numeric($row[6])
+    //                         ? RuanganSidang::find($row[6])?->id
+    //                         : RuanganSidang::where('nama_ruangan', $row[6])->value('id');
+
+    //                     if ($pengujiUtamaId === $pengujiPendampingId) {
+    //                         $skippedRows[] = "Baris " . ($key + 1) . ": Dosen penguji utama dan pendamping tidak boleh sama.";
+    //                         continue;
+    //                     }
+
+    //                     $isBentrok = JadwalSeminarProposal::where('tanggal', $tanggal)
+    //                         ->where('waktu_mulai', $waktuMulai)
+    //                         ->where(function ($query) use ($ruanganSidangId, $pengujiUtamaId, $pengujiPendampingId) {
+    //                             $query->where('ruangan_sidang_id', $ruanganSidangId)
+    //                                 ->orWhere('penguji_utama_id', $pengujiUtamaId)
+    //                                 ->orWhere('penguji_pendamping_id', $pengujiPendampingId);
+    //                         })->exists();
+
+    //                     if ($isBentrok) {
+    //                         $skippedRows[] = "Baris " . ($key + 1) . ": Jadwal bentrok dengan data yang sudah ada di database.";
+    //                         continue;
+    //                     }
+
+    //                     foreach ($jadwalList as $item) {
+    //                         if ($item['tanggal'] === $tanggal && $item['waktu_mulai'] === $waktuMulai) {
+    //                             if ($item['ruangan_sidang_id'] === $ruanganSidangId) {
+    //                                 $skippedRows[] = "Baris " . ($key + 1) . ": Ruangan sidang bentrok dengan baris sebelumnya.";
+    //                                 continue 2;
+    //                             }
+
+    //                             if (
+    //                                 $item['penguji_utama_id'] === $pengujiUtamaId ||
+    //                                 $item['penguji_pendamping_id'] === $pengujiPendampingId
+    //                             ) {
+    //                                 $skippedRows[] = "Baris " . ($key + 1) . ": Dosen penguji bentrok dengan baris sebelumnya.";
+    //                                 continue 2;
+    //                             }
+    //                         }
+    //                     }
+
+    //                     // Simpan
+    //                     JadwalSeminarProposal::create([
+    //                         'mahasiswa_id' => $mahasiswaId,
+    //                         'penguji_utama_id' => $pengujiUtamaId,
+    //                         'penguji_pendamping_id' => $pengujiPendampingId,
+    //                         'tanggal' => $tanggal,
+    //                         'waktu_mulai' => $waktuMulai,
+    //                         'waktu_selesai' => $waktuSelesai,
+    //                         'ruangan_sidang_id' => $ruanganSidangId,
+    //                     ]);
+
+    //                     $jadwalList[] = [
+    //                         'mahasiswa_id' => $mahasiswaId,
+    //                         'penguji_utama_id' => $pengujiUtamaId,
+    //                         'penguji_pendamping_id' => $pengujiPendampingId,
+    //                         'tanggal' => $tanggal,
+    //                         'waktu_mulai' => $waktuMulai,
+    //                         'waktu_selesai' => $waktuSelesai,
+    //                         'ruangan_sidang_id' => $ruanganSidangId,
+    //                     ];
+    //                 } catch (\Exception $e) {
+    //                     $skippedRows[] = "Baris " . ($key + 1) . ": " . $e->getMessage();
+    //                     continue;
+    //                 }
+    //             }
+    //         });
+
+    //         if (!empty($skippedRows)) {
+    //             session()->flash('error', 'Beberapa baris gagal diimpor:<br>' . implode('<br>', $skippedRows));
+    //         } else {
+    //             session()->flash('success', 'Semua data jadwal seminar proposal berhasil diimpor.');
+    //         }
+    //     } catch (\Exception $e) {
+    //         session()->flash('error', 'Gagal mengimpor data: ' . $e->getMessage());
+    //     }
+    // }
+
+
+    // public $errors = [];
+    // protected $jadwalList = [];
+
+    // public function collection(Collection $collection)
+    // {
+    //     foreach ($collection as $key => $row) {
+    //         if ($key === 0) continue; // Skip header
+
+    //         try {
+    //             // Ambil mahasiswa
+    //             $mahasiswaId = is_numeric($row[0])
+    //                 ? Mahasiswa::find($row[0])?->id
+    //                 : Mahasiswa::where('nama_mahasiswa', $row[0])->value('id');
+
+    //             if (!$mahasiswaId) {
+    //                 throw new \Exception("Mahasiswa '{$row[0]}' tidak ditemukan.");
+    //             }
+
+    //             if (JadwalSeminarProposal::where('mahasiswa_id', $mahasiswaId)->exists()) {
+    //                 throw new \Exception("Mahasiswa '{$row[0]}' sudah memiliki jadwal.");
+    //             }
+
+    //             $pengujiUtamaId = is_numeric($row[1])
+    //                 ? Dosen::find($row[1])?->id
+    //                 : Dosen::where('nama_dosen', $row[1])->value('id');
+
+    //             $pengujiPendampingId = is_numeric($row[2])
+    //                 ? Dosen::find($row[2])?->id
+    //                 : Dosen::where('nama_dosen', $row[2])->value('id');
+
+    //             $tanggal = $row[3];
+    //             $waktuMulai = $row[4];
+    //             $waktuSelesai = $row[5];
+
+    //             $ruanganSidangId = is_numeric($row[6])
+    //                 ? RuanganSidang::find($row[6])?->id
+    //                 : RuanganSidang::where('nama_ruangan', $row[6])->value('id');
+
+    //             // Validasi dosen tidak boleh sama
+    //             if ($pengujiUtamaId === $pengujiPendampingId) {
+    //                 throw new \Exception("Dosen penguji utama dan pendamping tidak boleh sama.");
+    //             }
+
+    //             // Validasi bentrok dengan DB
+    //             $isBentrok = JadwalSeminarProposal::where('tanggal', $tanggal)
+    //                 ->where('waktu_mulai', $waktuMulai)
+    //                 ->where(function ($query) use ($ruanganSidangId, $pengujiUtamaId, $pengujiPendampingId) {
+    //                     $query->where('ruangan_sidang_id', $ruanganSidangId)
+    //                         ->orWhere('penguji_utama_id', $pengujiUtamaId)
+    //                         ->orWhere('penguji_pendamping_id', $pengujiPendampingId);
+    //                 })->exists();
+
+    //             if ($isBentrok) {
+    //                 throw new \Exception("Bentrok dengan jadwal yang sudah ada di DB pada tanggal {$tanggal} jam {$waktuMulai}.");
+    //             }
+
+    //             // Validasi bentrok antar baris yang sedang di-import
+    //             foreach ($this->jadwalList as $item) {
+    //                 if ($item['tanggal'] === $tanggal && $item['waktu_mulai'] === $waktuMulai) {
+    //                     if ($item['ruangan_sidang_id'] === $ruanganSidangId) {
+    //                         throw new \Exception("Bentrok ruangan dengan baris lain pada tanggal {$tanggal} jam {$waktuMulai}.");
+    //                     }
+
+    //                     if (
+    //                         $item['penguji_utama_id'] === $pengujiUtamaId ||
+    //                         $item['penguji_pendamping_id'] === $pengujiPendampingId
+    //                     ) {
+    //                         throw new \Exception("Bentrok dosen penguji dengan baris lain pada tanggal {$tanggal} jam {$waktuMulai}.");
+    //                     }
+    //                 }
+    //             }
+
+    //             // Simpan ke DB jika lolos semua validasi
+    //             JadwalSeminarProposal::create([
+    //                 'mahasiswa_id' => $mahasiswaId,
+    //                 'penguji_utama_id' => $pengujiUtamaId,
+    //                 'penguji_pendamping_id' => $pengujiPendampingId,
+    //                 'tanggal' => $tanggal,
+    //                 'waktu_mulai' => $waktuMulai,
+    //                 'waktu_selesai' => $waktuSelesai,
+    //                 'ruangan_sidang_id' => $ruanganSidangId,
+    //             ]);
+
+    //             // Tambahkan ke list untuk validasi berikutnya
+    //             $this->jadwalList[] = [
+    //                 'mahasiswa_id' => $mahasiswaId,
+    //                 'penguji_utama_id' => $pengujiUtamaId,
+    //                 'penguji_pendamping_id' => $pengujiPendampingId,
+    //                 'tanggal' => $tanggal,
+    //                 'waktu_mulai' => $waktuMulai,
+    //                 'waktu_selesai' => $waktuSelesai,
+    //                 'ruangan_sidang_id' => $ruanganSidangId,
+    //             ];
+    //         } catch (\Exception $e) {
+    //             $this->errors[] = "Baris " . ($key + 1) . ": " . $e->getMessage();
+    //         }
+    //     }
+    // }
 }
