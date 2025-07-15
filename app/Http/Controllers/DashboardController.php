@@ -25,12 +25,20 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         $userCount = User::count();
-        $mahasiswaCount = Mahasiswa::count();
         $dosenCount = Dosen::count();
         $programstudiCount = ProgramStudi::count();
 
         if ($user->role === 'Dosen') {
             $dosen = Dosen::where('user_id', $user->id)->first();
+
+            // Default: jumlah semua mahasiswa
+            $mahasiswaCount = Mahasiswa::count();
+
+            // Jika dosen adalah Koordinator Program Studi
+            if ($dosen && $dosen->jabatan === 'Koordinator Program Studi') {
+                $mahasiswaCount = Mahasiswa::where('program_studi_id', $dosen->program_studi_id)->count();
+            }
+
             return view('dashboard.index', compact(
                 'userCount',
                 'mahasiswaCount',
@@ -41,10 +49,13 @@ class DashboardController extends Controller
             ));
         } elseif ($user->role === 'Mahasiswa') {
             $mahasiswa = Mahasiswa::with(['programStudi', 'tahunAjaran'])
-                // ->where('user_id', $user->mahasiswa->user_id)
                 ->where('user_id', $user->id)->first();
+
             $programStudi = ProgramStudi::all();
             $tahunAjaran = TahunAjaran::all();
+
+            $mahasiswaCount = Mahasiswa::count(); // untuk tampilan mahasiswa (boleh juga dihilangkan kalau tidak dipakai)
+
             return view('dashboard.index', compact(
                 'userCount',
                 'mahasiswaCount',
@@ -54,6 +65,15 @@ class DashboardController extends Controller
                 'mahasiswa',
                 'programStudi',
                 'tahunAjaran'
+            ));
+        } elseif ($user->role === 'Super Admin') {
+            $mahasiswaCount = Mahasiswa::count(); // semua mahasiswa
+            return view('dashboard.index', compact(
+                'userCount',
+                'mahasiswaCount',
+                'dosenCount',
+                'programstudiCount',
+                'user'
             ));
         } else {
             abort(403);
