@@ -37,7 +37,7 @@
     $style = $config[$type];
 @endphp
 
-<div x-data="{ show: true }" x-init="setTimeout(() => show = false, 5000)" x-show="show"
+<div x-data="{ show: true }" x-init="setTimeout(() => show = false, 10000)" x-show="show"
      class="flex items-center justify-between p-4 mb-4 text-sm {{ $style['text'] }} rounded-lg {{ $style['bg'] }} dark:bg-gray-800 {{ $style['dark'] }}"
      role="alert" x-transition>
     <div class="flex items-center">
