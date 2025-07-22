@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Response;
 use App\Http\Controllers\DosenController;
-use App\Http\Controllers\NilaiController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\DashboardController;
@@ -140,7 +139,8 @@ Route::prefix('jadwal_bimbingan')->group(function () {
     Route::get('/dosen', [JadwalBimbinganController::class, 'index'])->name('jadwal_bimbingan.index');
     Route::get('/list-bimbingan', [JadwalBimbinganController::class, 'indexKaprodi'])->name('jadwal_bimbingan.index_kaprodi');
     Route::post('/', [JadwalBimbinganController::class, 'store'])->name('jadwal_bimbingan.store');
-    Route::post('/jadwal-bimbingan/daftar/{id}', [JadwalBimbinganController::class, 'daftarBimbingan'])->name('jadwal_bimbingan.daftar');
+    Route::post('/daftar/{id}', [JadwalBimbinganController::class, 'daftarBimbingan'])->name('jadwal_bimbingan.daftar');
+    Route::post('/{id}/konfirmasi/{pendaftaranId}', [JadwalBimbinganController::class, 'konfirmasiBimbingan'])->name('jadwal_bimbingan.konfirmasi');
     Route::put('/{id}', [JadwalBimbinganController::class, 'update'])->name('jadwal_bimbingan.update');
     Route::get('/detail/{id}', [JadwalBimbinganController::class, 'detail'])->name('jadwal_bimbingan.detail');
     Route::get('/list-bimbingan/dropdown-search', [JadwalBimbinganController::class, 'dropdownSearch'])->name('jadwal_bimbingan.index_kaprodi.dropdown-search');
@@ -149,7 +149,6 @@ Route::prefix('jadwal_bimbingan')->group(function () {
 
 Route::prefix('logbook_bimbingan')->group(function () {
     Route::get('/mahasiswa', [LogbookBimbinganController::class, 'indexMahasiswa'])->name('logbook_bimbingan.index_mahasiswa');
-    // Route::get('/', [LogbookBimbinganController::class, 'indexKaprodi'])->name('logbook_bimbingan.index_kaprodi');
     Route::get('/{id}/logbook', [LogbookBimbinganController::class, 'showFile'])->name('logbook_bimbingan.showFile');
     Route::patch('/mahasiswa/{id}/update-permasalahan', [LogbookBimbinganController::class, 'updatePermasalahan'])->name('logbook_bimbingan.update_permasalahan');
     Route::get('/mahasiswa/{dosenId}/{mahasiswaId}', [LogbookBimbinganController::class, 'showMahasiswa'])->name('logbook_bimbingan.show_mahasiswa');    // Route::get('/{mahasiswaId}', [LogbookBimbinganController::class, 'show'])->name('logbook_bimbingan.show');
@@ -239,7 +238,6 @@ Route::prefix('berita_acara')->group(function () {
     Route::get('/seminar-proposal', [BeritaAcaraController::class, 'seminarProposal'])->name('berita_acara.seminar_proposal');
     Route::get('/sidang-tugas-akhir', [BeritaAcaraController::class, 'sidangTugasAkhir'])->name('berita_acara.sidang_tugas_akhir');
     Route::get('/kaprodi/seminar-proposal/{id}', [BeritaAcaraController::class, 'seminarProposalKaprodi'])->name('kaprodi.berita.seminar');
-    // Route::get('/kaprodi/sidang-ta/{id}', [BeritaAcaraController::class, 'sidangTugasAkhirKaprodi'])->name('kaprodi.berita.sidang');
     Route::get('/kaprodi/sidang-ta/show', [BeritaAcaraController::class, 'showKaprodi'])->name('berita_acara.sidang_tugas_akhir.show');
     Route::get('/seminar-proposal/cetak', [BeritaAcaraController::class, 'cetakSeminarProposal'])->name('berita_acara.seminar-proposal.cetak');
     Route::get('/seminar-proposal/lihat', [BeritaAcaraController::class, 'lihatSeminarProposal'])->name('berita_acara.seminar-proposal.lihat');
@@ -269,15 +267,12 @@ Route::get('/download-template/import-jadwal-sidang-ta', function () {
 
 
 
-Route::get('file_bimbingan/{filename}', function ($filename) {
-    // Memastikan file ada di storage dan dapat diakses
-    $path = storage_path('app/public/' . $filename);
+// Route::get('file_bimbingan/{filename}', function ($filename) {
+//     // Memastikan file ada di storage dan dapat diakses
+//     $path = storage_path('app/public/' . $filename);
 
-    if (!file_exists($path)) {
-        abort(404);  // Jika file tidak ada, tampilkan halaman 404
-    }
-    return Response::file($path);
-})->name('file_bimbingan');
-
-
-    // Route::get('/{filename}', [LogbookBimbinganController::class, 'show'])->name('logbook_bimbingan.show');
+//     if (!file_exists($path)) {
+//         abort(404);  // Jika file tidak ada, tampilkan halaman 404
+//     }
+//     return Response::file($path);
+// })->name('file_bimbingan');
