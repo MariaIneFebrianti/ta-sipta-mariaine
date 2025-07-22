@@ -43,56 +43,99 @@ class JadwalBimbinganController extends Controller
             ->update(['status' => 'Terjadwal']);
 
         if ($user->role === 'Mahasiswa') {
-            // Ambil data pengajuan pembimbing mahasiswa yang sedang login
-            $pengajuanPembimbing = PengajuanPembimbing::where('mahasiswa_id', Auth::user()->mahasiswa->id)
+            $mahasiswaId = $user->mahasiswa->id;
+
+            $pengajuanPembimbing = PengajuanPembimbing::where('mahasiswa_id', $mahasiswaId)
                 ->where('validasi', 'Acc')
                 ->first();
 
             if ($pengajuanPembimbing) {
-                $jadwalBimbingan = JadwalBimbingan::where(function ($query) use ($pengajuanPembimbing) {
+                // Ambil jadwal yang sudah didaftari
+                $jadwalSudah = JadwalBimbingan::where(function ($query) use ($pengajuanPembimbing) {
                     $query->where('dosen_id', $pengajuanPembimbing->pembimbing_utama_id)
                         ->orWhere('dosen_id', $pengajuanPembimbing->pembimbing_pendamping_id);
                 })
-                    ->with('dosen')->orderBy('created_at', 'desc')
-                    ->orderBy('tanggal', 'desc')
-                    ->paginate(10);
+                    ->whereHas('pendaftaranBimbingan', function ($query) use ($mahasiswaId) {
+                        $query->where('mahasiswa_id', $mahasiswaId);
+                    })
+                    ->with('dosen', 'pendaftaranBimbingan')
+                    ->get()
+                    ->map(function ($jadwal) use ($mahasiswaId) {
+                        $jadwal->sudahMendaftar = true;
 
-                // Tambahkan properti sudahMendaftar untuk masing-masing jadwal
-                $mahasiswaId = Auth::user()->mahasiswa->id;
-                $jadwalBimbingan->getCollection()->transform(function ($jadwalBimbingan) use ($mahasiswaId) {
-                    $sudahMendaftar = PendaftaranBimbingan::where('mahasiswa_id', $mahasiswaId)
-                        ->where('jadwal_bimbingan_id', $jadwalBimbingan->id)
-                        ->exists();
-                    $jadwalBimbingan->sudahMendaftar = $sudahMendaftar;
-                    return $jadwalBimbingan;
-                });
+                        // Tambahkan informasi status pendaftaran mahasiswa
+                        $pendaftaran = $jadwal->pendaftaranBimbingan->where('mahasiswa_id', $mahasiswaId)->first();
+                        $jadwal->pendaftaranMahasiswa = $pendaftaran;
+
+                        // Hitung waktu bimbingan jika diterima
+                        if ($pendaftaran && $pendaftaran->status_pendaftaran === 'Diterima') {
+                            $pendaftarDiterima = $jadwal->pendaftaranBimbingan
+                                ->where('status_pendaftaran', 'Diterima')
+                                ->sortBy('created_at')
+                                ->values();
+
+                            $antrian = $pendaftarDiterima->search(fn($p) => $p->mahasiswa_id == $mahasiswaId);
+                            $durasi = $jadwal->durasi ?? 30;
+                            $jadwal->waktuMulai = Carbon::parse($jadwal->waktu)->addMinutes($durasi * $antrian);
+                        } else {
+                            $jadwal->waktuMulai = null;
+                        }
+
+                        return $jadwal;
+                    });
+
+                // Ambil jadwal yang belum didaftari
+                $jadwalBelum = JadwalBimbingan::where(function ($query) use ($pengajuanPembimbing) {
+                    $query->where('dosen_id', $pengajuanPembimbing->pembimbing_utama_id)
+                        ->orWhere('dosen_id', $pengajuanPembimbing->pembimbing_pendamping_id);
+                })
+                    ->whereDoesntHave('pendaftaranBimbingan', function ($query) use ($mahasiswaId) {
+                        $query->where('mahasiswa_id', $mahasiswaId);
+                    })
+                    ->with('dosen', 'pendaftaranBimbingan')
+                    ->get()
+                    ->map(function ($jadwal) {
+                        $jadwal->sudahMendaftar = false;
+                        $jadwal->pendaftaranMahasiswa = null;
+                        $jadwal->waktuMulai = null;
+                        return $jadwal;
+                    });
+
+                // Gabungkan dan urutkan
+                $jadwalBimbingan = $jadwalSudah
+                    ->concat($jadwalBelum)
+                    ->sortBy([
+                        ['sudahMendaftar', 'desc'],
+                        ['tanggal', 'asc'],
+                    ])
+                    ->values();
             } else {
-                // Jika mahasiswa belum punya pembimbing, kosongkan jadwal
                 $jadwalBimbingan = collect([]);
             }
-        } elseif ($user->role === 'Dosen') {
-            // Ambil ID dosen dari user yang login
-            $dosenId = Auth::user()->dosen->id;
 
-            // Ambil semua jadwal bimbingan milik dosen tersebut
+            // Simpan pengajuan (biar bisa dipakai di view)
+            $pengajuan = $pengajuanPembimbing;
+        } elseif ($user->role === 'Dosen') {
+            $dosenId = $user->dosen->id;
+
             $jadwalBimbingan = JadwalBimbingan::where('dosen_id', $dosenId)
                 ->with('dosen')
-                ->orderBy('tanggal', 'desc')
+                ->orderBy('tanggal', 'asc')
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
 
-            // Cek apakah jadwal sudah dipakai di logbook
             $jadwalBimbingan->getCollection()->transform(function ($jadwal) {
                 $jadwal->isUsedInLogbook = PendaftaranBimbingan::where('jadwal_bimbingan_id', $jadwal->id)
                     ->whereHas('logbooks')
                     ->exists();
                 return $jadwal;
             });
+
+            $pengajuan = null;
         } else {
             abort(403);
         }
-        $mahasiswa = Auth::user();
-        $pengajuan = PengajuanPembimbing::where('mahasiswa_id', $mahasiswa->id)->first();
+
         return view('jadwal_bimbingan.index', compact('jadwalBimbingan', 'dosen', 'user', 'pengajuan'));
     }
 
@@ -128,6 +171,7 @@ class JadwalBimbinganController extends Controller
 
         return view('jadwal_bimbingan.index_kaprodi', compact('jadwalBimbingan', 'dosen', 'user'));
     }
+
     public function store(Request $request)
     {
         // Validasi input
@@ -135,6 +179,7 @@ class JadwalBimbinganController extends Controller
             'tanggal' => 'required|date|after_or_equal:today',
             'waktu' => 'required',
             'kuota' => 'required|integer|min:1',
+            'durasi' => 'required|integer|min:1',
         ]);
 
         $dosenId = Auth::user()->dosen->id;
@@ -157,11 +202,13 @@ class JadwalBimbinganController extends Controller
             'tanggal' => $request->tanggal,
             'waktu' => $request->waktu,
             'kuota' => $request->kuota,
+            'durasi' => $request->durasi,
             'status' => $status,
         ]);
 
         return redirect()->route('jadwal_bimbingan.index')->with('success', 'Jadwal Bimbingan berhasil ditambahkan.');
     }
+
 
     public function daftarBimbingan(Request $request, $id)
     {
@@ -179,8 +226,12 @@ class JadwalBimbinganController extends Controller
             return redirect()->back()->with('error', 'Anda sudah mendaftar bimbingan pada jadwal ini.');
         }
 
-        // Cek kuota sebelum mendaftar
-        if ($jadwalBimbingan->kuota <= 0) {
+        // Cek kuota total yang tersedia dengan menghitung jumlah yang sudah *diterima*
+        $kuotaTerpakai = PendaftaranBimbingan::where('jadwal_bimbingan_id', $jadwalBimbingan->id)
+            ->where('status_pendaftaran', 'Diterima')
+            ->count();
+
+        if ($kuotaTerpakai >= $jadwalBimbingan->kuota) {
             return redirect()->back()->with('error', 'Kuota sudah penuh!');
         }
 
@@ -190,9 +241,6 @@ class JadwalBimbinganController extends Controller
             'jadwal_bimbingan_id' => $jadwalBimbingan->id,
         ]);
 
-        // Kurangi kuota bimbingan
-        $jadwalBimbingan->decrement('kuota');
-
         return redirect()->route('jadwal_bimbingan.index')->with([
             'success' => 'Anda berhasil mendaftar bimbingan!',
             'dosen' => $jadwalBimbingan->dosen->nama_dosen,
@@ -200,6 +248,7 @@ class JadwalBimbinganController extends Controller
             'waktu' => $jadwalBimbingan->waktu
         ]);
     }
+
 
     public function dropdownSearch(Request $request)
     {
@@ -244,5 +293,62 @@ class JadwalBimbinganController extends Controller
         $jadwalBimbingan->delete();
 
         return redirect()->route('jadwal_bimbingan.index')->with('success', 'Berhasil membatalkan jadwal bimbingan.');
+    }
+
+    public function detail($id)
+    {
+        if (!Auth::check()) {
+            return redirect('/login')->with('message', 'Please log in to continue.');
+        }
+
+        $user = Auth::user();
+
+        $jadwal = JadwalBimbingan::with(['pendaftaranBimbingan' => function ($query) {
+            $query->with('mahasiswa');
+        }])->findOrFail($id);
+
+        return view('jadwal_bimbingan.detail_bimbingan', compact('jadwal', 'user'));
+    }
+
+    public function konfirmasiBimbingan(Request $request, $id, $pendaftaranId)
+    {
+        $pendaftaran = PendaftaranBimbingan::findOrFail($pendaftaranId);
+        $jadwal = JadwalBimbingan::findOrFail($id);
+
+        if ($request->aksi === 'terima') {
+            $pendaftaran->status_pendaftaran = 'Diterima';
+            $pendaftaran->save();
+
+            if ($jadwal->kuota > 0) {
+                $jadwal->decrement('kuota');
+            }
+
+            // Hitung urutan dan waktu bimbingan mahasiswa
+            $pendaftar = PendaftaranBimbingan::where('jadwal_bimbingan_id', $jadwal->id)
+                ->where('status_pendaftaran', 'Diterima')
+                ->orderBy('created_at')
+                ->get();
+
+            $index = $pendaftar->search(function ($item) use ($pendaftaran) {
+                return $item->id === $pendaftaran->id;
+            });
+
+            $jamMulai = \Carbon\Carbon::parse($jadwal->waktu)->addMinutes($index * $jadwal->durasi);
+            $jamDatang = $jamMulai->copy()->subMinutes(30);
+
+            return redirect()->back()->with(
+                'success',
+                'Mahasiswa berhasil diterima. Jam bimbingan: ' . $jamMulai->format('H:i') . ' WIB. Mohon hadir pukul ' . $jamDatang->format('H:i') . ' WIB.'
+            );
+        }
+
+        if ($request->aksi === 'tolak') {
+            $pendaftaran->status_pendaftaran = 'Ditolak';
+            $pendaftaran->save();
+
+            return redirect()->back()->with('success', 'Mahasiswa ditolak.');
+        }
+
+        return redirect()->back()->with('error', 'Aksi tidak valid.');
     }
 }

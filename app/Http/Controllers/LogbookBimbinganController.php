@@ -27,7 +27,8 @@ class LogbookBimbinganController extends Controller
         $user = Auth::user();
         if ($user->role === 'Mahasiswa') {
             $user = Auth::user();
-            $mahasiswa = Auth::user();
+            // $mahasiswa = Auth::user();
+            $mahasiswa = $user->mahasiswa;
             $pengajuan = PengajuanPembimbing::where('mahasiswa_id', $mahasiswa->id)->first();
             $logbooks = LogbookBimbingan::all();
         } else {
@@ -62,6 +63,7 @@ class LogbookBimbinganController extends Controller
             })->pluck('pendaftaran_bimbingan_id');
 
             $availablePendaftaranBimbingan = PendaftaranBimbingan::where('mahasiswa_id', $mahasiswaId)
+                ->where('status_pendaftaran', 'Diterima') // Tambahkan filter ini
                 ->whereHas('jadwalBimbingan', function ($query) use ($dosenId) {
                     $query->where('dosen_id', $dosenId);
                 })
@@ -74,6 +76,7 @@ class LogbookBimbinganController extends Controller
             // Ambil data logbook sesuai dengan role pengguna
             $logbooks = LogbookBimbingan::whereHas('pendaftaranBimbingan', function ($query) use ($mahasiswaId, $dosenId) {
                 $query->where('mahasiswa_id', $mahasiswaId)
+                    ->where('status_pendaftaran', 'Diterima')
                     ->whereHas('jadwalBimbingan', function ($query) use ($dosenId) {
                         $query->where('dosen_id', $dosenId);
                     });

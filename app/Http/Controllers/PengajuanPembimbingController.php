@@ -22,7 +22,7 @@ class PengajuanPembimbingController extends Controller
         }
 
         $user = Auth::user();
-        $dosen = $user->dosen;
+        $dosenLogin = $user->dosen;
         $tahunAjaranList = TahunAjaran::orderBy('tahun_ajaran', 'desc')->get();
         $pengajuanQuery = PengajuanPembimbing::with(['pembimbingUtama', 'pembimbingPendamping', 'mahasiswa']);
 
@@ -30,23 +30,43 @@ class PengajuanPembimbingController extends Controller
             $pengajuanPembimbing = $pengajuanQuery
                 ->where('mahasiswa_id', $user->mahasiswa->id)
                 ->paginate(10);
-        } elseif ($user->role === 'Dosen' && $dosen) {
+
+            // ambil dosen pembimbing utama: hanya dari prodi yang sama
+            $prodiId = $user->mahasiswa->program_studi_id;
+            $dosenPembimbingUtama = Dosen::where('program_studi_id', $prodiId)->get();
+
+            // pembimbing pendamping: semua dosen
+            $dosenPembimbingPendamping = Dosen::all();
+
+            $mahasiswa = $user->mahasiswa;
+            $proposal = $mahasiswa ? $mahasiswa->proposal : null;
+
+            return view('pengajuan_pembimbing.index', compact(
+                'pengajuanPembimbing',
+                'dosenPembimbingUtama',
+                'dosenPembimbingPendamping',
+                'user',
+                'proposal',
+                'tahunAjaranList'
+            ));
+        } elseif ($user->role === 'Dosen' && $dosenLogin) {
             $pengajuanPembimbing = $pengajuanQuery
-                ->where(function ($query) use ($dosen) {
-                    $query->where('pembimbing_utama_id', $dosen->id)
-                        ->orWhere('pembimbing_pendamping_id', $dosen->id);
+                ->where(function ($query) use ($dosenLogin) {
+                    $query->where('pembimbing_utama_id', $dosenLogin->id)
+                        ->orWhere('pembimbing_pendamping_id', $dosenLogin->id);
                 })
                 ->where('validasi', 'Acc')
-                ->orderBy('created_at', 'desc')->paginate(10);
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
+
+            return view('pengajuan_pembimbing.index', compact(
+                'pengajuanPembimbing',
+                'user',
+                'tahunAjaranList'
+            ));
         } else {
             abort(403, 'Unauthorized access.');
         }
-
-        $dosen = Dosen::all();
-        $mahasiswa = $user->mahasiswa;
-        $proposal = $mahasiswa ? $mahasiswa->proposal : null;
-
-        return view('pengajuan_pembimbing.index', compact('pengajuanPembimbing', 'dosen', 'user', 'proposal', 'tahunAjaranList'));
     }
 
     public function indexKaprodi()
@@ -58,7 +78,7 @@ class PengajuanPembimbingController extends Controller
         $user = Auth::user();
         $dosen = $user->dosen;
         $tahunAjaranList = TahunAjaran::orderBy('tahun_ajaran', 'desc')->get();
-        $pengajuanQuery = PengajuanPembimbing::with(['pembimbingUtama', 'pembimbingPendamping', 'mahasiswa']);
+        $pengajuanQuery = PengajuanPembimbing::with(['pembimbingUtama', 'pembimbingPendamping', 'mahasiswa.proposal']);
 
         if ($dosen->jabatan === 'Koordinator Program Studi') {
             $pengajuanPembimbing = $pengajuanQuery
@@ -72,8 +92,11 @@ class PengajuanPembimbingController extends Controller
             abort(403, 'Unauthorized access.');
         }
 
+        $dosenPembimbingUtama = Dosen::where('program_studi_id', $dosen->program_studi_id)->get();
+        $dosenPembimbingPendamping = Dosen::all();
         $dosen = Dosen::all();
-        return view('pengajuan_pembimbing.index_kaprodi', compact('pengajuanPembimbing', 'tahunAjaranList', 'dosen', 'user'));
+
+        return view('pengajuan_pembimbing.index_kaprodi', compact('pengajuanPembimbing', 'tahunAjaranList', 'dosen', 'dosenPembimbingUtama', 'dosenPembimbingPendamping', 'user'));
     }
 
     public function store(Request $request)

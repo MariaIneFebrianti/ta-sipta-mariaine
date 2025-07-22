@@ -14,8 +14,6 @@ use Maatwebsite\Excel\Facades\Excel;
 
 \Carbon\Carbon::setLocale('id');
 
-
-
 class DosenController extends Controller
 {
     public function index()
@@ -27,6 +25,7 @@ class DosenController extends Controller
 
         if ($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi' || $user->role === 'Dosen' && $user->dosen->jabatan === 'Super Admin') {
             $dosen = Dosen::with('user')
+                ->orderBy('program_studi_id', 'asc')
                 ->orderBy('nama_dosen', 'asc')
                 ->paginate(10);
             $programStudi = ProgramStudi::all();
@@ -48,15 +47,11 @@ class DosenController extends Controller
             'tanggal_lahir' => 'required|date|before:today',
             'jenis_kelamin' => 'required|string|max:9',
             'jabatan' => 'required|in:Dosen Biasa,Koordinator Program Studi,Super Admin',
-            'program_studi_id' => 'nullable|exists:program_studi,id',
+            'program_studi_id' => 'required|exists:program_studi,id',
         ]);
 
-        // Jika jabatan Koordinator Program Studi, pastikan program_studi_id tidak null
+        // Cek jika jabatan adalah Kaprodi, pastikan belum ada Kaprodi di prodi tersebut
         if ($request->jabatan === 'Koordinator Program Studi') {
-            if (!$request->program_studi_id) {
-                return back()->with('error', 'Program studi wajib diisi untuk Koordinator Program Studi.');
-            }
-
             $kaprodiSudahAda = Dosen::where('jabatan', 'Koordinator Program Studi')
                 ->where('program_studi_id', $request->program_studi_id)
                 ->exists();
@@ -82,9 +77,8 @@ class DosenController extends Controller
             'tanggal_lahir' => $request->tanggal_lahir,
             'jenis_kelamin' => $request->jenis_kelamin,
             'jabatan' => $request->jabatan,
-            'program_studi_id' => $request->jabatan === 'Koordinator Program Studi'
-                ? $request->program_studi_id
-                : null,
+            'program_studi_id' => $request->program_studi_id,
+
         ]);
 
         if (!$dosen) {
@@ -107,15 +101,11 @@ class DosenController extends Controller
             'tanggal_lahir' => 'required|date|before:today',
             'jenis_kelamin' => 'required|string|max:9',
             'jabatan' => 'required|in:Dosen Biasa,Koordinator Program Studi,Super Admin',
-            'program_studi_id' => 'nullable|exists:program_studi,id',
+            'program_studi_id' => 'required|exists:program_studi,id',
         ]);
 
-        // Cek jika mau dijadikan Kaprodi
+        // Jika jabatan Koordinator Program Studi, cek agar tidak ada dua kaprodi untuk satu prodi
         if ($request->jabatan === 'Koordinator Program Studi') {
-            if (!$request->program_studi_id) {
-                return back()->with('error', 'Program studi wajib diisi untuk Koordinator Program Studi.');
-            }
-
             $kaprodiSudahAda = Dosen::where('jabatan', 'Koordinator Program Studi')
                 ->where('program_studi_id', $request->program_studi_id)
                 ->where('id', '!=', $dosen->id)
@@ -125,6 +115,7 @@ class DosenController extends Controller
                 return back()->with('error', 'Sudah ada Kaprodi untuk program studi yang dipilih.');
             }
         }
+
 
         $user->update([
             'name' => $request->name,
@@ -137,7 +128,7 @@ class DosenController extends Controller
             'tanggal_lahir' => $request->tanggal_lahir,
             'jenis_kelamin' => $request->jenis_kelamin,
             'jabatan' => $request->jabatan,
-            'program_studi_id' => $request->jabatan === 'Koordinator Program Studi' ? $request->program_studi_id : null,
+            'program_studi_id' => $request->program_studi_id,
         ]);
 
         if (request()->routeIs('dosen.profile.update')) {
