@@ -16,6 +16,7 @@ class JadwalBimbingan extends Model
         'tanggal',
         'waktu',
         'kuota',
+        'durasi',
     ];
 
     public function dosen()
@@ -25,8 +26,9 @@ class JadwalBimbingan extends Model
 
     public function pendaftaranBimbingan()
     {
-        return $this->hasOne(PendaftaranBimbingan::class, 'jadwal_bimbingan_id');
+        return $this->hasMany(PendaftaranBimbingan::class, 'jadwal_bimbingan_id');
     }
+
     public function logbooks()
     {
         return $this->hasMany(LogbookBimbingan::class);

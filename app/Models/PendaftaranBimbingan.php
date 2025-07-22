@@ -10,7 +10,7 @@ class PendaftaranBimbingan extends Model
     use HasFactory;
 
     protected $table = 'pendaftaran_bimbingan';
-    protected $fillable = ['mahasiswa_id', 'jadwal_bimbingan_id'];
+    protected $fillable = ['mahasiswa_id', 'jadwal_bimbingan_id', 'status_pendaftaran'];
 
     public function mahasiswa()
     {
