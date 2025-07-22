@@ -88,7 +88,7 @@
                                         <label for='mahasiswa_id' class="block mb-2 text-sm font-medium text-gray-900">Mahasiswa</label>
                                         <input type="text" name="mahasiswa_id" id="mahasiswa_id" value="{{ auth()->user()->mahasiswa->nama_mahasiswa }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" readonly />
                                     </div>
-                                    <div class="col-span-2">
+                                    {{-- <div class="col-span-2">
                                         <label for="pembimbing_utama_id" class="block mb-2 text-sm font-medium text-gray-900">Pilih Dosen Pembimbing Utama</label>
                                         <select id="pembimbing_utama_id" name="pembimbing_utama_id" class="tom-select focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                                             @foreach ($dosen as $pembimbingUtama)
@@ -101,6 +101,29 @@
                                         <label for="pembimbing_pendamping_id" class="block mb-2 text-sm font-medium text-gray-900">Pilih Dosen Pembimbing Pendamping</label>
                                         <select id="pembimbing_pendamping_id" name="pembimbing_pendamping_id" class="tom-select focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                                             @foreach ($dosen as $pembimbingPendamping)
+                                                <option value="{{ $pembimbingPendamping->id }}">{{ $pembimbingPendamping->nama_dosen }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div> --}}
+                                    {{-- Pembimbing Utama: hanya dosen dari prodi yang sama --}}
+                                    <div class="col-span-2">
+                                        <label for="pembimbing_utama_id" class="block mb-2 text-sm font-medium text-gray-900">
+                                            Pilih Dosen Pembimbing Utama
+                                        </label>
+                                        <select id="pembimbing_utama_id" name="pembimbing_utama_id" class="tom-select block w-full p-2.5">
+                                            @foreach ($dosenPembimbingUtama as $pembimbingUtama)
+                                                <option value="{{ $pembimbingUtama->id }}">{{ $pembimbingUtama->nama_dosen }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    {{-- Pembimbing Pendamping: semua dosen --}}
+                                    <div class="col-span-2">
+                                        <label for="pembimbing_pendamping_id" class="block mb-2 text-sm font-medium text-gray-900">
+                                            Pilih Dosen Pembimbing Pendamping
+                                        </label>
+                                        <select id="pembimbing_pendamping_id" name="pembimbing_pendamping_id" class="tom-select block w-full p-2.5">
+                                            @foreach ($dosenPembimbingPendamping as $pembimbingPendamping)
                                                 <option value="{{ $pembimbingPendamping->id }}">{{ $pembimbingPendamping->nama_dosen }}</option>
                                             @endforeach
                                         </select>
@@ -255,8 +278,6 @@
         hideSelected(); // inisialisasi
     });
 </script>
-
-
 
 @endsection
 

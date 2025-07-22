@@ -10,7 +10,7 @@
     <div class="px-10 py-6 mt-3 p-6 rounded-lg bg-white shadow-md border border-gray-200">
     @include('components.alert-global')
 
-        <table class="w-full md:w-1/2"> <!-- Lebar penuh pada layar kecil, 1/2 pada layar normal -->
+        <table class="w-full md:w-1/2">
             <tbody>
                 <tr>
                     <td class="py-1 whitespace-nowrap"><strong>Nama Dosen</strong></td>
@@ -52,15 +52,6 @@
                     </button>
                 </a>
                 @endif
-
-                {{-- <a href="{{ route('logbook_bimbingan.index_mahasiswa') }}">
-                    <button class="flex items-center mb-2 text-white bg-gray-600 hover:bg-gray-800 font-medium rounded-lg text-sm px-5 py-2.5">
-                        <svg class="mr-1 w-4 h-4 text-white dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m15 19-7-7 7-7"/>
-                        </svg>
-                        Kembali
-                    </button>
-                </a> --}}
             </div>
 
 
@@ -295,19 +286,6 @@
         modal.classList.add('hidden');
     }
 </script>
-
-{{-- <script>
-    function openModal(logbookId) {
-    const modal = document.getElementById('fileModal');
-    const iframe = document.getElementById('fileFrame');
-
-    // Gunakan route showFile untuk iframe
-    iframe.src = `/logbook_bimbingan/${logbookId}/file`;
-
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-}
-</script> --}}
 
 @endsection
 

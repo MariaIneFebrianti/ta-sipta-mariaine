@@ -18,7 +18,7 @@
                         <svg class="w-7 h-7 inline-block" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                             <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
                         </svg>
-                        Unggah Prosal
+                        Unggah Proposal
                     </button>
                 </div>
                 <!-- Main modal -->
@@ -84,7 +84,6 @@
         @if ($user->role === 'Mahasiswa')
             @if($proposal)
                 @foreach ($proposal as $item)
-                    {{-- @if ($punyaCatatanRevisi && (!$item->revisi_judul_proposal || !$item->revisi_file_proposal)) --}}
                     @if ($punyaCatatanRevisi && (empty($item->revisi_judul_proposal) || empty($item->revisi_file_proposal)))
                             <div class="mb-4 w-full flex justify-end">
                                 <div class="w-42">
@@ -210,21 +209,8 @@
                                 @endif
                             </div>
                         @endif
-                    {{-- @endif --}}
                 @endforeach
             @else
-                {{-- <div class="mb-4">
-                    <label class="block text-gray-700">Nama Lengkap</label>
-                    <input type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded" value="{{ $mahasiswa->nama_mahasiswa }}" readonly>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700">Judul Proposal</label>
-                    <input type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded" value="Belum ada data" readonly>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700">File Proposal</label>
-                    <input type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded" value="Belum ada data" readonly>
-                </div> --}}
             @endif
         @elseif($user->role === 'Dosen' && $user->dosen->jabatan === 'Koordinator Program Studi' || $user->role === 'Dosen' && $user->dosen->jabatan === 'Super Admin')
             @if($proposal->isEmpty())

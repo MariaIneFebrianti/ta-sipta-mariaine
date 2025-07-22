@@ -171,41 +171,45 @@
                                         <div id="kelengkapanModal-{{ $hasil->id }}" tabindex="-1" aria-hidden="true"
                                             class="fixed hidden z-50 w-full inset-0 flex justify-center items-center bg-black bg-opacity-50">
                                             <div class="bg-white rounded-lg p-6 w-full max-w-md relative">
+                                                <button type="button"
+                                                    class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+                                                    data-modal-hide="kelengkapanModal-{{ $hasil->id }}">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                                        xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+
                                                 <h2 class="text-lg font-semibold mb-4 text-center">Cek Kelengkapan Yudisium</h2>
                                                 <p class="mb-4 text-center">Pilih status kelengkapan yudisium untuk mahasiswa ini:</p>
 
-                                                <!-- Tombol Belum Lengkap -->
-                                                <form action="{{ route('hasil_sidang.cek_kelengkapan', $hasil->id) }}" method="POST"
-                                                    class="flex justify-between gap-4 mb-2">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <input type="hidden" name="kelengkapan_yudisium" value="Belum Lengkap">
-                                                    <button type="submit"
-                                                        class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded">Belum Lengkap</button>
-                                                </form>
+                                                <div class="flex justify-center gap-4 mb-4">
+                                                    <!-- Tombol Belum Lengkap -->
+                                                    <form action="{{ route('hasil_sidang.cek_kelengkapan', $hasil->id) }}" method="POST">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <input type="hidden" name="kelengkapan_yudisium" value="Belum Lengkap">
+                                                        <button type="submit"class="flex justify-center items-center gap-1 text-sm px-3 py-3 w-36 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200">
+                                                            <svg class="w-5 h-5 text-white dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/>
+                                                            </svg>
+                                                            Belum Lengkap
+                                                        </button>
+                                                    </form>
 
-                                                <!-- Tombol Lengkap -->
-                                                <form action="{{ route('hasil_sidang.cek_kelengkapan', $hasil->id) }}" method="POST"
-                                                    class="flex justify-between gap-4">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <input type="hidden" name="kelengkapan_yudisium" value="Lengkap">
-                                                    <button type="submit"
-                                                        class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded">Lengkap</button>
-                                                </form>
-
-                                                <!-- Tombol Close di kanan bawah -->
-                                                <div class="mt-6 flex justify-end">
-                                                    <button type="button"
-                                                        class="text-white inline-flex items-center bg-gray-600 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-                                                        data-modal-hide="kelengkapanModal-{{ $hasil->id }}">
-                                                        <svg class="me-2 w-2 h-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                                            fill="none" viewBox="0 0 14 14">
-                                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-                                                        </svg>
-                                                        Batal
-                                                    </button>
+                                                    <!-- Tombol Lengkap -->
+                                                    <form action="{{ route('hasil_sidang.cek_kelengkapan', $hasil->id) }}" method="POST">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <input type="hidden" name="kelengkapan_yudisium" value="Lengkap">
+                                                        <button type="submit" class="flex justify-center items-center gap-1 text-sm px-3 py-3 w-36 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200">
+                                                            <svg class="w-5 h-5 text-white dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 11.917 9.724 16.5 19 7.5"/>
+                                                            </svg>
+                                                            Lengkap
+                                                        </button>
+                                                    </form>
                                                 </div>
                                             </div>
                                         </div>

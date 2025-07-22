@@ -64,22 +64,37 @@
                         <thead class="bg-gray-100">
                             <tr class="text-center">
                                 <th class="w-1/12 border border-gray-300 px-4 py-2">No.</th>
-                                <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Nama Dosen</th>
                                 <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Tanggal</th>
                                 <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Waktu</th>
-                                <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Kuota</th>
+                                <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Sisa Kuota</th>
+                                <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Durasi</th>
                                 <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Status</th>
+                                {{-- <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Jumlah Mendaftar</th>
+                                <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Detail</th> --}}
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($jadwalBimbingan as $jadwal)
                                 <tr class="hover:bg-gray-50 text-center">
                                     <td class="border border-gray-300 px-4 py-2 text-center whitespace-nowrap">{{ $loop->iteration + ($jadwalBimbingan->currentPage() - 1) * $jadwalBimbingan->perPage() }}</td>
-                                    <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $jadwal->dosen->nama_dosen }}</td>
                                     <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ \Carbon\Carbon::parse($jadwal->tanggal)->translatedFormat('d F Y') }}</td>
                                     <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $jadwal->waktu }}</td>
                                     <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $jadwal->kuota }}</td>
+                                    <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $jadwal->durasi }} menit </td>
                                     <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $jadwal->status }}</td>
+                                    {{-- <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">
+                                        {{ $jadwal->pendaftaranBimbingan->count() }}
+                                    </td>
+                                    <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">
+                                        <a href="{{ route('jadwal_bimbingan.detail', $jadwal->id) }}">
+                                            <button class="text-sm bg-blue-500 font-medium px-4 py-2 flex items-center justify-center gap-1  mx-auto rounded-lg text-white whitespace-nowrap">
+                                                <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                                   <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm9.408-5.5a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2h-.01ZM10 10a1 1 0 1 0 0 2h1v3h-1a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2h-1v-4a1 1 0 0 0-1-1h-2Z" clip-rule="evenodd"/>
+                                                </svg>
+                                                Detail
+                                            </button>
+                                        </a>
+                                    </td> --}}
                                 </tr>
                             @endforeach
                         </tbody>

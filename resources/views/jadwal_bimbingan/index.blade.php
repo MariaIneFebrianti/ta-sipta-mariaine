@@ -57,6 +57,10 @@
                                         <label for="kuota" class="block mb-2 text-sm font-medium text-gray-900">Kuota</label>
                                         <input type="number" name="kuota" id="kuota" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Masukkan kuota" min="1" required />
                                     </div>
+                                    <div class="grid-cols-2">
+                                        <label for="durasi" class="block mb-2 text-sm font-medium text-gray-900">Durasi (menit)</label>
+                                        <input type="number" name="durasi" id="durasi" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" min="1" placeholder="Contoh: 30" required />
+                                    </div>
                                 </div>
                                 <div class="flex justify-end space-x-2">
                                     <button type="button" class="text-white inline-flex items-center bg-gray-600 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center" data-modal-toggle="crud-modal">
@@ -92,13 +96,16 @@
                             <thead class="bg-gray-100">
                                 <tr class="text-center">
                                     <th class="w-1/12 border border-gray-300 px-4 py-2">No.</th>
-                                        @if(auth()->user()->role === 'Dosen' && auth()->user()->dosen && auth()->user()->dosen->jabatan === 'Koordinator Program Studi')
+                                        @if(auth()->user()->role === 'Dosen' && (auth()->user()->dosen && auth()->user()->dosen->jabatan === 'Koordinator Program Studi' || auth()->user()->dosen && auth()->user()->dosen->jabatan === 'Super Admin' ))
                                             <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Nama Dosen</th>
                                         @endif
                                         <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Tanggal</th>
                                         <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Waktu</th>
-                                        <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Kuota</th>
+                                        <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">  Sisa Kuota</th>
+                                        <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Durasi</th>
                                         <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Status</th>
+                                        <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Jumlah Pendaftar</th>
+                                        <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Detail</th>
                                         <th class="w-4 border border-gray-300 px-4 py-2">Aksi</th>
                                     </tr>
                             </thead>
@@ -106,13 +113,27 @@
                                 @foreach($jadwalBimbingan as $jadwal)
                                     <tr class="hover:bg-gray-50 text-center">
                                         <td class="border border-gray-300 px-4 py-2 text-center whitespace-nowrap">{{ $loop->iteration + ($jadwalBimbingan->currentPage() - 1) * $jadwalBimbingan->perPage() }}</td>
-                                        @if(auth()->user()->role === 'Dosen' && auth()->user()->dosen && auth()->user()->dosen->jabatan === 'Koordinator Program Studi')
+                                        @if(auth()->user()->role === 'Dosen' && (auth()->user()->dosen && auth()->user()->dosen->jabatan === 'Koordinator Program Studi' || auth()->user()->dosen && auth()->user()->dosen->jabatan === 'Super Admin' ))
                                             <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $jadwal->dosen->nama_dosen }}</td>
                                         @endif
                                         <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ \Carbon\Carbon::parse($jadwal->tanggal)->translatedFormat('d F Y') }}</td>
                                         <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $jadwal->waktu }}</td>
                                         <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $jadwal->kuota }}</td>
+                                        <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $jadwal->durasi }} menit </td>
                                         <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $jadwal->status }}</td>
+                                        <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">
+                                            {{ $jadwal->pendaftaranBimbingan->count() }}
+                                        </td>
+                                        <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">
+                                            <a href="{{ route('jadwal_bimbingan.detail', $jadwal->id) }}">
+                                                <button class="text-sm bg-blue-500 font-medium px-4 py-2 flex items-center justify-center gap-1  mx-auto rounded-lg text-white whitespace-nowrap">
+                                                    <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                                       <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm9.408-5.5a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2h-.01ZM10 10a1 1 0 1 0 0 2h1v3h-1a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2h-1v-4a1 1 0 0 0-1-1h-2Z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                    Detail
+                                                </button>
+                                            </a>
+                                        </td>
                                         <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">
                                             <div class="flex justify-center space-x-2">
                                                 @if ($jadwal->isUsedInLogbook)
@@ -202,18 +223,48 @@
                         <div class="overflow-x-auto">
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 @foreach($jadwalBimbingan as $jadwal)
+                                @php
+                                    $pendaftaran = $jadwal->pendaftaranBimbingan
+                                        ->where('mahasiswa_id', auth()->user()->mahasiswa->id)
+                                        ->first();
+
+                                    $pendaftarDiterima = $jadwal->pendaftaranBimbingan
+                                        ->where('status_pendaftaran', 'Diterima')
+                                        ->sortBy('created_at')
+                                        ->values(); // reset keys
+
+                                    $antrian = $pendaftarDiterima->search(fn($p) => $p->mahasiswa_id == auth()->user()->mahasiswa->id);
+
+                                    $durasi = $jadwal->durasi ?? 30;
+                                    $waktuMulai = \Carbon\Carbon::parse($jadwal->waktu)->addMinutes($durasi * $antrian);
+                                @endphp
+
+                                    {{-- Konten kartu --}}
                                     <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-6 {{ $jadwal->kuota == 0 ? 'bg-gray-200' : '' }}">
                                         <h3 class="text-xl font-semibold text-gray-800">{{ $jadwal->dosen->nama_dosen }}</h3>
                                         <p class="text-gray-600">Tanggal: <strong>{{ \Carbon\Carbon::parse($jadwal->tanggal)->translatedFormat('d F Y') }}</strong></p>
                                         <p class="text-gray-600">Waktu: <strong>{{ $jadwal->waktu }}</strong></p>
-                                        <p class="text-gray-600">Kuota Tersisa:
-                                            <strong class="{{ $jadwal->kuota == 0 ? 'text-red-500' : 'text-red-600' }}">
-                                                {{ $jadwal->kuota }}
-                                            </strong>
-                                        </p>
+                                        <p class="text-gray-600">Kuota Tersisa: <strong class="{{ $jadwal->kuota == 0 ? 'text-red-500' : 'text-red-600' }}">{{ $jadwal->kuota }}</strong></p>
 
-                                        @if ($jadwal->kuota > 0)
-                                            @if (!$jadwal->sudahMendaftar)
+                                        {{-- Jika ada pendaftaran --}}
+                                        @if ($pendaftaran)
+                                            @if ($pendaftaran->status_pendaftaran === 'Diterima')
+                                                <div class="mt-4 w-full bg-yellow-200 text-yellow-700 p-2 rounded-lg hover:bg-yellow-200 transition text-center">
+                                                    Anda sudah mendaftar! <br>
+                                                    <strong>Jam Anda: {{ $waktuMulai->format('H:i') }} WIB</strong><br>
+                                                    Mohon datang <strong>30 menit sebelumnya</strong>.
+                                                </div>
+                                            @elseif ($pendaftaran->status_pendaftaran === 'Ditolak')
+                                                <div class="mt-4 p-3 bg-red-100 text-red-700 rounded-lg text-center">
+                                                    Anda <strong>ditolak</strong> pada jadwal ini dan tidak dapat mendaftar ulang.
+                                                </div>
+                                            @else
+                                                <button type="button" class="mt-4 w-full bg-gray-300 text-black font-semibold p-2 rounded-lg pointer-events-none" disabled>
+                                                    Anda sudah mendaftar! Menunggu konfirmasi.
+                                                </button>
+                                            @endif
+                                        @else
+                                            @if ($jadwal->kuota > 0)
                                                 <form action="{{ route('jadwal_bimbingan.daftar', $jadwal->id) }}" method="POST">
                                                     @csrf
                                                     <button type="submit" class="mt-4 w-full bg-green-600 text-white font-semibold py-2 rounded-lg hover:bg-green-600 transition">
@@ -221,37 +272,14 @@
                                                     </button>
                                                 </form>
                                             @else
-                                            <button type="button" class="mt-4 w-full bg-yellow-300 text-black font-semibold py-2 rounded-lg pointer-events-none" disabled>
-                                                Anda sudah Mendaftar!
+                                                <button type="button" class="mt-4 w-full bg-red-600 text-white py-2 rounded-lg pointer-events-none" disabled>
+                                                    Maaf, Kuota Penuh!
                                                 </button>
                                             @endif
-                                        @else
-                                            <button type="button"  class="mt-4 w-full bg-red-600 text-white py-2 rounded-lg pointer-events-none" disabled>
-                                                Maaf, Kuota Penuh!
-                                            </button>
                                         @endif
                                     </div>
                                 @endforeach
                             </div>
-                                @if(session('success'))
-                                    <div id="popup" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50">
-                                        <div class="bg-white p-6 rounded-lg shadow-lg text-center">
-                                        <h2 class="text-lg font-semibold text-green-600">{{ session('success') }}</h2>
-                                        <p class="mt-2 text-gray-700">
-                                            Nama Dosen: <strong>{{ session('dosen') }}</strong> <br>
-                                            Tanggal: <strong>{{ \Carbon\Carbon::parse(session('tanggal'))->translatedFormat('d F Y') }}</strong> <br>
-                                            Pukul: <strong>{{ session('waktu') }}</strong>
-                                        </p>
-                                            <div class="mt-4 flex justify-center gap-4">
-                                                <button onclick="document.getElementById('popup').style.display='none'"
-                                                    class="px-4 py-2 bg-gray-400 text-white rounded-lg">Kembali</button>
-                                                <a href="{{ route('logbook_bimbingan.index_mahasiswa') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg">
-                                                    Lihat Logbook Bimbingan
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
                         </div>
                 @endif
             @endif

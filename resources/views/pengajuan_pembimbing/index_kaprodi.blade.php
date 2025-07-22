@@ -1,4 +1,3 @@
-{{-- @extends('layout') --}}
 @extends('layouts.app')
 
 @section('content')
@@ -88,8 +87,6 @@
                 @endif
             </div>
 
-
-
         @if($pengajuanPembimbing->isEmpty())
             <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative text-center" role="alert">
                 <strong class="font-bold">Perhatian!</strong>
@@ -102,6 +99,7 @@
                     <tr class="text-center">
                         <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">No.</th>
                         <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Nama Mahasiswa</th>
+                        <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Judul Tugas Akhir</th>
                         <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Dosen Pembimbing Utama</th>
                         <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Dosen Pembimbing Pendamping</th>
                         <th class="border border-gray-300 px-4 py-2 whitespace-nowrap">Status Validasi</th>
@@ -115,6 +113,7 @@
                         <tr class="hover:bg-gray-50">
                             <td class="border border-gray-300 px-4 py-2 text-center whitespace-nowrap">{{ $loop->iteration }}</td>
                             <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $pembimbing->mahasiswa->nama_mahasiswa }}</td>
+                            <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $pembimbing->mahasiswa->proposal->judul_proposal }}</td>
                             <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $pembimbing->pembimbingUtama ? $pembimbing->pembimbingUtama->nama_dosen : 'Tidak ada' }}</td>
                             <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $pembimbing->pembimbingPendamping ? $pembimbing->pembimbingPendamping->nama_dosen : 'Tidak ada' }}</td>
                             <td class="border border-gray-300 px-4 py-2 whitespace-nowrap">{{ $pembimbing->validasi }}</td>
@@ -193,7 +192,7 @@
                                                 <div class="mb-4">
                                                     <label for="pembimbing_utama_id_edit" class="block mb-2 text-sm font-medium text-gray-900">Dosen Pembimbing Utama</label>
                                                     <select name="pembimbing_utama_id" class="pembimbing-utama-edit tom-select">
-                                                        @foreach ($dosen as $pembimbingUtama)
+                                                        @foreach ($dosenPembimbingUtama as $pembimbingUtama)
                                                             <option value="{{ $pembimbingUtama->id }}" {{ $pembimbingUtama->id == $pembimbing->pembimbing_utama_id ? 'selected' : '' }}>{{ $pembimbingUtama->nama_dosen }}</option>
                                                         @endforeach
                                                     </select>
@@ -201,7 +200,7 @@
                                                 <div class="mb-4">
                                                     <label for="pembimbing_pendamping_id_edit" class="block mb-2 text-sm font-medium text-gray-900">Dosen Pembimbing Pendamping</label>
                                                     <select name="pembimbing_pendamping_id" class="pembimbing-pendamping-edit tom-select">
-                                                        @foreach ($dosen as $pembimbingPendamping)
+                                                        @foreach ($dosenPembimbingPendamping as $pembimbingPendamping)
                                                             <option value="{{ $pembimbingPendamping->id }}" {{ $pembimbingPendamping->id == $pembimbing->pembimbing_pendamping_id ? 'selected' : '' }}>{{ $pembimbingPendamping->nama_dosen }}</option>
                                                         @endforeach
                                                     </select>
