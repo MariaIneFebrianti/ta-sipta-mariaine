@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::create('dosen', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('nama_dosen', 100); // maksimal 100
-            $table->integer('nip')->unique(); // validasi panjang di controller (maks 50 digit)
-            $table->string('tempat_lahir', 100); // maksimal 100
+            $table->string('nama_dosen', 100);
+            $table->string('nip')->unique();
+            $table->string('tempat_lahir', 100);
             $table->date('tanggal_lahir');
-            $table->string('jenis_kelamin', 9); // maksimal 9
-            $table->string('jabatan', 25)->nullable(); // maksimal 25
+            $table->string('jenis_kelamin', 9);
+            $table->string('jabatan', 25)->nullable();
             $table->foreignId('program_studi_id')->nullable()->constrained('program_studi')->onDelete('set null');
             $table->string('ttd_dosen')->nullable();
             $table->timestamps();
