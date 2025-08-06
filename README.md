@@ -1,7 +1,7 @@
-# SISTEM INFORMASI PENGELOLAAN TUGAS AKHIR JURUSAN KOMPUTER DAN BISNIS POLITEKNIK NEGERI CILACAP BERBASIS WEBSITE
+# FINAL PROJECT MANAGEMENT SYSTEM FOR THE COMPUTER AND BUSINESS DEPARTMENT AT POLITEKNIK NEGERI CILACAP WEB-BASED
 
 # Overview
-Sistem ini merupakan aplikasi berbasis website yang dirancang untuk mendukung proses Pengelolaan Tugas Akhir di Jurusan Komputer dan Bisnis Politeknik Negeri Cilacap. Sistem ini memfasilitasi Proses pengajuan proposal, pengajuan dosen pembimbing, logbokk bimbingan, jadwal sidang, penilaian, dan berita acara. Dengan adanya sistem ini, proses pengelolaan tugas akhir menjadi lebih terstruktur, efisien, dan terdokumentasi dengan baik.
+This system is a web-based application designed to support the Final Project Management process at the Department of Computer and Business, Politeknik Negeri Cilacap. It facilitates the processes of proposal submission, supervisor selection, guidance logbook, defense scheduling, grading, and meeting minutes. With this system, the management of final projects becomes more structured, efficient, and well-documented.
 
 ---
 
@@ -40,14 +40,14 @@ php artisan serve
 
 ## Data Modeling
 
-### Flowchart
-![1. Flowchart SIPTA](public/img/flowchart-sipta.png)
+### 1. Flowchart
+![Flowchart SIPTA](public/img/flowchart-sipta.png)
 
-### Use Case Diagram
-![2. Use Case SIPTA](public/img/usecase-sipta.png)
+### 2. Use Case Diagram
+![Use Case SIPTA](public/img/usecase-sipta.png)
 
-### Entity Relationship Diagram (ERD)
-![3. ERD SIPTA](public/img/erd-sipta.png)
+### 3. Entity Relationship Diagram (ERD)
+![ERD SIPTA](public/img/erd-sipta.png)
 
 ---
 
