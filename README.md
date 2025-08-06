@@ -1,66 +1,192 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SISTEM INFORMASI PENGELOLAAN TUGAS AKHIR JURUSAN KOMPUTER DAN BISNIS POLITEKNIK NEGERI CILACAP BERBASIS WEBSITE
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# Overview
+Sistem ini merupakan aplikasi berbasis website yang dirancang untuk mendukung proses Pengelolaan Tugas Akhir di Jurusan Komputer dan Bisnis Politeknik Negeri Cilacap. Sistem ini memfasilitasi Proses pengajuan proposal, pengajuan dosen pembimbing, logbokk bimbingan, jadwal sidang, penilaian, dan berita acara. Dengan adanya sistem ini, proses pengelolaan tugas akhir menjadi lebih terstruktur, efisien, dan terdokumentasi dengan baik.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Instalation
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 1. Clone the repository and navigate to the project directory:
+```bash
+git clone https://github.com/MariaIneFebrianti/ta-sipta-mariaine.git
+cd ta-sipta-mariaine
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 2. Install dependencies:
+```bash
+composer install
+npm install
+npm run dev
+```
 
-## Learning Laravel
+### 3. Configure environment:
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 4. Run migrations and seeders:
+```bash
+php artisan migrate --seed
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 5. Start development server:
+```bash
+php artisan serve
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## Data Modeling
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Flowchart
+![Flowchart SIPTA](public/img/flowchart-sipta.png)
 
-### Premium Partners
+### Use Case Diagram
+![Use Case SIPTA](public/img/usecase-sipta.png)
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### Entity Relationship Diagram (ERD)
+![ERD SIPTA](public/img/erd-sipta.png)
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## User Roles and Features
 
-## Code of Conduct
+This system includes the following user roles and their respective functionalities:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 1. **Super Admin**
+  - Login  
+  - View user data  
+  - Manage study program data  
+  - Manage seminar room data  
+  - Manage academic year data  
+  - Manage student data  
+  - Manage lecturer data  
+  - View grading rubric data  
+  - Import student data  
+  - Import lecturer data  
+  - View proposal data  
+  - View supervisor request data  
+  - View supervision schedule data  
+  - View seminar proposal schedule  
+  - View final thesis defense schedule  
+  - View supervision logbook data  
+  - View final thesis defense registration  
+  - View final seminar proposal results  
+  - View final thesis defense results  
+  - View student grade recap  
+  - Logout  
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 2. **Koordinator Program Studi**
+  - Login  
+  - View user data  
+  - Manage study program data  
+  - Manage seminar room data  
+  - Manage academic year data  
+  - Manage student data  
+  - Manage lecturer data  
+  - Add grading rubric data  
+  - Import student data  
+  - Import lecturer data  
+  - View proposal data  
+  - Validate supervisor requests (approve or reassign)  
+  - Print student supervisor recap  
+  - Import seminar proposal schedule  
+  - Import thesis defense schedule  
+  - Print student examiner recap  
+  - View supervision logbook data  
+  - View thesis defense registration  
+  - View seminar proposal results  
+  - View thesis defense results  
+  - View and print student grade recap  
+  - Logout 
+
+---
+
+### 3. **Dosen**
+  - Login  
+  - View supervised and examined students  
+  - View seminar proposal schedule  
+  - Input seminar proposal grades  
+  - Input seminar proposal revision notes  
+  - Input supervision schedule  
+  - Approve or reject supervision registration  
+  - Input issues in supervision logbook  
+  - Recommend students for thesis defense  
+  - View students for examination  
+  - View final thesis defense schedule  
+  - Input thesis defense grades  
+  - Input final thesis report revision notes  
+  - Logout
+
+  ---
+
+### 4. **Mahasiswa**
+  - Login  
+  - Upload final project proposal  
+  - Submit supervisor request  
+  - Select supervision schedule (based on assigned supervisor) and register  
+  - Fill in supervision logbook  
+  - View seminar proposal schedule  
+  - View proposal revision notes  
+  - Upload revised proposal  
+  - View thesis defense schedule  
+  - View final thesis revision notes  
+  - View seminar proposal result  
+  - View thesis defense result  
+  - Upload final thesis revision  
+  - View and download official report documents  
+  - Logout  
+
+  ---
+
+## System Workflow
+
+### 1. Students upload their final project proposals.
+### 2. Students submit their preferred academic supervisors through the system.
+### 3. The Head of Study Program validates the supervisor submissions:
+#### If approved, the submission status changes to "Acc".
+#### If not approved, the Head of Study Program assigns a different supervisor, and the submission status also changes to "Acc".
+### 4. The Head of Study Program prints the recap of student-supervisor assignments.
+### 5. The Head of Study Program imports the proposal seminar schedule.
+### 6. Students attend the seminar based on the assigned schedule.
+### 7. Examiners provide grades through a dedicated page accessible only to authorized lecturers.
+### 8. Examiners add revision notes for the proposal.
+### 9. The system automatically calculates the seminar result and determines whether the student passes or needs revision.
+### 10. The seminar report is generated and becomes accessible to the student and Head of Study Program.
+### 11. Students revise and re-upload their final project proposals.
+### 12. Supervisors create and manage supervision schedules for their assigned students.
+### 13. Students view and register for available supervision schedules.
+### 14. Students fill out the supervision logbook based on the registered schedule.
+### 15. If further supervision is required, the process repeats with new schedule creation.
+### 16. After completing at least five supervision sessions with each assigned supervisor, students can be recommended to register for the final defense.
+### 17. Students register for the final defense by uploading all required documents, such as the final report, clearance letters, payment slips, and other supporting files.
+### 18. The Head of Study Program imports the final defense schedule.
+### 19. The Head of Study Program prints the list of examiners for the final defense.
+### 20. Students and examiners can view the assigned final defense schedule.
+### 21. Students attend the final defense as scheduled.
+### 22. Supervisors and examiners submit grades through a dedicated page accessible only to authorized lecturers.
+### 23. Supervisors and examiners provide revision notes for the final project report.
+### 24. The system calculates the final defense result and determines the student's final status (pass, revision, reschedule, or fail).
+### 25. Students revise and re-upload their final project report.
+### 26. The Head of Study Program prints the recap of final defense grades.
+### 27. The final defense report is generated and becomes accessible to the student and Head of Study Program.
+### 28. The Head of Study Program verifies the completeness of graduation documents submitted by the student.
+### 29. The Head of Study Program prints the graduation data recap.
+
+---
+
+## Contact
+
+Email : mariainefebrianti29@gmail.com
+
+---
 
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+---
