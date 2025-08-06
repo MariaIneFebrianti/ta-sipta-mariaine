@@ -146,6 +146,27 @@ This system includes the following user roles and their respective functionaliti
 
 ---
 
+## Requirements
+- PHP ≥ 8.2
+- MySQL ≥ 8.0
+- Composer
+- Node.js & NPM
+- Laravel 11
+- Laragon/XAMPP (or other applications used as a local server)
+- Git (optional, for cloning the repository)
+- phpMyAdmin (optional, for database GUI)
+
+---
+
+## Tech Stack
+- Framework: Laravel 11
+- Frontend: Blade, Tailwind CSS, Flowbite
+- Database: MySQL
+- Authentication: Laravel Breeze
+- Package Manager: Composer, NPM
+- IDE: Visual Studio Code
+- Version Control: Git + Github
+
 ## Installation
 
 ### 1. Clone the repository and navigate to the project directory:
