@@ -145,37 +145,37 @@ This system includes the following user roles and their respective functionaliti
 
 ## System Workflow
 
-### 1. Students upload their final project proposals.
-### 2. Students submit their preferred academic supervisors through the system.
-### 3. The Head of Study Program validates the supervisor submissions:
-#### If approved, the submission status changes to "Acc".
-#### If not approved, the Head of Study Program assigns a different supervisor, and the submission status also changes to "Acc".
-### 4. The Head of Study Program prints the recap of student-supervisor assignments.
-### 5. The Head of Study Program imports the proposal seminar schedule.
-### 6. Students attend the seminar based on the assigned schedule.
-### 7. Examiners provide grades through a dedicated page accessible only to authorized lecturers.
-### 8. Examiners add revision notes for the proposal.
-### 9. The system automatically calculates the seminar result and determines whether the student passes or needs revision.
-### 10. The seminar report is generated and becomes accessible to the student and Head of Study Program.
-### 11. Students revise and re-upload their final project proposals.
-### 12. Supervisors create and manage supervision schedules for their assigned students.
-### 13. Students view and register for available supervision schedules.
-### 14. Students fill out the supervision logbook based on the registered schedule.
-### 15. If further supervision is required, the process repeats with new schedule creation.
-### 16. After completing at least five supervision sessions with each assigned supervisor, students can be recommended to register for the final defense.
-### 17. Students register for the final defense by uploading all required documents, such as the final report, clearance letters, payment slips, and other supporting files.
-### 18. The Head of Study Program imports the final defense schedule.
-### 19. The Head of Study Program prints the list of examiners for the final defense.
-### 20. Students and examiners can view the assigned final defense schedule.
-### 21. Students attend the final defense as scheduled.
-### 22. Supervisors and examiners submit grades through a dedicated page accessible only to authorized lecturers.
-### 23. Supervisors and examiners provide revision notes for the final project report.
-### 24. The system calculates the final defense result and determines the student's final status (pass, revision, reschedule, or fail).
-### 25. Students revise and re-upload their final project report.
-### 26. The Head of Study Program prints the recap of final defense grades.
-### 27. The final defense report is generated and becomes accessible to the student and Head of Study Program.
-### 28. The Head of Study Program verifies the completeness of graduation documents submitted by the student.
-### 29. The Head of Study Program prints the graduation data recap.
+1. Students upload their final project proposals.
+2. Students submit their preferred academic supervisors through the system.
+3. The Head of Study Program validates the supervisor submissions:
+ If approved, the submission status changes to "Acc".
+ If not approved, the Head of Study Program assigns a different supervisor, and the submission status also changes to "Acc".
+4. The Head of Study Program prints the recap of student-supervisor assignments.
+5. The Head of Study Program imports the proposal seminar schedule.
+6. Students attend the seminar based on the assigned schedule.
+7. Examiners provide grades through a dedicated page accessible only to authorized lecturers.
+8. Examiners add revision notes for the proposal.
+9. The system automatically calculates the seminar result and determines whether the student passes or needs revision.
+10. The seminar report is generated and becomes accessible to the student and Head of Study Program.
+11. Students revise and re-upload their final project proposals.
+12. Supervisors create and manage supervision schedules for their assigned students.
+13. Students view and register for available supervision schedules.
+14. Students fill out the supervision logbook based on the registered schedule.
+15. If further supervision is required, the process repeats with new schedule creation.
+16. After completing at least five supervision sessions with each assigned supervisor, students can be recommended to register for the final defense.
+17. Students register for the final defense by uploading all required documents, such as the final report, clearance letters, payment slips, and other supporting files.
+18. The Head of Study Program imports the final defense schedule.
+19. The Head of Study Program prints the list of examiners for the final defense.
+20. Students and examiners can view the assigned final defense schedule.
+21. Students attend the final defense as scheduled.
+22. Supervisors and examiners submit grades through a dedicated page accessible only to authorized lecturers.
+23. Supervisors and examiners provide revision notes for the final project report.
+24. The system calculates the final defense result and determines the student's final status (pass, revision, reschedule, or fail).
+25. Students revise and re-upload their final project report.
+26. The Head of Study Program prints the recap of final defense grades.
+27. The final defense report is generated and becomes accessible to the student and Head of Study Program.
+28. The Head of Study Program verifies the completeness of graduation documents submitted by the student.
+29. The Head of Study Program prints the graduation data recap.
 
 ---
 
