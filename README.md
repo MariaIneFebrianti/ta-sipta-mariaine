@@ -1,53 +1,7 @@
 # FINAL PROJECT MANAGEMENT SYSTEM FOR THE COMPUTER AND BUSINESS DEPARTMENT AT POLITEKNIK NEGERI CILACAP WEB-BASED
 
-# Overview
+## Overview
 This system is a web-based application designed to support the Final Project Management process at the Department of Computer and Business, Politeknik Negeri Cilacap. It facilitates the processes of proposal submission, supervisor selection, guidance logbook, defense scheduling, grading, and meeting minutes. With this system, the management of final projects becomes more structured, efficient, and well-documented.
-
----
-
-## Instalation
-
-### 1. Clone the repository and navigate to the project directory:
-```bash
-git clone https://github.com/MariaIneFebrianti/ta-sipta-mariaine.git
-cd ta-sipta-mariaine
-```
-
-### 2. Install dependencies:
-```bash
-composer install
-npm install
-npm run dev
-```
-
-### 3. Configure environment:
-```bash
-cp .env.example .env
-php artisan key:generate
-```
-
-### 4. Run migrations and seeders:
-```bash
-php artisan migrate --seed
-```
-
-### 5. Start development server:
-```bash
-php artisan serve
-```
-
----
-
-## Data Modeling
-
-### 1. Flowchart
-![Flowchart SIPTA](public/img/flowchart-sipta.png)
-
-### 2. Use Case Diagram
-![Use Case SIPTA](public/img/usecase-sipta.png)
-
-### 3. Entity Relationship Diagram (ERD)
-![ERD SIPTA](public/img/erd-sipta.png)
 
 ---
 
@@ -176,6 +130,52 @@ This system includes the following user roles and their respective functionaliti
 27. The final defense report is generated and becomes accessible to the student and Head of Study Program.
 28. The Head of Study Program verifies the completeness of graduation documents submitted by the student.
 29. The Head of Study Program prints the graduation data recap.
+
+---
+
+## Data Modeling
+
+### 1. Flowchart
+![Flowchart SIPTA](public/img/flowchart-sipta.png)
+
+### 2. Use Case Diagram
+![Use Case SIPTA](public/img/usecase-sipta.png)
+
+### 3. Entity Relationship Diagram (ERD)
+![ERD SIPTA](public/img/erd-sipta.png)
+
+---
+
+## Installation
+
+### 1. Clone the repository and navigate to the project directory:
+```bash
+git clone https://github.com/MariaIneFebrianti/ta-sipta-mariaine.git
+cd ta-sipta-mariaine
+```
+
+### 2. Install dependencies:
+```bash
+composer install
+npm install
+npm run dev
+```
+
+### 3. Configure environment:
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+### 4. Run migrations and seeders:
+```bash
+php artisan migrate --seed
+```
+
+### 5. Start development server:
+```bash
+php artisan serve
+```
 
 ---
 
