@@ -41,13 +41,13 @@ php artisan serve
 ## Data Modeling
 
 ### Flowchart
-![Flowchart SIPTA](public/img/flowchart-sipta.png)
+1. ![Flowchart SIPTA](public/img/flowchart-sipta.png)
 
 ### Use Case Diagram
-![Use Case SIPTA](public/img/usecase-sipta.png)
+1. ![Use Case SIPTA](public/img/usecase-sipta.png)
 
 ### Entity Relationship Diagram (ERD)
-![ERD SIPTA](public/img/erd-sipta.png)
+3. ![ERD SIPTA](public/img/erd-sipta.png)
 
 ---
 
